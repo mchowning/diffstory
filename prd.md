@@ -111,14 +111,15 @@ This manual correlation is tedious and error-prone. Users lose context switching
 | FR18 | User-selectable git state (staged, unstaged, branch comparison) |
 | FR19 | Web UI in addition to TUI |
 | FR20 | Smooth animations for transitions (section selection, pane scrolling, content loading) |
+| FR21 | (Moved to MVP) Built-in syntax highlighting using Chroma |
 
 ### Won't Have (Explicitly Out of Scope)
 
 | ID | Requirement |
 |----|-------------|
-| FR21 | Reviewing others' code / pull request integration |
-| FR22 | Multi-user / collaborative features |
-| FR23 | Generating the narrative (this is done externally by Claude Code) |
+| FR22 | Reviewing others' code / pull request integration |
+| FR23 | Multi-user / collaborative features |
+| FR24 | Generating the narrative (this is done externally by Claude Code) |
 
 ---
 
@@ -129,7 +130,7 @@ This manual correlation is tedious and error-prone. Users lose context switching
 | NFR1 | Application must start and display UI within 500ms |
 | NFR2 | Application must handle review data with up to 100 sections and 500 total hunks without noticeable lag |
 | NFR3 | HTTP endpoint must respond within 100ms |
-| NFR4 | Application must be distributable as a single binary (no runtime dependencies) |
+| NFR4 | Application is a self-contained binary with no external runtime dependencies |
 | NFR5 | Keyboard navigation must feel responsive (no perceptible delay) |
 
 ---
@@ -170,6 +171,11 @@ The following are explicitly NOT part of this project:
 ---
 
 ## 10. Design Considerations
+
+### Application States
+
+1. **Welcome/Listening State**: Displayed on launch. Shows ASCII art logo and instructions for sending data via HTTP.
+2. **Review State**: Displayed when valid review data is received. Shows the two-pane interface.
 
 ### UI Layout
 
