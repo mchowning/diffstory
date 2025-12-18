@@ -4,16 +4,23 @@ git_commit: f4c986788f47d53effc089bad8400994714d5883
 branch: main
 repository: diffguide
 topic: "Diffguide MVP Implementation"
-tags: [plans, tui, bubble-tea, go, mvp]
-status: complete
+tags: [plans, tui, bubble-tea, go, mvp, server-viewer]
+status: in_progress
 last_updated: 2025-12-18
+last_updated_note: "Updated to server+viewer architecture"
 ---
 
 # Diffguide MVP Implementation Plan
 
 ## Overview
 
-Implement the minimum viable product for diffguide - a TUI application that receives code review data via HTTP and displays it in a two-pane lazygit-style interface. The MVP covers FR1-FR12 from the PRD, enabling developers to view AI-generated narrative explanations alongside syntax-highlighted diffs.
+Implement the minimum viable product for diffguide using a **server + viewer architecture**. This enables running multiple viewer instances across different project directories simultaneously (matching the lazygit multi-tab workflow), while maintaining a single HTTP endpoint for MCP integration.
+
+**Architecture**:
+- **Server** (`diffguide server`): Single HTTP endpoint, writes reviews to per-directory files
+- **Viewer** (`diffguide`): Watches for updates to its working directory's review file
+
+The MVP covers FR1-FR12 from the PRD, enabling developers to view AI-generated narrative explanations alongside syntax-highlighted diffs.
 
 ## Current State Analysis
 
@@ -39,38 +46,54 @@ Implement the minimum viable product for diffguide - a TUI application that rece
 
 ## Desired End State
 
-A single Go binary that:
-1. Launches and displays an empty state with ASCII art and instructions (showing actual bound port)
-2. Runs an HTTP server on port 8765 (configurable, supports `-port=0` for ephemeral)
-3. Accepts POST /review with JSON payload
-4. Displays two-pane interface: sections on left, diffs on right
-5. Supports j/k/arrow navigation between sections
-6. Shows syntax-highlighted code with green/red diff coloring
-7. Supports J/K scrolling in the diff pane
-8. Quits with 'q' and gracefully shuts down HTTP server
+A single Go binary with two modes:
+
+### Server Mode (`diffguide server`)
+1. Runs HTTP server on port 8765 (configurable)
+2. Accepts POST /review with JSON payload including `workingDirectory`
+3. Writes review data to `~/.diffguide/reviews/{dir-hash}.json`
+4. Responds with 200 OK on success
+5. Logs activity when `-v` flag is set
+
+### Viewer Mode (`diffguide` or `diffguide view`)
+1. Launches and displays empty state with instructions
+2. Watches `~/.diffguide/reviews/{hash-of-pwd}.json` for changes
+3. When review file appears/changes, displays two-pane interface
+4. Supports j/k/arrow navigation between sections
+5. Shows syntax-highlighted code with green/red diff coloring
+6. Supports J/K scrolling in the diff pane
+7. Quits with 'q'
 
 **Verification:**
 ```bash
-# Start the application
+# Terminal 1: Start the server (once)
+./diffguide server
+
+# Terminal 2: Start a viewer in project A
+cd ~/code/project-a
 ./diffguide
 
-# In another terminal, send test data
+# Terminal 3: Start a viewer in project B
+cd ~/code/project-b
+./diffguide
+
+# Terminal 4: Send test data for project A
 curl -X POST http://localhost:8765/review \
   -H "Content-Type: application/json" \
-  -d '{"title": "Test Review", "sections": [...]}'
+  -d '{"workingDirectory": "/Users/you/code/project-a", "title": "Test Review", "sections": [...]}'
 
-# Verify: TUI displays the review data with syntax highlighting
+# Verify: Only the viewer in Terminal 2 updates
 ```
 
 ## What We're NOT Doing
 
 - FR13-FR21 (post-MVP features)
-- MCP server wrapper
+- MCP server wrapper (post-MVP, but architecture supports it)
 - Section filtering by importance
 - External editor integration
 - Git operations
-- File watching or auto-refresh
-- Persistence of reviews
+- Server auto-start from viewer (user starts server manually for MVP)
+- Review history/persistence beyond latest per directory
 - Configuration files (just CLI flags for MVP)
 
 ## Implementation Approach
@@ -78,16 +101,23 @@ curl -X POST http://localhost:8765/review \
 We'll build incrementally using TDD, with each phase producing working, testable software. The testing strategy uses:
 
 1. **Unit tests** for Update function state transitions and View output
-2. **Integration tests** with mocked `Dispatcher` interface for HTTP server testing
+2. **Integration tests** for HTTP server and file watcher
 3. **Table-driven tests** for comprehensive input coverage
 4. **Race detector** (`go test -race ./...`) for concurrency safety
 
 Key architectural decisions:
-- **Dispatcher interface**: Decouples HTTP server from `tea.Program` for testability
+- **Server + Viewer separation**: Server handles HTTP, viewer handles display
+- **File-based communication**: Server writes JSON files, viewers watch with fsnotify
+- **Directory hashing**: `~/.diffguide/reviews/{sha256(abs-path)}.json` for per-directory isolation
 - **Viewport from Phase 3**: Prevents layout breakage with long content
-- **Graceful shutdown**: HTTP server stops cleanly when TUI exits
 
-The phases are ordered to deliver a working end-to-end flow as early as possible (Phase 2), then incrementally add features.
+The phases are ordered to:
+1. ✅ Phase 1: Foundation (TUI skeleton) - COMPLETE
+2. Phase 2: Server mode (HTTP → file writing)
+3. Phase 3: Viewer mode (file watching → TUI display)
+4. Phase 4: Two-pane layout with navigation
+5. Phase 5: Syntax highlighting and diff colors
+6. Phase 6: Scrolling and polish
 
 ---
 
@@ -106,7 +136,7 @@ Set up the Go project structure, create a minimal Bubble Tea TUI that can quit, 
 ```go
 module github.com/mchowning/diffguide
 
-go 1.21
+go 1.24
 
 require (
     github.com/charmbracelet/bubbletea v1.2.4
@@ -151,8 +181,8 @@ type Hunk struct {
 ```go
 package tui
 
-// truncate shortens a string to maxLen, adding "…" if truncated
-func truncate(s string, maxLen int) string {
+// Truncate shortens a string to maxLen, adding "…" if truncated
+func Truncate(s string, maxLen int) string {
     if len(s) <= maxLen {
         return s
     }
@@ -180,11 +210,11 @@ type Model struct {
     selected int
     width    int
     height   int
-    port     string  // Actual bound port for display
+    workDir  string  // Working directory this viewer is watching
 }
 
-func NewModel(port string) Model {
-    return Model{port: port}
+func NewModel(workDir string) Model {
+    return Model{workDir: workDir}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -232,7 +262,9 @@ func (m Model) View() string {
 
 func (m Model) renderEmptyState() string {
     // ASCII art logo and instructions
-    // Include: POST http://localhost:{m.port}/review (actual bound port)
+    // Include: "Watching: {m.workDir}"
+    // Include: "Start server: diffguide server"
+    // Include: "POST http://localhost:8765/review"
     // Include: q: quit | ?: help
 }
 
@@ -281,10 +313,10 @@ func main() {
 - [x] `go test -race ./...` passes (no race conditions)
 - [x] Unit test: Update with 'q' key - execute returned cmd and assert it yields `tea.QuitMsg`
 - [x] Unit test: Update with 'ctrl+c' - execute returned cmd and assert it yields `tea.QuitMsg`
-- [x] Unit test: View() when review is nil contains "localhost" and port
+- [x] Unit test: View() when review is nil contains working directory path
 - [x] Unit test: View() when review is nil contains "q: quit"
-- [x] Unit test: truncate("hello", 3) returns "he…"
-- [x] Unit test: truncate("hi", 10) returns "hi"
+- [x] Unit test: Truncate("hello", 3) returns "he…"
+- [x] Unit test: Truncate("hi", 10) returns "hi"
 
 #### Manual Verification:
 - [ ] Running `./diffguide` displays ASCII art and instructions
@@ -292,98 +324,177 @@ func main() {
 
 ---
 
-## Phase 2: HTTP Server and Data Flow
+## Phase 2: Server Mode
 
 ### Overview
 
-Add an HTTP server running in a goroutine that accepts POST /review requests, parses JSON payloads, and sends them to the TUI via a `Dispatcher` interface. This completes the end-to-end data flow with proper architecture for testability.
+Implement the server mode that accepts HTTP requests and writes review data to per-directory files. The server is a headless process (no TUI) that runs continuously.
 
 ### Changes Required:
 
-#### 1. Message Types
+#### 1. Update Domain Types with WorkingDirectory
 
-**File**: `internal/tui/messages.go`
+**File**: `internal/model/review.go`
 
 ```go
-package tui
+package model
 
-import "github.com/mchowning/diffguide/internal/model"
-
-// ReviewReceivedMsg is sent when the HTTP server receives a review
-type ReviewReceivedMsg struct {
-    Review model.Review
+type Review struct {
+    WorkingDirectory string    `json:"workingDirectory"`
+    Title            string    `json:"title"`
+    Sections         []Section `json:"sections"`
 }
 
-// ErrorMsg is sent when an error occurs
-type ErrorMsg struct {
-    Err error
+// (Section and Hunk unchanged)
+```
+
+#### 2. Review Storage
+
+**File**: `internal/storage/store.go`
+
+```go
+package storage
+
+import (
+    "crypto/sha256"
+    "encoding/hex"
+    "encoding/json"
+    "fmt"
+    "os"
+    "path/filepath"
+
+    "github.com/mchowning/diffguide/internal/model"
+)
+
+// Store handles persisting reviews to disk
+type Store struct {
+    baseDir string
 }
 
-// ClearStatusMsg clears the status bar message
-type ClearStatusMsg struct{}
+// NewStore creates a store with the default base directory (~/.diffguide/reviews)
+func NewStore() (*Store, error) {
+    home, err := os.UserHomeDir()
+    if err != nil {
+        return nil, err
+    }
+    baseDir := filepath.Join(home, ".diffguide", "reviews")
+    if err := os.MkdirAll(baseDir, 0755); err != nil {
+        return nil, err
+    }
+    return &Store{baseDir: baseDir}, nil
+}
 
-// PortBoundMsg is sent when the HTTP server binds to a port
-type PortBoundMsg struct {
-    Port string
+// NewStoreWithDir creates a store with a custom base directory (for testing)
+func NewStoreWithDir(baseDir string) (*Store, error) {
+    if err := os.MkdirAll(baseDir, 0755); err != nil {
+        return nil, err
+    }
+    return &Store{baseDir: baseDir}, nil
+}
+
+// NormalizePath returns a canonical absolute path for consistent hashing.
+// Applies filepath.Abs, filepath.Clean, and filepath.EvalSymlinks to handle
+// trailing slashes, relative paths, symlinks, and case variations on
+// case-insensitive filesystems (macOS, Windows).
+func NormalizePath(dir string) (string, error) {
+    abs, err := filepath.Abs(dir)
+    if err != nil {
+        return "", fmt.Errorf("failed to get absolute path: %w", err)
+    }
+    cleaned := filepath.Clean(abs)
+
+    // EvalSymlinks resolves symlinks AND canonicalizes case on macOS/Windows.
+    // This ensures "/users/foo" and "/Users/Foo" produce the same hash.
+    resolved, err := filepath.EvalSymlinks(cleaned)
+    if err != nil {
+        // If path doesn't exist yet, fall back to cleaned path
+        // (server may receive paths before directories are created)
+        if os.IsNotExist(err) {
+            return cleaned, nil
+        }
+        return "", fmt.Errorf("failed to resolve path: %w", err)
+    }
+    return resolved, nil
+}
+
+// HashDirectory returns the SHA256 hash of a normalized directory path
+func HashDirectory(dir string) string {
+    // Note: caller should normalize path first for consistency
+    hash := sha256.Sum256([]byte(dir))
+    return hex.EncodeToString(hash[:])
+}
+
+// PathForDirectory returns the file path for a given working directory.
+// The directory path is normalized before hashing.
+func (s *Store) PathForDirectory(dir string) (string, error) {
+    normalized, err := NormalizePath(dir)
+    if err != nil {
+        return "", err
+    }
+    return filepath.Join(s.baseDir, HashDirectory(normalized)+".json"), nil
+}
+
+// BaseDir returns the base directory for review files (for watcher setup)
+func (s *Store) BaseDir() string {
+    return s.baseDir
+}
+
+// Write persists a review to disk using atomic write (temp file + rename)
+// to prevent partial reads by file watchers.
+func (s *Store) Write(review model.Review) error {
+    path, err := s.PathForDirectory(review.WorkingDirectory)
+    if err != nil {
+        return err
+    }
+
+    data, err := json.MarshalIndent(review, "", "  ")
+    if err != nil {
+        return err
+    }
+
+    // Atomic write: write to temp file, then rename
+    tempPath := path + ".tmp"
+    if err := os.WriteFile(tempPath, data, 0644); err != nil {
+        return fmt.Errorf("failed to write temp file: %w", err)
+    }
+
+    if err := os.Rename(tempPath, path); err != nil {
+        os.Remove(tempPath) // Clean up temp file on rename failure
+        return fmt.Errorf("failed to rename temp file: %w", err)
+    }
+
+    return nil
+}
+
+// Read loads a review from disk for a given directory
+func (s *Store) Read(dir string) (*model.Review, error) {
+    path, err := s.PathForDirectory(dir)
+    if err != nil {
+        return nil, err
+    }
+    data, err := os.ReadFile(path)
+    if err != nil {
+        return nil, err
+    }
+    var review model.Review
+    if err := json.Unmarshal(data, &review); err != nil {
+        return nil, err
+    }
+    return &review, nil
 }
 ```
 
-#### 2. Dispatcher Interface
+#### 3. HTTP Server (Headless)
 
-**File**: `internal/api/dispatcher.go`
-
-```go
-package api
-
-import tea "github.com/charmbracelet/bubbletea"
-
-// Dispatcher sends messages to the TUI. This interface enables
-// testing the HTTP server without a real tea.Program.
-type Dispatcher interface {
-    Send(msg tea.Msg)
-}
-
-// ProgramDispatcher wraps a tea.Program to implement Dispatcher
-type ProgramDispatcher struct {
-    program *tea.Program
-}
-
-func NewProgramDispatcher(p *tea.Program) *ProgramDispatcher {
-    return &ProgramDispatcher{program: p}
-}
-
-func (d *ProgramDispatcher) Send(msg tea.Msg) {
-    d.program.Send(msg)
-}
-```
-
-#### 3. Update Function - Handle ReviewReceivedMsg
-
-**File**: `internal/tui/update.go`
-
-Add cases for new messages:
+**File**: `internal/server/server.go`
 
 ```go
-case ReviewReceivedMsg:
-    m.review = &msg.Review
-    m.selected = 0
-    return m, nil
-
-case PortBoundMsg:
-    m.port = msg.Port
-    return m, nil
-```
-
-#### 4. HTTP Server with Proper Structure
-
-**File**: `internal/api/server.go`
-
-```go
-package api
+package server
 
 import (
     "context"
     "encoding/json"
+    "errors"
     "fmt"
     "log"
     "net"
@@ -391,22 +502,22 @@ import (
     "time"
 
     "github.com/mchowning/diffguide/internal/model"
-    "github.com/mchowning/diffguide/internal/tui"
+    "github.com/mchowning/diffguide/internal/storage"
 )
 
 type Server struct {
-    dispatcher Dispatcher
-    server     *http.Server
-    listener   net.Listener
-    verbose    bool
+    store    *storage.Store
+    server   *http.Server
+    listener net.Listener
+    verbose  bool
 }
 
-func NewServer(dispatcher Dispatcher, port string, verbose bool) (*Server, error) {
+func New(store *storage.Store, port string, verbose bool) (*Server, error) {
     mux := http.NewServeMux()
 
     s := &Server{
-        dispatcher: dispatcher,
-        verbose:    verbose,
+        store:   store,
+        verbose: verbose,
         server: &http.Server{
             Addr:              "127.0.0.1:" + port,
             Handler:           mux,
@@ -419,7 +530,6 @@ func NewServer(dispatcher Dispatcher, port string, verbose bool) (*Server, error
 
     mux.HandleFunc("/review", s.handleReview)
 
-    // Bind to get actual port (supports port=0 for ephemeral)
     ln, err := net.Listen("tcp", s.server.Addr)
     if err != nil {
         return nil, fmt.Errorf("failed to bind: %w", err)
@@ -429,40 +539,24 @@ func NewServer(dispatcher Dispatcher, port string, verbose bool) (*Server, error
     return s, nil
 }
 
-// Port returns the actual bound port
 func (s *Server) Port() string {
     addr := s.listener.Addr().(*net.TCPAddr)
     return fmt.Sprintf("%d", addr.Port)
 }
 
-func (s *Server) Start() {
-    // Notify TUI of actual bound port
-    s.dispatcher.Send(tui.PortBoundMsg{Port: s.Port()})
-
+func (s *Server) Run() error {
     if s.verbose {
-        log.Printf("HTTP server listening on 127.0.0.1:%s", s.Port())
+        log.Printf("Server listening on http://127.0.0.1:%s", s.Port())
     }
-
-    // Panic recovery to prevent terminal corruption
-    go func() {
-        defer func() {
-            if r := recover(); r != nil {
-                log.Printf("HTTP server panic: %v", r)
-            }
-        }()
-
-        if err := s.server.Serve(s.listener); err != http.ErrServerClosed {
-            log.Printf("HTTP server error: %v", err)
-        }
-    }()
+    return s.server.Serve(s.listener)
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-    if s.verbose {
-        log.Printf("HTTP server shutting down")
-    }
     return s.server.Shutdown(ctx)
 }
+
+// maxRequestBody limits request body size to 10MB to prevent DoS
+const maxRequestBody = 10 * 1024 * 1024
 
 func (s *Server) handleReview(w http.ResponseWriter, r *http.Request) {
     if r.Method != http.MethodPost {
@@ -470,26 +564,97 @@ func (s *Server) handleReview(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Limit request body size to prevent memory exhaustion
+    r.Body = http.MaxBytesReader(w, r.Body, maxRequestBody)
+    defer r.Body.Close()
+
     var review model.Review
     if err := json.NewDecoder(r.Body).Decode(&review); err != nil {
-        if s.verbose {
-            log.Printf("Invalid JSON: %v", err)
+        // Check for oversized body using proper type assertion
+        var maxBytesErr *http.MaxBytesError
+        if errors.As(err, &maxBytesErr) {
+            http.Error(w, "Request body too large (max 10MB)", http.StatusRequestEntityTooLarge)
+            return
         }
-        http.Error(w, err.Error(), http.StatusBadRequest)
-        s.dispatcher.Send(tui.ErrorMsg{Err: fmt.Errorf("invalid JSON: %w", err)})
+        http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+        return
+    }
+
+    if review.WorkingDirectory == "" {
+        http.Error(w, "Missing workingDirectory field", http.StatusBadRequest)
+        return
+    }
+
+    // Normalize the working directory path for consistent hashing
+    normalized, err := storage.NormalizePath(review.WorkingDirectory)
+    if err != nil {
+        http.Error(w, "Invalid workingDirectory: "+err.Error(), http.StatusBadRequest)
+        return
+    }
+    review.WorkingDirectory = normalized
+
+    if err := s.store.Write(review); err != nil {
+        http.Error(w, "Failed to store review: "+err.Error(), http.StatusInternalServerError)
         return
     }
 
     if s.verbose {
-        log.Printf("Received review: %s (%d sections)", review.Title, len(review.Sections))
+        log.Printf("Stored review for %s: %s (%d sections)",
+            review.WorkingDirectory, review.Title, len(review.Sections))
     }
 
-    s.dispatcher.Send(tui.ReviewReceivedMsg{Review: review})
     w.WriteHeader(http.StatusOK)
 }
 ```
 
-#### 5. Updated Entry Point with Graceful Shutdown
+#### 4. Server Command Entry Point
+
+**File**: `cmd/diffguide/server.go`
+
+```go
+package main
+
+import (
+    "context"
+    "log"
+    "os"
+    "os/signal"
+    "syscall"
+    "time"
+
+    "github.com/mchowning/diffguide/internal/server"
+    "github.com/mchowning/diffguide/internal/storage"
+)
+
+func runServer(port string, verbose bool) {
+    store, err := storage.NewStore()
+    if err != nil {
+        log.Fatalf("Failed to create store: %v", err)
+    }
+
+    srv, err := server.New(store, port, verbose)
+    if err != nil {
+        log.Fatalf("Failed to create server: %v", err)
+    }
+
+    // Handle shutdown signals
+    stop := make(chan os.Signal, 1)
+    signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+    go func() {
+        <-stop
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+        srv.Shutdown(ctx)
+    }()
+
+    if err := srv.Run(); err != nil && err != http.ErrServerClosed {
+        log.Fatalf("Server error: %v", err)
+    }
+}
+```
+
+#### 5. Updated Main Entry Point with Subcommands
 
 **File**: `cmd/diffguide/main.go`
 
@@ -497,47 +662,44 @@ func (s *Server) handleReview(w http.ResponseWriter, r *http.Request) {
 package main
 
 import (
-    "context"
     "flag"
+    "fmt"
     "log"
     "os"
-    "time"
 
     tea "github.com/charmbracelet/bubbletea"
-    "github.com/mchowning/diffguide/internal/api"
     "github.com/mchowning/diffguide/internal/tui"
 )
 
 func main() {
-    port := flag.String("port", "8765", "HTTP server port (use 0 for ephemeral)")
-    verbose := flag.Bool("v", false, "Enable verbose logging")
-    flag.Parse()
+    if len(os.Args) > 1 && os.Args[1] == "server" {
+        // Server mode
+        serverCmd := flag.NewFlagSet("server", flag.ExitOnError)
+        port := serverCmd.String("port", "8765", "HTTP server port")
+        verbose := serverCmd.Bool("v", false, "Enable verbose logging")
+        serverCmd.Parse(os.Args[2:])
+        runServer(*port, *verbose)
+        return
+    }
 
-    // Create model with placeholder port (will be updated by PortBoundMsg)
-    m := tui.NewModel(*port)
+    // Viewer mode (default)
+    flag.Parse()
+    runViewer()
+}
+
+func runViewer() {
+    // Get current working directory
+    cwd, err := os.Getwd()
+    if err != nil {
+        log.Fatalf("Failed to get working directory: %v", err)
+    }
+
+    m := tui.NewModel(cwd)
     p := tea.NewProgram(m, tea.WithAltScreen())
 
-    // Create dispatcher and server
-    dispatcher := api.NewProgramDispatcher(p)
-    server, err := api.NewServer(dispatcher, *port, *verbose)
-    if err != nil {
-        log.Fatalf("Failed to create server: %v", err)
-    }
-
-    // Start HTTP server
-    server.Start()
-
-    // Run TUI (blocking)
     if _, err := p.Run(); err != nil {
-        log.Printf("Error: %v", err)
+        fmt.Fprintf(os.Stderr, "Error: %v\n", err)
         os.Exit(1)
-    }
-
-    // Graceful shutdown of HTTP server
-    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancel()
-    if err := server.Shutdown(ctx); err != nil {
-        log.Printf("Shutdown error: %v", err)
     }
 }
 ```
@@ -548,28 +710,413 @@ func main() {
 - [ ] `go build ./...` compiles without errors
 - [ ] `go test ./...` passes all tests
 - [ ] `go test -race ./...` passes (no race conditions)
-- [ ] Unit test: POST /review with valid JSON returns 200 OK (using mock Dispatcher)
-- [ ] Unit test: POST /review with invalid JSON returns 400 Bad Request
+- [ ] Unit test: NormalizePath handles trailing slashes consistently
+- [ ] Unit test: NormalizePath handles relative paths
+- [ ] Unit test: NormalizePath resolves symlinks
+- [ ] Unit test: NormalizePath canonicalizes case on case-insensitive filesystems
+- [ ] Unit test: HashDirectory returns consistent hash for same input
+- [ ] Unit test: HashDirectory returns different hash for different inputs
+- [ ] Unit test: Store.Write creates file at expected path
+- [ ] Unit test: Store.Write uses atomic write (temp file + rename)
+- [ ] Unit test: Store.Read returns written review
+- [ ] Unit test: POST /review with valid JSON returns 200 OK
+- [ ] Unit test: POST /review without workingDirectory returns 400
+- [ ] Unit test: POST /review with invalid JSON returns 400
+- [ ] Unit test: POST /review normalizes workingDirectory path
+- [ ] Unit test: POST /review with oversized body returns 413
 - [ ] Unit test: GET /review returns 405 Method Not Allowed
-- [ ] Unit test: JSON payload parses correctly into Review struct
-- [ ] Unit test: handleReview calls dispatcher.Send with ReviewReceivedMsg
-- [ ] Unit test: handleReview calls dispatcher.Send with ErrorMsg on invalid JSON
-- [ ] Unit test: Update with ReviewReceivedMsg sets m.review
-- [ ] Unit test: Update with ReviewReceivedMsg sets m.selected to 0
-- [ ] Unit test: Update with PortBoundMsg updates m.port
-- [ ] Unit test: Server.Port() returns actual bound port (test with port=0)
-- [ ] Unit test: Server gracefully shuts down when Shutdown() called
+- [ ] Unit test: Review file is created after POST
+- [ ] Unit test: Server gracefully shuts down on SIGTERM
 
 #### Manual Verification:
-- [ ] `curl -X POST localhost:8765/review -d '{"title":"Test"}'` returns 200
-- [ ] TUI updates to show review title after POST
-- [ ] With `-port=0`, empty state shows actual ephemeral port
-- [ ] With `-v`, server logs requests to stderr
-- [ ] Pressing 'q' cleanly exits (no hanging goroutines)
+- [ ] `./diffguide server` starts and listens on port 8765
+- [ ] `./diffguide server -v` logs incoming requests
+- [ ] `curl -X POST localhost:8765/review -d '{"workingDirectory":"/tmp/test","title":"Test"}'` returns 200
+- [ ] File exists at `~/.diffguide/reviews/{hash}.json` after POST
+- [ ] No .tmp files left in reviews directory after POST
+- [ ] Ctrl+C gracefully shuts down server
 
 ---
 
-## Phase 3: Two-Pane Layout with Navigation and Viewport
+## Phase 3: Viewer Mode with File Watching
+
+### Overview
+
+Implement the viewer mode that watches for review file changes using fsnotify. When the server writes a review file for this viewer's working directory, the TUI updates to display it.
+
+### Changes Required:
+
+#### 1. Add fsnotify Dependency
+
+**File**: `go.mod`
+
+```
+require github.com/fsnotify/fsnotify v1.7.0
+```
+
+#### 2. TUI Messages for File Watching
+
+**File**: `internal/tui/messages.go`
+
+```go
+package tui
+
+import "github.com/mchowning/diffguide/internal/model"
+
+// ReviewReceivedMsg is sent when a review file is created/updated
+type ReviewReceivedMsg struct {
+    Review model.Review
+}
+
+// ReviewClearedMsg is sent when the review file is deleted
+type ReviewClearedMsg struct{}
+
+// WatchErrorMsg is sent when file watching fails
+type WatchErrorMsg struct {
+    Err error
+}
+```
+
+#### 3. File Watcher
+
+**File**: `internal/watcher/watcher.go`
+
+```go
+package watcher
+
+import (
+    "encoding/json"
+    "os"
+    "path/filepath"
+
+    "github.com/fsnotify/fsnotify"
+    "github.com/mchowning/diffguide/internal/model"
+    "github.com/mchowning/diffguide/internal/storage"
+)
+
+// Watcher watches for review file changes for a specific directory
+type Watcher struct {
+    workDir    string
+    reviewPath string
+    reviewDir  string
+    fsWatcher  *fsnotify.Watcher
+    Reviews    chan model.Review  // Buffered to prevent deadlock on initial send
+    Cleared    chan struct{}      // Sent when review file is deleted
+    Errors     chan error         // Buffered to prevent deadlock
+    done       chan struct{}
+}
+
+// New creates a watcher for the given working directory.
+// Uses the default storage location (~/.diffguide/reviews).
+func New(workDir string) (*Watcher, error) {
+    store, err := storage.NewStore()
+    if err != nil {
+        return nil, err
+    }
+    return NewWithStore(workDir, store)
+}
+
+// NewWithStore creates a watcher using a custom store (for testing).
+// This enables tests to use t.TempDir() for isolation.
+func NewWithStore(workDir string, store *storage.Store) (*Watcher, error) {
+    // Normalize the working directory for consistent hashing
+    normalized, err := storage.NormalizePath(workDir)
+    if err != nil {
+        return nil, err
+    }
+
+    fsWatcher, err := fsnotify.NewWatcher()
+    if err != nil {
+        return nil, err
+    }
+
+    reviewPath, err := store.PathForDirectory(normalized)
+    if err != nil {
+        fsWatcher.Close()
+        return nil, err
+    }
+    reviewDir := store.BaseDir()
+
+    // Ensure reviews directory exists and watch it
+    if err := os.MkdirAll(reviewDir, 0755); err != nil {
+        fsWatcher.Close()
+        return nil, err
+    }
+    if err := fsWatcher.Add(reviewDir); err != nil {
+        fsWatcher.Close()
+        return nil, err
+    }
+
+    return &Watcher{
+        workDir:    normalized,
+        reviewPath: reviewPath,
+        reviewDir:  reviewDir,
+        fsWatcher:  fsWatcher,
+        Reviews:    make(chan model.Review, 1),  // Buffered to avoid deadlock
+        Cleared:    make(chan struct{}, 1),      // Buffered to avoid deadlock
+        Errors:     make(chan error, 1),         // Buffered to avoid deadlock
+        done:       make(chan struct{}),
+    }, nil
+}
+
+// Start begins watching for file changes.
+// Loads any existing review file asynchronously to avoid blocking.
+func (w *Watcher) Start() {
+    // Load existing review asynchronously to avoid deadlock
+    go func() {
+        if review, err := w.loadReview(); err == nil {
+            select {
+            case w.Reviews <- *review:
+            case <-w.done:
+            }
+        }
+    }()
+
+    go w.watch()
+}
+
+func (w *Watcher) watch() {
+    for {
+        select {
+        case <-w.done:
+            return
+        case event, ok := <-w.fsWatcher.Events:
+            if !ok {
+                return
+            }
+            // Only care about our specific file
+            if event.Name != w.reviewPath {
+                continue
+            }
+
+            // Handle file deletion - transition TUI back to empty state
+            if event.Has(fsnotify.Remove) {
+                select {
+                case w.Cleared <- struct{}{}:
+                case <-w.done:
+                    return
+                }
+                continue
+            }
+
+            // Handle Write, Create, and Rename events (Rename for atomic writes)
+            if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) || event.Has(fsnotify.Rename) {
+                review, err := w.loadReview()
+                if err != nil {
+                    // File might have been deleted between event and read
+                    if os.IsNotExist(err) {
+                        select {
+                        case w.Cleared <- struct{}{}:
+                        case <-w.done:
+                            return
+                        }
+                        continue
+                    }
+                    select {
+                    case w.Errors <- err:
+                    case <-w.done:
+                        return
+                    }
+                    continue
+                }
+                select {
+                case w.Reviews <- *review:
+                case <-w.done:
+                    return
+                }
+            }
+        case err, ok := <-w.fsWatcher.Errors:
+            if !ok {
+                return
+            }
+            select {
+            case w.Errors <- err:
+            case <-w.done:
+                return
+            }
+        }
+    }
+}
+
+func (w *Watcher) loadReview() (*model.Review, error) {
+    data, err := os.ReadFile(w.reviewPath)
+    if err != nil {
+        return nil, err
+    }
+    var review model.Review
+    if err := json.Unmarshal(data, &review); err != nil {
+        return nil, err
+    }
+    return &review, nil
+}
+
+// ReviewPath returns the path being watched (for testing)
+func (w *Watcher) ReviewPath() string {
+    return w.reviewPath
+}
+
+// Close stops the watcher
+func (w *Watcher) Close() error {
+    close(w.done)
+    return w.fsWatcher.Close()
+}
+```
+
+#### 4. Update TUI Model
+
+**File**: `internal/tui/model.go`
+
+Update to store working directory instead of port:
+
+```go
+type Model struct {
+    review   *model.Review
+    selected int
+    width    int
+    height   int
+    workDir  string  // Working directory this viewer is watching
+}
+
+func NewModel(workDir string) Model {
+    return Model{workDir: workDir}
+}
+```
+
+#### 5. Update View for New Empty State
+
+**File**: `internal/tui/view.go`
+
+Update empty state to show working directory info:
+
+```go
+func (m Model) renderEmptyState() string {
+    // ASCII art logo and instructions
+    // Show: "Watching for reviews in: {workDir}"
+    // Show: "Start server: diffguide server"
+    // Show: "Send review: POST http://localhost:8765/review"
+}
+```
+
+#### 6. Update Function - Handle File Watcher Messages
+
+**File**: `internal/tui/update.go`
+
+```go
+case ReviewReceivedMsg:
+    m.review = &msg.Review
+    m.selected = 0
+    return m, nil
+
+case ReviewClearedMsg:
+    // Review file was deleted - return to empty state
+    m.review = nil
+    m.selected = 0
+    return m, nil
+
+case WatchErrorMsg:
+    // Could show in status bar; for MVP just log
+    return m, nil
+```
+
+#### 7. Bubble Tea Command for File Watching
+
+**File**: `internal/tui/commands.go`
+
+```go
+package tui
+
+import (
+    tea "github.com/charmbracelet/bubbletea"
+    "github.com/mchowning/diffguide/internal/watcher"
+)
+
+// WatchForReviews returns a command that listens for review updates
+func WatchForReviews(w *watcher.Watcher) tea.Cmd {
+    return func() tea.Msg {
+        select {
+        case review := <-w.Reviews:
+            return ReviewReceivedMsg{Review: review}
+        case err := <-w.Errors:
+            return WatchErrorMsg{Err: err}
+        }
+    }
+}
+```
+
+#### 8. Update Main Entry Point
+
+**File**: `cmd/diffguide/main.go`
+
+```go
+func runViewer() {
+    cwd, err := os.Getwd()
+    if err != nil {
+        log.Fatalf("Failed to get working directory: %v", err)
+    }
+
+    w, err := watcher.New(cwd)
+    if err != nil {
+        log.Fatalf("Failed to create watcher: %v", err)
+    }
+    defer w.Close()
+
+    w.Start()
+
+    m := tui.NewModel(cwd)
+    p := tea.NewProgram(m, tea.WithAltScreen())
+
+    // Continuously pump watcher events to TUI
+    go func() {
+        for {
+            select {
+            case review := <-w.Reviews:
+                p.Send(tui.ReviewReceivedMsg{Review: review})
+            case <-w.Cleared:
+                p.Send(tui.ReviewClearedMsg{})
+            case err := <-w.Errors:
+                p.Send(tui.WatchErrorMsg{Err: err})
+            }
+        }
+    }()
+
+    if _, err := p.Run(); err != nil {
+        fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+        os.Exit(1)
+    }
+}
+```
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] `go build ./...` compiles without errors
+- [ ] `go test ./...` passes all tests
+- [ ] `go test -race ./...` passes (no race conditions)
+- [ ] Unit test: Watcher.New creates watcher for given directory
+- [ ] Unit test: Watcher.NewWithStore accepts custom store for test isolation
+- [ ] Unit test: Watcher normalizes working directory path
+- [ ] Unit test: Watcher watches correct file path based on directory hash
+- [ ] Unit test: Watcher sends ReviewReceivedMsg when file is created
+- [ ] Unit test: Watcher sends ReviewReceivedMsg when file is modified
+- [ ] Unit test: Watcher sends ReviewReceivedMsg on file rename (atomic writes)
+- [ ] Unit test: Watcher sends on Cleared channel when file is deleted
+- [ ] Unit test: Watcher ignores changes to other files in reviews directory
+- [ ] Unit test: Watcher channels are buffered (no deadlock on initial send)
+- [ ] Unit test: Update with ReviewReceivedMsg sets m.review
+- [ ] Unit test: Update with ReviewReceivedMsg sets m.selected to 0
+- [ ] Unit test: Update with ReviewClearedMsg sets m.review to nil
+- [ ] Unit test: View in empty state shows working directory
+
+#### Manual Verification:
+- [ ] Start viewer: `./diffguide` shows empty state with working directory
+- [ ] Start server in another terminal: `./diffguide server`
+- [ ] Send review via curl - viewer updates immediately
+- [ ] Send another review - viewer updates with new content
+- [ ] Viewer in different directory doesn't see updates for other directories
+
+---
+
+## Phase 4: Two-Pane Layout with Navigation and Viewport
 
 ### Overview
 
@@ -595,13 +1142,13 @@ type Model struct {
     selected  int
     width     int
     height    int
-    port      string
+    workDir   string
     viewport  viewport.Model
     ready     bool  // viewport initialized after first WindowSizeMsg
 }
 
-func NewModel(port string) Model {
-    return Model{port: port}
+func NewModel(workDir string) Model {
+    return Model{workDir: workDir}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -694,10 +1241,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         m.viewport.GotoTop()
         m.updateViewportContent()
         return m, nil
-
-    case PortBoundMsg:
-        m.port = msg.Port
-        return m, nil
     }
     return m, nil
 }
@@ -749,7 +1292,7 @@ func (m Model) renderSectionList(width, height int) string {
             prefix = selectedPrefix
         }
         // Truncate narrative for display (account for prefix)
-        text := prefix + truncate(section.Narrative, width-len(prefix)-4)
+        text := prefix + Truncate(section.Narrative, width-len(prefix)-4)
         items = append(items, style.Render(text))
     }
     // Join and apply border
@@ -809,7 +1352,7 @@ func (m Model) renderDiffContent(section model.Section) string {
 
 ---
 
-## Phase 4: Syntax Highlighting and Diff Colors
+## Phase 5: Syntax Highlighting and Diff Colors
 
 ### Overview
 
@@ -964,7 +1507,7 @@ func (m Model) renderDiffContent(section model.Section) string {
 
 ---
 
-## Phase 5: Scrolling and Polish
+## Phase 6: Scrolling and Polish
 
 ### Overview
 
@@ -984,7 +1527,7 @@ type Model struct {
     selected  int
     width     int
     height    int
-    port      string
+    workDir   string
     viewport  viewport.Model
     ready     bool
     showHelp  bool
@@ -1126,7 +1669,7 @@ HTTP API:
 Located in `*_test.go` files alongside source:
 
 1. **Helper tests** (`internal/tui/helpers_test.go`):
-   - truncate function behavior
+   - Truncate function behavior
 
 2. **Model tests** (`internal/tui/model_test.go`):
    - Initial state values
@@ -1134,13 +1677,13 @@ Located in `*_test.go` files alongside source:
 
 3. **Update tests** (`internal/tui/update_test.go`):
    - Key handling (q, j, k, J, K, ?, arrows)
-   - Message handling (ReviewReceivedMsg, ErrorMsg, WindowSizeMsg, PortBoundMsg, ClearStatusMsg)
+   - Message handling (ReviewReceivedMsg, WatchErrorMsg, WindowSizeMsg, ClearStatusMsg)
    - Navigation bounds checking
    - Viewport reset on navigation
    - **Test pattern for quit**: Execute returned cmd and assert `tea.QuitMsg`
 
 4. **View tests** (`internal/tui/view_test.go`):
-   - Empty state contains expected text and port
+   - Empty state contains expected text and working directory
    - Review state shows title, sections, hunks
    - Selected section has "› " prefix
    - Help overlay visible when toggled
@@ -1152,56 +1695,51 @@ Located in `*_test.go` files alongside source:
    - Diff line colorization by prefix
    - Full diff colorization
 
-6. **API tests** (`internal/api/server_test.go`):
-   - HTTP method handling
-   - JSON parsing
-   - Response codes
-   - Mock Dispatcher receives correct messages
-   - Graceful shutdown
+6. **Storage tests** (`internal/storage/store_test.go`):
+   - HashDirectory consistency
+   - PathForDirectory correctness
+   - Write creates file at expected path
+   - Read returns written review
+   - Round-trip (Write then Read)
 
-### Testing the Dispatcher Interface
+7. **Server tests** (`internal/server/server_test.go`):
+   - HTTP method handling
+   - JSON parsing and validation
+   - workingDirectory required
+   - Response codes
+   - File created after POST
+
+8. **Watcher tests** (`internal/watcher/watcher_test.go`):
+   - Watches correct file based on directory hash
+   - Sends review when file created
+   - Sends review when file modified
+   - Ignores other files in reviews directory
+
+### Testing Storage
 
 ```go
-// MockDispatcher for testing
-type MockDispatcher struct {
-    messages []tea.Msg
-    mu       sync.Mutex
-}
+func TestStore_RoundTrip(t *testing.T) {
+    dir := t.TempDir()
+    store, _ := storage.NewStoreWithDir(dir)
 
-func (m *MockDispatcher) Send(msg tea.Msg) {
-    m.mu.Lock()
-    defer m.mu.Unlock()
-    m.messages = append(m.messages, msg)
-}
-
-func (m *MockDispatcher) Messages() []tea.Msg {
-    m.mu.Lock()
-    defer m.mu.Unlock()
-    return m.messages
-}
-
-// Example test
-func TestHandleReview_ValidJSON(t *testing.T) {
-    mock := &MockDispatcher{}
-    server, _ := api.NewServer(mock, "0", false)
-
-    req := httptest.NewRequest("POST", "/review",
-        strings.NewReader(`{"title":"Test"}`))
-    w := httptest.NewRecorder()
-
-    server.handleReview(w, req)
-
-    if w.Code != http.StatusOK {
-        t.Errorf("expected 200, got %d", w.Code)
+    review := model.Review{
+        WorkingDirectory: "/test/project",
+        Title:            "Test Review",
+        Sections:         []model.Section{{ID: "1", Narrative: "Test"}},
     }
 
-    msgs := mock.Messages()
-    if len(msgs) != 1 {
-        t.Fatalf("expected 1 message, got %d", len(msgs))
+    err := store.Write(review)
+    if err != nil {
+        t.Fatalf("Write failed: %v", err)
     }
 
-    if _, ok := msgs[0].(tui.ReviewReceivedMsg); !ok {
-        t.Error("expected ReviewReceivedMsg")
+    loaded, err := store.Read("/test/project")
+    if err != nil {
+        t.Fatalf("Read failed: %v", err)
+    }
+
+    if loaded.Title != review.Title {
+        t.Errorf("Title mismatch: got %q, want %q", loaded.Title, review.Title)
     }
 }
 ```
@@ -1210,7 +1748,7 @@ func TestHandleReview_ValidJSON(t *testing.T) {
 
 ```go
 func TestUpdate_QuitKey(t *testing.T) {
-    m := tui.NewModel("8765")
+    m := tui.NewModel("/test/project")
     msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")}
 
     _, cmd := m.Update(msg)
@@ -1290,30 +1828,37 @@ If performance issues arise with large reviews (100 sections, 500 hunks per NFR2
 diffguide/
 ├── cmd/
 │   └── diffguide/
-│       └── main.go
+│       ├── main.go         # Entry point with subcommand routing
+│       └── server.go       # Server mode implementation
 ├── internal/
-│   ├── api/
-│   │   ├── dispatcher.go
-│   │   ├── server.go
-│   │   └── server_test.go
 │   ├── highlight/
 │   │   ├── diff.go
 │   │   ├── diff_test.go
 │   │   ├── syntax.go
 │   │   └── syntax_test.go
 │   ├── model/
-│   │   └── review.go
-│   └── tui/
-│       ├── helpers.go
-│       ├── helpers_test.go
-│       ├── messages.go
-│       ├── model.go
-│       ├── model_test.go
-│       ├── styles.go
-│       ├── update.go
-│       ├── update_test.go
-│       ├── view.go
-│       └── view_test.go
+│   │   └── review.go       # Domain types (Review, Section, Hunk)
+│   ├── server/
+│   │   ├── server.go       # HTTP server for server mode
+│   │   └── server_test.go
+│   ├── storage/
+│   │   ├── store.go        # File-based review storage
+│   │   └── store_test.go
+│   ├── tui/
+│   │   ├── commands.go     # Bubble Tea commands
+│   │   ├── helpers.go
+│   │   ├── helpers_test.go
+│   │   ├── messages.go     # Message types
+│   │   ├── model.go
+│   │   ├── model_test.go
+│   │   ├── styles.go
+│   │   ├── update.go
+│   │   ├── update_test.go
+│   │   ├── view.go
+│   │   └── view_test.go
+│   └── watcher/
+│       ├── watcher.go      # File watcher for viewer mode
+│       └── watcher_test.go
 ├── go.mod
 ├── go.sum
 ├── prd.md

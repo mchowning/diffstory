@@ -4,9 +4,9 @@ git_commit: 4b1986eccbdbd317315b62404a0444e9ece6abde
 branch: main
 repository: diffguide
 topic: "Diffguide Implementation Technologies Research"
-tags: [research, bubble-tea, lipgloss, chroma, lazygit, tui, go]
+tags: [research, bubble-tea, lipgloss, chroma, lazygit, tui, go, server-viewer, architecture]
 last_updated: 2025-12-18
-last_updated_note: "All open questions resolved"
+last_updated_note: "Added server+viewer architecture decision"
 ---
 
 # Research: Diffguide Implementation Technologies
@@ -387,6 +387,83 @@ diffguide/
 - Lazygit config: [Config.md](https://github.com/jesseduffield/lazygit/blob/master/docs/Config.md)
 
 ## Decisions Made
+
+### 0. Application Architecture: Server + Viewer Model
+
+**Decision**: Use a central server process with multiple lightweight viewer processes instead of a single HTTP server per instance.
+
+**Problem**: The original PRD specified a single HTTP server on a fixed port. This prevents running multiple instances across different projects simultaneously - a key workflow for developers who have multiple terminal tabs open with different projects (similar to running lazygit in multiple tabs).
+
+**Architecture**:
+
+```
+┌─────────────────┐      POST /review        ┌──────────────────────┐
+│   Claude Code   │ ──────────────────────── │   diffguide server   │
+│  (MCP client)   │   {dir: "/project/a"}    │   (single instance)  │
+└─────────────────┘                          └──────────┬───────────┘
+                                                        │
+                                         Notifies viewers by directory
+                                                        │
+                    ┌───────────────────────────────────┼───────────────────────────────────┐
+                    │                                   │                                   │
+                    ▼                                   ▼                                   ▼
+          ┌─────────────────┐                ┌─────────────────┐                ┌─────────────────┐
+          │ diffguide view  │                │ diffguide view  │                │ diffguide view  │
+          │  (project A)    │                │  (project B)    │                │  (project C)    │
+          │  Terminal Tab 1 │                │  Terminal Tab 2 │                │  Terminal Tab 3 │
+          └─────────────────┘                └─────────────────┘                └─────────────────┘
+```
+
+**Components**:
+
+1. **Server mode** (`diffguide server`):
+   - Single HTTP endpoint on port 8765
+   - MCP-wrappable for Claude Code integration
+   - Receives reviews tagged with `workingDirectory`
+   - Stores latest review per directory in memory
+   - Notifies connected viewers via file-based notification
+
+2. **Viewer mode** (`diffguide` or `diffguide view`):
+   - Runs in each project terminal tab
+   - Watches for updates to its working directory
+   - Displays only reviews for `$PWD`
+   - Lightweight - just rendering, no HTTP server
+
+**Communication between server and viewers**: File-based notification
+
+- Server writes to `~/.diffguide/reviews/{dir-hash}.json`
+- Viewers watch their corresponding file using `fsnotify`
+- Simple, reliable, no WebSocket complexity
+
+**Rationale**:
+- Matches lazygit workflow (one instance per terminal tab)
+- Single HTTP endpoint enables MCP wrapper
+- Clean separation of concerns (server handles HTTP/storage, viewers handle display)
+- Per-directory isolation without port conflicts
+- Viewers can start before server (file appears when server writes)
+- Resilient - viewers can reconnect, server can restart
+
+**API Change**:
+
+The HTTP payload now requires `workingDirectory`:
+
+```json
+{
+  "workingDirectory": "/Users/matt/code/project-a",
+  "title": "Add authentication",
+  "sections": [...]
+}
+```
+
+**Alternatives considered**:
+
+1. **HTTP with ephemeral ports**: Each instance gets random port, writes to file for discovery. Rejected: extra indirection (file to discover port, HTTP to send data).
+
+2. **Unix domain sockets**: HTTP over per-directory socket files. Rejected: Windows compatibility issues, socket cleanup on crash.
+
+3. **WebSocket for server→viewer**: Real-time push. Rejected: adds complexity; file watching is equally fast and simpler.
+
+4. **Tabbed single app**: One process with internal tabs per directory. Rejected: different UX from lazygit model.
 
 ### 1. Diff Format Within Hunks: Raw Unified Diff
 
