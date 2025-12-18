@@ -17,10 +17,17 @@ Implement the minimum viable product for diffguide - a TUI application that rece
 
 ## Current State Analysis
 
-**What exists now:**
+**What exists now (after Phase 1):**
 - PRD document defining requirements
 - Research document with technology decisions
-- Empty project directory
+- Nix flake for reproducible dev environment
+- Go module with Bubble Tea, Lipgloss, Chroma dependencies
+- Domain types: Review, Section, Hunk
+- TUI model with Init/Update/View implementing tea.Model
+- Empty state view with ASCII art and instructions
+- Quit handling (q, ctrl+c)
+- Entry point (cmd/diffguide/main.go)
+- Tests for helpers, update, and view
 
 **Key decisions from research:**
 - Bubble Tea for TUI framework
@@ -84,7 +91,7 @@ The phases are ordered to deliver a working end-to-end flow as early as possible
 
 ---
 
-## Phase 1: Project Foundation
+## Phase 1: Project Foundation ✓ COMPLETE
 
 ### Overview
 
@@ -269,15 +276,15 @@ func main() {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `go build ./...` compiles without errors
-- [ ] `go test ./...` passes all tests
-- [ ] `go test -race ./...` passes (no race conditions)
-- [ ] Unit test: Update with 'q' key - execute returned cmd and assert it yields `tea.QuitMsg`
-- [ ] Unit test: Update with 'ctrl+c' - execute returned cmd and assert it yields `tea.QuitMsg`
-- [ ] Unit test: View() when review is nil contains "localhost" and port
-- [ ] Unit test: View() when review is nil contains "q: quit"
-- [ ] Unit test: truncate("hello", 3) returns "he…"
-- [ ] Unit test: truncate("hi", 10) returns "hi"
+- [x] `go build ./...` compiles without errors
+- [x] `go test ./...` passes all tests
+- [x] `go test -race ./...` passes (no race conditions)
+- [x] Unit test: Update with 'q' key - execute returned cmd and assert it yields `tea.QuitMsg`
+- [x] Unit test: Update with 'ctrl+c' - execute returned cmd and assert it yields `tea.QuitMsg`
+- [x] Unit test: View() when review is nil contains "localhost" and port
+- [x] Unit test: View() when review is nil contains "q: quit"
+- [x] Unit test: truncate("hello", 3) returns "he…"
+- [x] Unit test: truncate("hi", 10) returns "hi"
 
 #### Manual Verification:
 - [ ] Running `./diffguide` displays ASCII art and instructions
