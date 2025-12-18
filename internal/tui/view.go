@@ -15,15 +15,11 @@ func (m Model) renderEmptyState() string {
     ║                                           ║
     ╚═══════════════════════════════════════════╝
 
-    Waiting for review data...
+    Watching for reviews in:
+    ` + m.workDir + `
 
-    Send a POST request to:
-    http://localhost:` + m.port + `/review
-
-    Example:
-    curl -X POST http://localhost:` + m.port + `/review \
-      -H "Content-Type: application/json" \
-      -d '{"title": "My Review", "sections": [...]}'
+    Start server: diffguide server
+    Send review:  POST http://localhost:8765/review
 
     q: quit | ?: help
 `

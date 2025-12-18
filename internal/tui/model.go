@@ -10,11 +10,11 @@ type Model struct {
 	selected int
 	width    int
 	height   int
-	port     string
+	workDir  string
 }
 
-func NewModel(port string) Model {
-	return Model{port: port}
+func NewModel(workDir string) Model {
+	return Model{workDir: workDir}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -29,6 +29,6 @@ func (m Model) Height() int {
 	return m.height
 }
 
-func (m Model) Port() string {
-	return m.port
+func (m Model) WorkDir() string {
+	return m.workDir
 }

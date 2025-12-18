@@ -1,8 +1,9 @@
 package model
 
 type Review struct {
-	Title    string    `json:"title"`
-	Sections []Section `json:"sections"`
+	WorkingDirectory string    `json:"workingDirectory"`
+	Title            string    `json:"title"`
+	Sections         []Section `json:"sections"`
 }
 
 type Section struct {

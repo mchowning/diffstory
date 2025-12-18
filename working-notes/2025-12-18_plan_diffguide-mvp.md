@@ -7,7 +7,7 @@ topic: "Diffguide MVP Implementation"
 tags: [plans, tui, bubble-tea, go, mvp, server-viewer]
 status: in_progress
 last_updated: 2025-12-18
-last_updated_note: "Updated to server+viewer architecture"
+last_updated_note: "Phase 2 (Server Mode) complete"
 ---
 
 # Diffguide MVP Implementation Plan
@@ -24,17 +24,20 @@ The MVP covers FR1-FR12 from the PRD, enabling developers to view AI-generated n
 
 ## Current State Analysis
 
-**What exists now (after Phase 1):**
+**What exists now (after Phase 2):**
 - PRD document defining requirements
 - Research document with technology decisions
 - Nix flake for reproducible dev environment
 - Go module with Bubble Tea, Lipgloss, Chroma dependencies
-- Domain types: Review, Section, Hunk
+- Domain types: Review (with WorkingDirectory), Section, Hunk
 - TUI model with Init/Update/View implementing tea.Model
-- Empty state view with ASCII art and instructions
+- Empty state view with ASCII art and instructions (shows working directory)
 - Quit handling (q, ctrl+c)
-- Entry point (cmd/diffguide/main.go)
-- Tests for helpers, update, and view
+- Entry point with subcommand routing (cmd/diffguide/main.go)
+- Server mode (cmd/diffguide/server.go)
+- Storage package: NormalizePath, HashDirectory, Store with atomic Write/Read
+- Server package: HTTP server with POST /review endpoint, validation, body limits
+- Tests for helpers, update, view, storage, and server
 
 **Key decisions from research:**
 - Bubble Tea for TUI framework
@@ -113,7 +116,7 @@ Key architectural decisions:
 
 The phases are ordered to:
 1. ✅ Phase 1: Foundation (TUI skeleton) - COMPLETE
-2. Phase 2: Server mode (HTTP → file writing)
+2. ✅ Phase 2: Server mode (HTTP → file writing) - COMPLETE
 3. Phase 3: Viewer mode (file watching → TUI display)
 4. Phase 4: Two-pane layout with navigation
 5. Phase 5: Syntax highlighting and diff colors
@@ -319,12 +322,12 @@ func main() {
 - [x] Unit test: Truncate("hi", 10) returns "hi"
 
 #### Manual Verification:
-- [ ] Running `./diffguide` displays ASCII art and instructions
-- [ ] Pressing 'q' exits the application cleanly
+- [x] Running `./diffguide` displays ASCII art and instructions
+- [x] Pressing 'q' exits the application cleanly
 
 ---
 
-## Phase 2: Server Mode
+## Phase 2: Server Mode ✓ COMPLETE
 
 ### Overview
 
@@ -707,34 +710,34 @@ func runViewer() {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `go build ./...` compiles without errors
-- [ ] `go test ./...` passes all tests
-- [ ] `go test -race ./...` passes (no race conditions)
-- [ ] Unit test: NormalizePath handles trailing slashes consistently
-- [ ] Unit test: NormalizePath handles relative paths
-- [ ] Unit test: NormalizePath resolves symlinks
-- [ ] Unit test: NormalizePath canonicalizes case on case-insensitive filesystems
-- [ ] Unit test: HashDirectory returns consistent hash for same input
-- [ ] Unit test: HashDirectory returns different hash for different inputs
-- [ ] Unit test: Store.Write creates file at expected path
-- [ ] Unit test: Store.Write uses atomic write (temp file + rename)
-- [ ] Unit test: Store.Read returns written review
-- [ ] Unit test: POST /review with valid JSON returns 200 OK
-- [ ] Unit test: POST /review without workingDirectory returns 400
-- [ ] Unit test: POST /review with invalid JSON returns 400
-- [ ] Unit test: POST /review normalizes workingDirectory path
-- [ ] Unit test: POST /review with oversized body returns 413
-- [ ] Unit test: GET /review returns 405 Method Not Allowed
-- [ ] Unit test: Review file is created after POST
-- [ ] Unit test: Server gracefully shuts down on SIGTERM
+- [x] `go build ./...` compiles without errors
+- [x] `go test ./...` passes all tests
+- [x] `go test -race ./...` passes (no race conditions)
+- [x] Unit test: NormalizePath handles trailing slashes consistently
+- [x] Unit test: NormalizePath handles relative paths
+- [x] Unit test: NormalizePath resolves symlinks
+- [x] Unit test: NormalizePath canonicalizes case on case-insensitive filesystems
+- [x] Unit test: HashDirectory returns consistent hash for same input
+- [x] Unit test: HashDirectory returns different hash for different inputs
+- [x] Unit test: Store.Write creates file at expected path
+- [x] Unit test: Store.Write uses atomic write (temp file + rename)
+- [x] Unit test: Store.Read returns written review
+- [x] Unit test: POST /review with valid JSON returns 200 OK
+- [x] Unit test: POST /review without workingDirectory returns 400
+- [x] Unit test: POST /review with invalid JSON returns 400
+- [x] Unit test: POST /review normalizes workingDirectory path
+- [x] Unit test: POST /review with oversized body returns 413
+- [x] Unit test: GET /review returns 405 Method Not Allowed
+- [x] Unit test: Review file is created after POST
+- [x] Unit test: Server gracefully shuts down on SIGTERM
 
 #### Manual Verification:
-- [ ] `./diffguide server` starts and listens on port 8765
-- [ ] `./diffguide server -v` logs incoming requests
-- [ ] `curl -X POST localhost:8765/review -d '{"workingDirectory":"/tmp/test","title":"Test"}'` returns 200
-- [ ] File exists at `~/.diffguide/reviews/{hash}.json` after POST
-- [ ] No .tmp files left in reviews directory after POST
-- [ ] Ctrl+C gracefully shuts down server
+- [x] `./diffguide server` starts and listens on port 8765
+- [x] `./diffguide server -v` logs incoming requests
+- [x] `curl -X POST localhost:8765/review -d '{"workingDirectory":"/tmp/test","title":"Test"}'` returns 200
+- [x] File exists at `~/.diffguide/reviews/{hash}.json` after POST
+- [x] No .tmp files left in reviews directory after POST
+- [x] Ctrl+C gracefully shuts down server
 
 ---
 

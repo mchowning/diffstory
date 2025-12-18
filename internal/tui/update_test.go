@@ -8,7 +8,7 @@ import (
 )
 
 func TestUpdate_QuitWithQKey(t *testing.T) {
-	m := tui.NewModel("8765")
+	m := tui.NewModel("/test/project")
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")}
 
 	_, cmd := m.Update(msg)
@@ -24,7 +24,7 @@ func TestUpdate_QuitWithQKey(t *testing.T) {
 }
 
 func TestUpdate_QuitWithCtrlC(t *testing.T) {
-	m := tui.NewModel("8765")
+	m := tui.NewModel("/test/project")
 	msg := tea.KeyMsg{Type: tea.KeyCtrlC}
 
 	_, cmd := m.Update(msg)
@@ -40,7 +40,7 @@ func TestUpdate_QuitWithCtrlC(t *testing.T) {
 }
 
 func TestUpdate_WindowSizeMsg(t *testing.T) {
-	m := tui.NewModel("8765")
+	m := tui.NewModel("/test/project")
 	msg := tea.WindowSizeMsg{Width: 100, Height: 50}
 
 	updated, _ := m.Update(msg)
