@@ -11,3 +11,11 @@ nix develop -c go build ./...
 nix develop -c go test ./...
 nix develop -c go mod tidy
 ```
+
+## Installing
+
+Build and install to `~/dotfiles/bin/`:
+
+```bash
+nix develop -c go build -o ~/dotfiles/bin/diffguide ./cmd/diffguide/
+```
