@@ -11,22 +11,23 @@ import (
 	"time"
 
 	"github.com/mchowning/diffguide/internal/model"
+	"github.com/mchowning/diffguide/internal/review"
 	"github.com/mchowning/diffguide/internal/storage"
 )
 
 type Server struct {
-	store    *storage.Store
-	server   *http.Server
-	listener net.Listener
-	verbose  bool
+	reviewService *review.Service
+	server        *http.Server
+	listener      net.Listener
+	verbose       bool
 }
 
 func New(store *storage.Store, port string, verbose bool) (*Server, error) {
 	mux := http.NewServeMux()
 
 	s := &Server{
-		store:   store,
-		verbose: verbose,
+		reviewService: review.NewService(store),
+		verbose:       verbose,
 		server: &http.Server{
 			Addr:              "127.0.0.1:" + port,
 			Handler:           mux,
@@ -77,8 +78,8 @@ func (s *Server) handleReview(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBody)
 	defer r.Body.Close()
 
-	var review model.Review
-	if err := json.NewDecoder(r.Body).Decode(&review); err != nil {
+	var reviewData model.Review
+	if err := json.NewDecoder(r.Body).Decode(&reviewData); err != nil {
 		// Check for oversized body using proper type assertion
 		var maxBytesErr *http.MaxBytesError
 		if errors.As(err, &maxBytesErr) {
@@ -89,27 +90,24 @@ func (s *Server) handleReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if review.WorkingDirectory == "" {
-		http.Error(w, "Missing workingDirectory field", http.StatusBadRequest)
-		return
-	}
-
-	// Normalize the working directory path for consistent hashing
-	normalized, err := storage.NormalizePath(review.WorkingDirectory)
+	_, err := s.reviewService.Submit(r.Context(), reviewData)
 	if err != nil {
-		http.Error(w, "Invalid workingDirectory: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	review.WorkingDirectory = normalized
-
-	if err := s.store.Write(review); err != nil {
+		if errors.Is(err, review.ErrMissingWorkingDirectory) {
+			http.Error(w, "Missing workingDirectory field", http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, review.ErrInvalidWorkingDirectory) {
+			http.Error(w, "Invalid workingDirectory: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		// Storage errors
 		http.Error(w, "Failed to store review: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if s.verbose {
 		log.Printf("Stored review for %s: %s (%d sections)",
-			review.WorkingDirectory, review.Title, len(review.Sections))
+			reviewData.WorkingDirectory, reviewData.Title, len(reviewData.Sections))
 	}
 
 	w.WriteHeader(http.StatusOK)

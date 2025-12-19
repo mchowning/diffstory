@@ -1,0 +1,185 @@
+package review_test
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/mchowning/diffguide/internal/model"
+	"github.com/mchowning/diffguide/internal/review"
+	"github.com/mchowning/diffguide/internal/storage"
+)
+
+func setupTestService(t *testing.T) (*review.Service, *storage.Store) {
+	t.Helper()
+	baseDir := t.TempDir()
+	store, err := storage.NewStoreWithDir(baseDir)
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	svc := review.NewService(store)
+	return svc, store
+}
+
+func TestService_SubmitWithValidReview(t *testing.T) {
+	svc, store := setupTestService(t)
+	ctx := context.Background()
+
+	input := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+	}
+
+	result, err := svc.Submit(ctx, input)
+	if err != nil {
+		t.Fatalf("Submit failed: %v", err)
+	}
+
+	if result.FilePath == "" {
+		t.Error("expected FilePath to be set")
+	}
+
+	// Verify stored
+	stored, err := store.Read("/test/project")
+	if err != nil {
+		t.Fatalf("Read failed: %v", err)
+	}
+	if stored.Title != input.Title {
+		t.Errorf("Title = %q, want %q", stored.Title, input.Title)
+	}
+}
+
+func TestService_SubmitMissingWorkingDirectory(t *testing.T) {
+	svc, _ := setupTestService(t)
+	ctx := context.Background()
+
+	input := model.Review{
+		Title: "Test Review",
+		// WorkingDirectory intentionally omitted
+	}
+
+	_, err := svc.Submit(ctx, input)
+	if !errors.Is(err, review.ErrMissingWorkingDirectory) {
+		t.Errorf("expected ErrMissingWorkingDirectory, got %v", err)
+	}
+}
+
+func TestService_SubmitInvalidWorkingDirectory(t *testing.T) {
+	svc, _ := setupTestService(t)
+	ctx := context.Background()
+
+	input := model.Review{
+		WorkingDirectory: "\x00invalid", // null byte is invalid in paths
+		Title:            "Test Review",
+	}
+
+	_, err := svc.Submit(ctx, input)
+	if !errors.Is(err, review.ErrInvalidWorkingDirectory) {
+		t.Errorf("expected ErrInvalidWorkingDirectory, got %v", err)
+	}
+}
+
+func TestService_SubmitNormalizesPath(t *testing.T) {
+	svc, store := setupTestService(t)
+	ctx := context.Background()
+
+	// Submit with trailing slash
+	input := model.Review{
+		WorkingDirectory: "/test/project/",
+		Title:            "Test Review",
+	}
+
+	_, err := svc.Submit(ctx, input)
+	if err != nil {
+		t.Fatalf("Submit failed: %v", err)
+	}
+
+	// Should be readable without trailing slash (normalized)
+	stored, err := store.Read("/test/project")
+	if err != nil {
+		t.Fatalf("Read failed: %v", err)
+	}
+	if stored.Title != input.Title {
+		t.Errorf("Title = %q, want %q", stored.Title, input.Title)
+	}
+}
+
+func TestService_SubmitPreservesAllFields(t *testing.T) {
+	svc, store := setupTestService(t)
+	ctx := context.Background()
+
+	input := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Full Review",
+		Sections: []model.Section{
+			{
+				ID:         "section-1",
+				Narrative:  "This is the first section",
+				Importance: "high",
+				Hunks: []model.Hunk{
+					{
+						File:      "main.go",
+						StartLine: 10,
+						Diff:      "@@ -10,3 +10,5 @@\n func main() {\n+    fmt.Println(\"hello\")\n }",
+					},
+				},
+			},
+			{
+				ID:         "section-2",
+				Narrative:  "Second section",
+				Importance: "medium",
+				Hunks:      []model.Hunk{},
+			},
+		},
+	}
+
+	_, err := svc.Submit(ctx, input)
+	if err != nil {
+		t.Fatalf("Submit failed: %v", err)
+	}
+
+	stored, err := store.Read("/test/project")
+	if err != nil {
+		t.Fatalf("Read failed: %v", err)
+	}
+
+	if stored.Title != input.Title {
+		t.Errorf("Title = %q, want %q", stored.Title, input.Title)
+	}
+
+	if len(stored.Sections) != 2 {
+		t.Fatalf("Sections count = %d, want 2", len(stored.Sections))
+	}
+
+	// Check first section
+	s1 := stored.Sections[0]
+	if s1.ID != "section-1" {
+		t.Errorf("Section[0].ID = %q, want %q", s1.ID, "section-1")
+	}
+	if s1.Narrative != "This is the first section" {
+		t.Errorf("Section[0].Narrative = %q, want %q", s1.Narrative, "This is the first section")
+	}
+	if s1.Importance != "high" {
+		t.Errorf("Section[0].Importance = %q, want %q", s1.Importance, "high")
+	}
+	if len(s1.Hunks) != 1 {
+		t.Fatalf("Section[0].Hunks count = %d, want 1", len(s1.Hunks))
+	}
+
+	h := s1.Hunks[0]
+	if h.File != "main.go" {
+		t.Errorf("Hunk.File = %q, want %q", h.File, "main.go")
+	}
+	if h.StartLine != 10 {
+		t.Errorf("Hunk.StartLine = %d, want %d", h.StartLine, 10)
+	}
+	if h.Diff != input.Sections[0].Hunks[0].Diff {
+		t.Errorf("Hunk.Diff mismatch")
+	}
+
+	// Check second section
+	s2 := stored.Sections[1]
+	if s2.ID != "section-2" {
+		t.Errorf("Section[1].ID = %q, want %q", s2.ID, "section-2")
+	}
+}
