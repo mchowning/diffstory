@@ -59,8 +59,12 @@ func (s *Server) Run(ctx context.Context) error {
 	}, nil)
 
 	mcp.AddTool(mcpServer, &mcp.Tool{
-		Name:        "submit_review",
-		Description: "Submit a code review for display in the diffguide TUI viewer",
+		Name: "submit_review",
+		Description: "Submit a code review for display in the diffguide TUI viewer. " +
+			"Structure the review as a narrative that tells the story of the changes - " +
+			"someone reading just the section summaries in order should understand what changed and why. " +
+			"Each section groups related changes with a narrative explaining the intent and context. " +
+			"IMPORTANT: Include COMPLETE diff content for each hunk - do not summarize or truncate diffs.",
 	}, s.handleSubmitReview)
 
 	return mcpServer.Run(ctx, &mcp.StdioTransport{})
