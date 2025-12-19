@@ -7,7 +7,7 @@ topic: "Diffguide MVP Implementation"
 tags: [plans, tui, bubble-tea, go, mvp, server-viewer]
 status: in_progress
 last_updated: 2025-12-18
-last_updated_note: "Phase 2 (Server Mode) complete"
+last_updated_note: "Added robust payload testing requirements with testdata fixtures"
 ---
 
 # Diffguide MVP Implementation Plan
@@ -117,7 +117,7 @@ Key architectural decisions:
 The phases are ordered to:
 1. ✅ Phase 1: Foundation (TUI skeleton) - COMPLETE
 2. ✅ Phase 2: Server mode (HTTP → file writing) - COMPLETE
-3. Phase 3: Viewer mode (file watching → TUI display)
+3. ✅ Phase 3: Viewer mode (file watching → TUI display) - COMPLETE
 4. Phase 4: Two-pane layout with navigation
 5. Phase 5: Syntax highlighting and diff colors
 6. Phase 6: Scrolling and polish
@@ -731,6 +731,18 @@ func runViewer() {
 - [x] Unit test: Review file is created after POST
 - [x] Unit test: Server gracefully shuts down on SIGTERM
 
+**Payload Integration Tests** (using testdata fixtures):
+- [x] Integration test: POST `simple_review.json` - all fields round-trip correctly
+- [x] Integration test: POST `multi_section_review.json` - all sections/hunks preserved
+- [x] Integration test: POST `realistic_claude_review.json` - full Claude-style payload works
+- [x] Integration test: POST `unicode_content.json` - unicode in narratives/diffs preserved
+- [x] Integration test: POST `special_characters.json` - quotes, backslashes, newlines preserved
+- [x] Integration test: POST `empty_arrays.json` - empty sections array handled correctly
+- [x] Integration test: POST `large_review.json` - 100 sections/500 hunks within NFR limits
+- [x] Integration test: Diff content with hunk headers (`@@`) preserved exactly
+- [x] Integration test: Diff content with context lines (space prefix) preserved exactly
+- [x] Integration test: Multi-line narrative text preserved with exact whitespace
+
 #### Manual Verification:
 - [x] `./diffguide server` starts and listens on port 8765
 - [x] `./diffguide server -v` logs incoming requests
@@ -741,7 +753,7 @@ func runViewer() {
 
 ---
 
-## Phase 3: Viewer Mode with File Watching
+## Phase 3: Viewer Mode with File Watching ✓ COMPLETE
 
 ### Overview
 
@@ -1092,30 +1104,30 @@ func runViewer() {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `go build ./...` compiles without errors
-- [ ] `go test ./...` passes all tests
-- [ ] `go test -race ./...` passes (no race conditions)
-- [ ] Unit test: Watcher.New creates watcher for given directory
-- [ ] Unit test: Watcher.NewWithStore accepts custom store for test isolation
-- [ ] Unit test: Watcher normalizes working directory path
-- [ ] Unit test: Watcher watches correct file path based on directory hash
-- [ ] Unit test: Watcher sends ReviewReceivedMsg when file is created
-- [ ] Unit test: Watcher sends ReviewReceivedMsg when file is modified
-- [ ] Unit test: Watcher sends ReviewReceivedMsg on file rename (atomic writes)
-- [ ] Unit test: Watcher sends on Cleared channel when file is deleted
-- [ ] Unit test: Watcher ignores changes to other files in reviews directory
-- [ ] Unit test: Watcher channels are buffered (no deadlock on initial send)
-- [ ] Unit test: Update with ReviewReceivedMsg sets m.review
-- [ ] Unit test: Update with ReviewReceivedMsg sets m.selected to 0
-- [ ] Unit test: Update with ReviewClearedMsg sets m.review to nil
-- [ ] Unit test: View in empty state shows working directory
+- [x] `go build ./...` compiles without errors
+- [x] `go test ./...` passes all tests
+- [x] `go test -race ./...` passes (no race conditions)
+- [x] Unit test: Watcher.New creates watcher for given directory
+- [x] Unit test: Watcher.NewWithStore accepts custom store for test isolation
+- [x] Unit test: Watcher normalizes working directory path
+- [x] Unit test: Watcher watches correct file path based on directory hash
+- [x] Unit test: Watcher sends ReviewReceivedMsg when file is created
+- [x] Unit test: Watcher sends ReviewReceivedMsg when file is modified
+- [x] Unit test: Watcher sends ReviewReceivedMsg on file rename (atomic writes)
+- [x] Unit test: Watcher sends on Cleared channel when file is deleted
+- [x] Unit test: Watcher ignores changes to other files in reviews directory
+- [x] Unit test: Watcher channels are buffered (no deadlock on initial send)
+- [x] Unit test: Update with ReviewReceivedMsg sets m.review
+- [x] Unit test: Update with ReviewReceivedMsg sets m.selected to 0
+- [x] Unit test: Update with ReviewClearedMsg sets m.review to nil
+- [x] Unit test: View in empty state shows working directory
 
 #### Manual Verification:
-- [ ] Start viewer: `./diffguide` shows empty state with working directory
-- [ ] Start server in another terminal: `./diffguide server`
-- [ ] Send review via curl - viewer updates immediately
-- [ ] Send another review - viewer updates with new content
-- [ ] Viewer in different directory doesn't see updates for other directories
+- [x] Start viewer: `./diffguide` shows empty state with working directory
+- [x] Start server in another terminal: `./diffguide server`
+- [x] Send review via curl - viewer updates immediately
+- [x] Send another review - viewer updates with new content
+- [x] Viewer in different directory doesn't see updates for other directories
 
 ---
 
@@ -1667,6 +1679,154 @@ HTTP API:
 
 ## Testing Strategy
 
+### Realistic Payload Testing
+
+To avoid regressions and ensure the system handles real-world Claude-generated reviews correctly, we maintain a set of testdata fixtures and comprehensive integration tests.
+
+#### Testdata Fixtures
+
+**Directory**: `internal/testdata/`
+
+| File | Purpose |
+|------|---------|
+| `simple_review.json` | Minimal valid review: 1 section, 1 hunk, basic diff |
+| `multi_section_review.json` | 5 sections with varying numbers of hunks (1-4 each) |
+| `realistic_claude_review.json` | Full Claude-style payload with narrative explanations, multiple file types (.go, .ts, .md), real unified diff format |
+| `unicode_content.json` | Unicode in narratives (emoji, CJK, accented chars) and file paths |
+| `special_characters.json` | Quotes, backslashes, tabs, embedded newlines in diff content |
+| `empty_arrays.json` | Valid review with `sections: []` |
+| `large_review.json` | Near NFR2 limits: 100 sections, ~500 hunks total |
+
+#### Realistic Unified Diff Content
+
+All diff content in fixtures should use proper unified diff format:
+
+```diff
+@@ -10,7 +10,9 @@ func processFile(path string) error {
+     if err != nil {
+         return fmt.Errorf("failed to open: %w", err)
+     }
++    defer f.Close()
++
+     data, err := io.ReadAll(f)
+-    f.Close()
+     return nil
+ }
+```
+
+Key elements to include:
+- Hunk headers with line numbers (`@@ -start,count +start,count @@`)
+- Optional function context after hunk header
+- Context lines (space prefix)
+- Addition lines (`+` prefix)
+- Deletion lines (`-` prefix)
+- Multiple hunks per file
+- Various file extensions for syntax highlighting coverage
+
+#### Integration Test Requirements
+
+**File**: `internal/integration/payload_test.go`
+
+These tests verify the full round-trip from HTTP POST to stored file:
+
+1. **Full Field Preservation Test**
+   - POST each testdata fixture via HTTP
+   - Read the stored JSON file
+   - Verify ALL fields match exactly:
+     - `workingDirectory` (normalized)
+     - `title`
+     - Each section: `id`, `narrative`, `importance`
+     - Each hunk: `file`, `startLine`, `diff`
+
+2. **Diff Content Integrity Test**
+   - POST payload with multi-line unified diff content
+   - Verify stored diff preserves:
+     - Exact line breaks (`\n`)
+     - Leading whitespace (context line indentation)
+     - Special characters (no escaping corruption)
+     - Unicode characters
+
+3. **Multi-Section Navigation Test** (Phase 4+)
+   - Load `multi_section_review.json` into TUI
+   - Verify all sections appear in list
+   - Navigate to each section, verify correct hunks display
+
+4. **Boundary Test**
+   - POST `large_review.json` (100 sections, ~500 hunks)
+   - Verify 200 OK response within NFR3 time limit (<100ms)
+   - Verify file is stored correctly
+   - Verify TUI can load and navigate without lag
+
+#### Fixture Creation Guidelines
+
+When creating test fixtures:
+
+1. **Use realistic narratives** - Not "test narrative" but actual explanatory text like Claude would generate:
+   ```json
+   {
+     "narrative": "This change adds proper resource cleanup by deferring the file close immediately after opening. Previously, the file handle could leak if an error occurred between Open and the manual Close call."
+   }
+   ```
+
+2. **Use real file paths** - Not `/test/file.txt` but realistic paths:
+   ```json
+   {
+     "file": "internal/server/handler.go",
+     "startLine": 45
+   }
+   ```
+
+3. **Include various importance levels** - Mix of "high", "medium", "low"
+
+4. **Cover multiple languages** - `.go`, `.ts`, `.py`, `.rs`, `.md`, etc.
+
+#### Example: realistic_claude_review.json
+
+```json
+{
+  "workingDirectory": "/Users/dev/projects/myapp",
+  "title": "Add user authentication middleware",
+  "sections": [
+    {
+      "id": "sec-1",
+      "narrative": "This change introduces JWT-based authentication middleware. The middleware extracts the Bearer token from the Authorization header, validates it against the signing key, and attaches the decoded user claims to the request context for downstream handlers.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/middleware/auth.go",
+          "startLine": 1,
+          "diff": "@@ -0,0 +1,45 @@\n+package middleware\n+\n+import (\n+\t\"context\"\n+\t\"net/http\"\n+\t\"strings\"\n+\n+\t\"github.com/golang-jwt/jwt/v5\"\n+)\n+\n+type contextKey string\n+\n+const UserClaimsKey contextKey = \"userClaims\"\n+\n+func AuthMiddleware(signingKey []byte) func(http.Handler) http.Handler {\n+\treturn func(next http.Handler) http.Handler {\n+\t\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n+\t\t\tauthHeader := r.Header.Get(\"Authorization\")\n+\t\t\tif !strings.HasPrefix(authHeader, \"Bearer \") {\n+\t\t\t\thttp.Error(w, \"Missing or invalid Authorization header\", http.StatusUnauthorized)\n+\t\t\t\treturn\n+\t\t\t}\n+\n+\t\t\ttokenStr := strings.TrimPrefix(authHeader, \"Bearer \")\n+\t\t\ttoken, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {\n+\t\t\t\treturn signingKey, nil\n+\t\t\t})\n+\t\t\tif err != nil || !token.Valid {\n+\t\t\t\thttp.Error(w, \"Invalid token\", http.StatusUnauthorized)\n+\t\t\t\treturn\n+\t\t\t}\n+\n+\t\t\tctx := context.WithValue(r.Context(), UserClaimsKey, token.Claims)\n+\t\t\tnext.ServeHTTP(w, r.WithContext(ctx))\n+\t\t})\n+\t}\n+}"
+        }
+      ]
+    },
+    {
+      "id": "sec-2",
+      "narrative": "Updated the router to apply the auth middleware to protected routes. Public endpoints like /health and /login remain accessible without authentication.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "cmd/server/main.go",
+          "startLine": 25,
+          "diff": "@@ -25,6 +25,8 @@ func main() {\n \trouter := http.NewServeMux()\n \n \t// Public routes\n \trouter.HandleFunc(\"/health\", handlers.Health)\n \trouter.HandleFunc(\"/login\", handlers.Login)\n+\n+\t// Protected routes (with auth middleware)\n+\tprotected := middleware.AuthMiddleware([]byte(os.Getenv(\"JWT_SECRET\")))\n+\trouter.Handle(\"/api/\", protected(http.StripPrefix(\"/api\", apiRouter)))\n \n \tlog.Fatal(http.ListenAndServe(\":8080\", router))\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-3",
+      "narrative": "Added comprehensive tests for the auth middleware covering valid tokens, expired tokens, malformed tokens, and missing headers.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/middleware/auth_test.go",
+          "startLine": 1,
+          "diff": "@@ -0,0 +1,89 @@\n+package middleware_test\n+\n+import (\n+\t\"net/http\"\n+\t\"net/http/httptest\"\n+\t\"testing\"\n+\t\"time\"\n+\n+\t\"github.com/golang-jwt/jwt/v5\"\n+\t\"github.com/myapp/internal/middleware\"\n+)\n+\n+var testSigningKey = []byte(\"test-secret-key\")\n+\n+func createTestToken(t *testing.T, exp time.Time) string {\n+\tt.Helper()\n+\ttoken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{\n+\t\t\"sub\": \"user123\",\n+\t\t\"exp\": exp.Unix(),\n+\t})\n+\ttokenStr, err := token.SignedString(testSigningKey)\n+\tif err != nil {\n+\t\tt.Fatalf(\"failed to sign token: %v\", err)\n+\t}\n+\treturn tokenStr\n+}\n+\n+func TestAuthMiddleware_ValidToken(t *testing.T) {\n+\ttoken := createTestToken(t, time.Now().Add(time.Hour))\n+\t// ... test implementation\n+}"
+        }
+      ]
+    }
+  ]
+}
+```
+
 ### Unit Tests
 
 Located in `*_test.go` files alongside source:
@@ -1703,7 +1863,10 @@ Located in `*_test.go` files alongside source:
    - PathForDirectory correctness
    - Write creates file at expected path
    - Read returns written review
-   - Round-trip (Write then Read)
+   - Round-trip (Write then Read) - **must verify ALL fields**:
+     - `workingDirectory`, `title`
+     - Each section: `id`, `narrative`, `importance`
+     - Each hunk: `file`, `startLine`, `diff` (exact content)
 
 7. **Server tests** (`internal/server/server_test.go`):
    - HTTP method handling
@@ -1839,6 +2002,8 @@ diffguide/
 │   │   ├── diff_test.go
 │   │   ├── syntax.go
 │   │   └── syntax_test.go
+│   ├── integration/
+│   │   └── payload_test.go # Full round-trip integration tests
 │   ├── model/
 │   │   └── review.go       # Domain types (Review, Section, Hunk)
 │   ├── server/
@@ -1847,6 +2012,14 @@ diffguide/
 │   ├── storage/
 │   │   ├── store.go        # File-based review storage
 │   │   └── store_test.go
+│   ├── testdata/           # Realistic test fixtures
+│   │   ├── simple_review.json
+│   │   ├── multi_section_review.json
+│   │   ├── realistic_claude_review.json
+│   │   ├── unicode_content.json
+│   │   ├── special_characters.json
+│   │   ├── empty_arrays.json
+│   │   └── large_review.json
 │   ├── tui/
 │   │   ├── commands.go     # Bubble Tea commands
 │   │   ├── helpers.go

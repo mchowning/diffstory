@@ -8,6 +8,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mchowning/diffguide/internal/tui"
+	"github.com/mchowning/diffguide/internal/watcher"
 )
 
 func main() {
@@ -33,8 +34,30 @@ func runViewer() {
 		log.Fatalf("Failed to get working directory: %v", err)
 	}
 
+	w, err := watcher.New(cwd)
+	if err != nil {
+		log.Fatalf("Failed to create watcher: %v", err)
+	}
+	defer w.Close()
+
+	w.Start()
+
 	m := tui.NewModel(cwd)
 	p := tea.NewProgram(m, tea.WithAltScreen())
+
+	// Pump watcher events to TUI
+	go func() {
+		for {
+			select {
+			case review := <-w.Reviews:
+				p.Send(tui.ReviewReceivedMsg{Review: review})
+			case <-w.Cleared:
+				p.Send(tui.ReviewClearedMsg{})
+			case err := <-w.Errors:
+				p.Send(tui.WatchErrorMsg{Err: err})
+			}
+		}
+	}()
 
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

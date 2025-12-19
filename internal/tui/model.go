@@ -32,3 +32,11 @@ func (m Model) Height() int {
 func (m Model) WorkDir() string {
 	return m.workDir
 }
+
+func (m Model) Review() *model.Review {
+	return m.review
+}
+
+func (m Model) Selected() int {
+	return m.selected
+}
