@@ -1677,7 +1677,7 @@ HTTP API:
 - [x] Unit test: ErrorMsg returns tea.Tick command for auto-clear
 - [x] Unit test: ClearStatusMsg clears statusMsg field
 - [x] Unit test: View with statusMsg shows error text
-- [ ] Integration test: Full workflow - start, receive review, navigate, scroll, quit
+- [x] Integration test: Full workflow - start, receive review, navigate, scroll, quit
 
 #### Manual Verification:
 - [ ] J/K scroll the diff content smoothly

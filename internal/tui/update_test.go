@@ -451,6 +451,132 @@ func TestUpdate_ClearStatusMsgClearsStatusMsg(t *testing.T) {
 	}
 }
 
+func TestIntegration_FullWorkflow(t *testing.T) {
+	// 1. Start - create model
+	m := tui.NewModel("/test/project")
+
+	// 2. Initialize viewport (simulates terminal startup)
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	if !m.Ready() {
+		t.Fatal("viewport should be ready after WindowSizeMsg")
+	}
+
+	// 3. Receive review with multiple sections
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Full Workflow Test",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "First section", Hunks: []model.Hunk{
+				{File: "file1.go", Diff: strings.Repeat("line\n", 100)},
+			}},
+			{ID: "2", Narrative: "Second section", Hunks: []model.Hunk{
+				{File: "file2.go", Diff: "+added\n-removed"},
+			}},
+			{ID: "3", Narrative: "Third section", Hunks: []model.Hunk{
+				{File: "file3.go", Diff: "@@ -1,3 +1,4 @@\n context\n+new"},
+			}},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	if m.Review() == nil {
+		t.Fatal("review should be set after ReviewReceivedMsg")
+	}
+	if m.Selected() != 0 {
+		t.Errorf("selected should be 0 initially, got %d", m.Selected())
+	}
+
+	// 4. Navigate down with 'j'
+	jMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")}
+	updated, _ = m.Update(jMsg)
+	m = updated.(tui.Model)
+
+	if m.Selected() != 1 {
+		t.Errorf("selected should be 1 after j key, got %d", m.Selected())
+	}
+
+	// 5. Navigate down again with down arrow
+	downMsg := tea.KeyMsg{Type: tea.KeyDown}
+	updated, _ = m.Update(downMsg)
+	m = updated.(tui.Model)
+
+	if m.Selected() != 2 {
+		t.Errorf("selected should be 2 after down arrow, got %d", m.Selected())
+	}
+
+	// 6. Navigate back up with 'k'
+	kMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("k")}
+	updated, _ = m.Update(kMsg)
+	m = updated.(tui.Model)
+
+	if m.Selected() != 1 {
+		t.Errorf("selected should be 1 after k key, got %d", m.Selected())
+	}
+
+	// 7. Go back to first section to test scrolling (it has long content)
+	updated, _ = m.Update(kMsg)
+	m = updated.(tui.Model)
+
+	// 8. Scroll diff pane down with 'J'
+	shiftJMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("J")}
+	updated, _ = m.Update(shiftJMsg)
+	m = updated.(tui.Model)
+
+	offsetAfterJ := m.ViewportYOffset()
+	if offsetAfterJ == 0 {
+		t.Error("viewport should have scrolled down after J key")
+	}
+
+	// 9. Scroll diff pane up with 'K'
+	shiftKMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("K")}
+	updated, _ = m.Update(shiftKMsg)
+	m = updated.(tui.Model)
+
+	if m.ViewportYOffset() >= offsetAfterJ {
+		t.Error("viewport should have scrolled up after K key")
+	}
+
+	// 10. Toggle help with '?'
+	helpMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("?")}
+	updated, _ = m.Update(helpMsg)
+	m = updated.(tui.Model)
+
+	if !m.ShowHelp() {
+		t.Error("help should be shown after ? key")
+	}
+
+	// Verify view contains help text
+	view := m.View()
+	if !strings.Contains(view, "Keybindings") {
+		t.Error("view should show keybindings when help is toggled on")
+	}
+
+	// 11. Toggle help off
+	updated, _ = m.Update(helpMsg)
+	m = updated.(tui.Model)
+
+	if m.ShowHelp() {
+		t.Error("help should be hidden after second ? key")
+	}
+
+	// 12. Quit with 'q'
+	quitMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")}
+	_, cmd := m.Update(quitMsg)
+
+	if cmd == nil {
+		t.Fatal("expected quit command, got nil")
+	}
+
+	result := cmd()
+	if _, ok := result.(tea.QuitMsg); !ok {
+		t.Errorf("expected tea.QuitMsg, got %T", result)
+	}
+}
+
 func TestUpdate_NavigationResetsViewportToTop(t *testing.T) {
 	m := tui.NewModel("/test/project")
 	// Initialize viewport
