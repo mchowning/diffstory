@@ -1,6 +1,7 @@
 package tui_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -169,6 +170,64 @@ func TestView_SectionListDoesNotTruncateText(t *testing.T) {
 	// Should contain the full text (or at least the ending words)
 	if !strings.Contains(view, "ellipsis character") {
 		t.Error("section list should contain full narrative text")
+	}
+}
+
+func TestView_StatusBarShowsErrorText(t *testing.T) {
+	m := tui.NewModel("/test/project")
+
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Set an error
+	errMsg := tui.ErrorMsg{Err: errors.New("test error")}
+	updated, _ = m.Update(errMsg)
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	if !strings.Contains(view, "Error: test error") {
+		t.Error("view should contain error message in status bar")
+	}
+}
+
+func TestView_HelpOverlayContainsKeybindings(t *testing.T) {
+	m := tui.NewModel("/test/project")
+
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Toggle help on
+	helpMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("?")}
+	updated, _ = m.Update(helpMsg)
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	if !strings.Contains(view, "Keybindings") {
+		t.Error("help overlay should contain 'Keybindings'")
 	}
 }
 

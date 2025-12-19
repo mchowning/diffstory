@@ -1,6 +1,8 @@
 package tui_test
 
 import (
+	"errors"
+	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -286,6 +288,166 @@ func TestUpdate_WindowSizeMsgResizesViewport(t *testing.T) {
 	}
 	if result.Height() != 30 {
 		t.Errorf("Height() = %d, want 30", result.Height())
+	}
+}
+
+func TestUpdate_ShiftJScrollsViewportDown(t *testing.T) {
+	m := tui.NewModel("/test/project")
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "First", Hunks: []model.Hunk{
+				{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+			}},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	initialOffset := m.ViewportYOffset()
+
+	// Press J (shift+j) to scroll down
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("J")}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.ViewportYOffset() <= initialOffset {
+		t.Errorf("ViewportYOffset() = %d, expected > %d after J key", result.ViewportYOffset(), initialOffset)
+	}
+}
+
+func TestUpdate_ShiftKScrollsViewportUp(t *testing.T) {
+	m := tui.NewModel("/test/project")
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review with enough content to scroll
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "First", Hunks: []model.Hunk{
+				{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+			}},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// First scroll down with J
+	jMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("J")}
+	updated, _ = m.Update(jMsg)
+	m = updated.(tui.Model)
+
+	offsetAfterJ := m.ViewportYOffset()
+
+	// Now scroll up with K
+	kMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("K")}
+	updated, _ = m.Update(kMsg)
+	result := updated.(tui.Model)
+
+	if result.ViewportYOffset() >= offsetAfterJ {
+		t.Errorf("ViewportYOffset() = %d, expected < %d after K key", result.ViewportYOffset(), offsetAfterJ)
+	}
+}
+
+func TestUpdate_QuestionMarkTogglesShowHelp(t *testing.T) {
+	m := tui.NewModel("/test/project")
+
+	if m.ShowHelp() {
+		t.Error("expected ShowHelp() to be false initially")
+	}
+
+	// Press ? to show help
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("?")}
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	if !result.ShowHelp() {
+		t.Error("expected ShowHelp() to be true after ? key")
+	}
+
+	// Press ? again to hide help
+	updated, _ = result.Update(msg)
+	result = updated.(tui.Model)
+
+	if result.ShowHelp() {
+		t.Error("expected ShowHelp() to be false after second ? key")
+	}
+}
+
+func TestUpdate_QuitWorksWhenHelpShown(t *testing.T) {
+	m := tui.NewModel("/test/project")
+
+	// Show help
+	helpMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("?")}
+	updated, _ := m.Update(helpMsg)
+	m = updated.(tui.Model)
+
+	// Quit should still work
+	quitMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")}
+	_, cmd := m.Update(quitMsg)
+
+	if cmd == nil {
+		t.Fatal("expected command, got nil")
+	}
+
+	result := cmd()
+	if _, ok := result.(tea.QuitMsg); !ok {
+		t.Errorf("expected tea.QuitMsg, got %T", result)
+	}
+}
+
+func TestUpdate_ErrorMsgSetsStatusMsg(t *testing.T) {
+	m := tui.NewModel("/test/project")
+	testErr := errors.New("test error")
+	msg := tui.ErrorMsg{Err: testErr}
+
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	expected := "Error: test error"
+	if result.StatusMsg() != expected {
+		t.Errorf("StatusMsg() = %q, want %q", result.StatusMsg(), expected)
+	}
+}
+
+func TestUpdate_ErrorMsgReturnsTickCommandForAutoClear(t *testing.T) {
+	m := tui.NewModel("/test/project")
+	testErr := errors.New("test error")
+	msg := tui.ErrorMsg{Err: testErr}
+
+	_, cmd := m.Update(msg)
+
+	if cmd == nil {
+		t.Fatal("expected command for auto-clear, got nil")
+	}
+}
+
+func TestUpdate_ClearStatusMsgClearsStatusMsg(t *testing.T) {
+	m := tui.NewModel("/test/project")
+
+	// First set an error
+	errMsg := tui.ErrorMsg{Err: errors.New("test error")}
+	updated, _ := m.Update(errMsg)
+	m = updated.(tui.Model)
+
+	// Now clear it
+	clearMsg := tui.ClearStatusMsg{}
+	updated, _ = m.Update(clearMsg)
+	result := updated.(tui.Model)
+
+	if result.StatusMsg() != "" {
+		t.Errorf("StatusMsg() = %q, want empty string", result.StatusMsg())
 	}
 }
 

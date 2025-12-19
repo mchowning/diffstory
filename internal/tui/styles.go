@@ -27,4 +27,14 @@ var (
 	headerStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("230"))
+
+	// Help overlay
+	helpStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("63")).
+			Padding(1, 2)
+
+	// Status bar
+	statusStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("203"))
 )

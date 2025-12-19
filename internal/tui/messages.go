@@ -14,3 +14,11 @@ type ReviewClearedMsg struct{}
 type WatchErrorMsg struct {
 	Err error
 }
+
+// ErrorMsg is sent when an error should be displayed in the status bar
+type ErrorMsg struct {
+	Err error
+}
+
+// ClearStatusMsg is sent to clear the status bar message
+type ClearStatusMsg struct{}

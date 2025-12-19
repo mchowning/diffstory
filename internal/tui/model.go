@@ -7,13 +7,15 @@ import (
 )
 
 type Model struct {
-	review   *model.Review
-	selected int
-	width    int
-	height   int
-	workDir  string
-	viewport viewport.Model
-	ready    bool
+	review    *model.Review
+	selected  int
+	width     int
+	height    int
+	workDir   string
+	viewport  viewport.Model
+	ready     bool
+	showHelp  bool
+	statusMsg string
 }
 
 func NewModel(workDir string) Model {
@@ -50,6 +52,14 @@ func (m Model) Ready() bool {
 
 func (m Model) ViewportYOffset() int {
 	return m.viewport.YOffset
+}
+
+func (m Model) ShowHelp() bool {
+	return m.showHelp
+}
+
+func (m Model) StatusMsg() string {
+	return m.statusMsg
 }
 
 func (m *Model) updateViewportContent() {

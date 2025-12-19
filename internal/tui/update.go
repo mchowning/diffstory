@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -23,6 +25,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.viewport.GotoTop()
 				m.updateViewportContent()
 			}
+		case "J":
+			m.viewport.LineDown(1)
+		case "K":
+			m.viewport.LineUp(1)
+		case "?":
+			m.showHelp = !m.showHelp
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -49,6 +57,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ReviewClearedMsg:
 		m.review = nil
 		m.selected = 0
+		return m, nil
+	case ErrorMsg:
+		m.statusMsg = "Error: " + msg.Err.Error()
+		return m, tea.Tick(3*time.Second, func(time.Time) tea.Msg {
+			return ClearStatusMsg{}
+		})
+	case ClearStatusMsg:
+		m.statusMsg = ""
 		return m, nil
 	}
 	return m, nil

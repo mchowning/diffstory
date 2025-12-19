@@ -12,7 +12,14 @@ func (m Model) View() string {
 	if m.review == nil {
 		return m.renderEmptyState()
 	}
-	return m.renderReviewState()
+
+	base := m.renderReviewState()
+
+	if m.showHelp {
+		return m.renderHelpOverlay(base)
+	}
+
+	return base
 }
 
 func (m Model) renderEmptyState() string {
@@ -46,6 +53,9 @@ func (m Model) renderReviewState() string {
 
 	header := headerStyle.Render("diffguide - " + m.review.Title)
 	footer := "j/k: navigate | J/K: scroll | q: quit | ?: help"
+	if m.statusMsg != "" {
+		footer = statusStyle.Render(m.statusMsg) + "  " + footer
+	}
 
 	content := lipgloss.JoinHorizontal(lipgloss.Top, leftPane, rightPane)
 
@@ -88,4 +98,25 @@ func (m Model) renderDiffContent(section model.Section) string {
 	}
 
 	return content.String()
+}
+
+func (m Model) renderHelpOverlay(base string) string {
+	help := `Keybindings:
+
+  j/k or ↑/↓    Navigate sections
+  J/K           Scroll diff pane
+  q             Quit
+  ?             Toggle this help
+
+HTTP API:
+
+  POST /review  Send review data`
+
+	overlay := helpStyle.Render(help)
+
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Center, lipgloss.Center,
+		overlay,
+	)
 }
