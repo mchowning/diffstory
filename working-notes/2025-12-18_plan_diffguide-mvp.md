@@ -5,9 +5,9 @@ branch: main
 repository: diffguide
 topic: "Diffguide MVP Implementation"
 tags: [plans, tui, bubble-tea, go, mvp, server-viewer]
-status: in_progress
+status: complete
 last_updated: 2025-12-18
-last_updated_note: "Completed Phase 5 + section list text wrapping and spacing"
+last_updated_note: "Completed Phase 6 - Scrolling and Polish (J/K scrolling, help overlay, status bar)"
 ---
 
 # Diffguide MVP Implementation Plan
@@ -120,7 +120,7 @@ The phases are ordered to:
 3. ✅ Phase 3: Viewer mode (file watching → TUI display) - COMPLETE
 4. ✅ Phase 4: Two-pane layout with navigation - COMPLETE
 5. ✅ Phase 5: Syntax highlighting and diff colors - COMPLETE
-6. Phase 6: Scrolling and polish
+6. ✅ Phase 6: Scrolling and polish - COMPLETE
 
 ---
 
@@ -1535,7 +1535,7 @@ The following improvements were made to the section list (left pane):
 
 ---
 
-## Phase 6: Scrolling and Polish
+## Phase 6: Scrolling and Polish ✓ COMPLETE
 
 ### Overview
 
@@ -1666,17 +1666,17 @@ HTTP API:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `go build ./...` compiles without errors
-- [ ] `go test ./...` passes all tests
-- [ ] `go test -race ./...` passes (no race conditions)
-- [ ] Unit test: 'J' key calls viewport.LineDown
-- [ ] Unit test: 'K' key calls viewport.LineUp
-- [ ] Unit test: '?' key toggles showHelp flag
-- [ ] Unit test: View with showHelp=true contains "Keybindings"
-- [ ] Unit test: ErrorMsg sets statusMsg field
-- [ ] Unit test: ErrorMsg returns tea.Tick command for auto-clear
-- [ ] Unit test: ClearStatusMsg clears statusMsg field
-- [ ] Unit test: View with statusMsg shows error text
+- [x] `go build ./...` compiles without errors
+- [x] `go test ./...` passes all tests
+- [x] `go test -race ./...` passes (no race conditions)
+- [x] Unit test: 'J' key calls viewport.LineDown
+- [x] Unit test: 'K' key calls viewport.LineUp
+- [x] Unit test: '?' key toggles showHelp flag
+- [x] Unit test: View with showHelp=true contains "Keybindings"
+- [x] Unit test: ErrorMsg sets statusMsg field
+- [x] Unit test: ErrorMsg returns tea.Tick command for auto-clear
+- [x] Unit test: ClearStatusMsg clears statusMsg field
+- [x] Unit test: View with statusMsg shows error text
 - [ ] Integration test: Full workflow - start, receive review, navigate, scroll, quit
 
 #### Manual Verification:
