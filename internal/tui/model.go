@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mchowning/diffguide/internal/model"
 )
@@ -11,6 +12,8 @@ type Model struct {
 	width    int
 	height   int
 	workDir  string
+	viewport viewport.Model
+	ready    bool
 }
 
 func NewModel(workDir string) Model {
@@ -39,4 +42,23 @@ func (m Model) Review() *model.Review {
 
 func (m Model) Selected() int {
 	return m.selected
+}
+
+func (m Model) Ready() bool {
+	return m.ready
+}
+
+func (m Model) ViewportYOffset() int {
+	return m.viewport.YOffset
+}
+
+func (m *Model) updateViewportContent() {
+	if m.review == nil || m.selected >= len(m.review.Sections) {
+		m.viewport.SetContent("")
+		return
+	}
+
+	section := m.review.Sections[m.selected]
+	content := m.renderDiffContent(section)
+	m.viewport.SetContent(content)
 }

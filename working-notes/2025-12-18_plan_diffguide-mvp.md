@@ -7,7 +7,7 @@ topic: "Diffguide MVP Implementation"
 tags: [plans, tui, bubble-tea, go, mvp, server-viewer]
 status: in_progress
 last_updated: 2025-12-18
-last_updated_note: "Added robust payload testing requirements with testdata fixtures"
+last_updated_note: "Completed Phase 4: Two-pane layout with navigation and viewport"
 ---
 
 # Diffguide MVP Implementation Plan
@@ -118,7 +118,7 @@ The phases are ordered to:
 1. ✅ Phase 1: Foundation (TUI skeleton) - COMPLETE
 2. ✅ Phase 2: Server mode (HTTP → file writing) - COMPLETE
 3. ✅ Phase 3: Viewer mode (file watching → TUI display) - COMPLETE
-4. Phase 4: Two-pane layout with navigation
+4. ✅ Phase 4: Two-pane layout with navigation - COMPLETE
 5. Phase 5: Syntax highlighting and diff colors
 6. Phase 6: Scrolling and polish
 
@@ -1131,7 +1131,7 @@ func runViewer() {
 
 ---
 
-## Phase 4: Two-Pane Layout with Navigation and Viewport
+## Phase 4: Two-Pane Layout with Navigation and Viewport ✓ COMPLETE
 
 ### Overview
 
@@ -1336,24 +1336,24 @@ func (m Model) renderDiffContent(section model.Section) string {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `go build ./...` compiles without errors
-- [ ] `go test ./...` passes all tests
-- [ ] `go test -race ./...` passes (no race conditions)
-- [ ] Unit test: View with review shows section list in left pane
-- [ ] Unit test: View with review shows hunks in right pane (via viewport)
-- [ ] Unit test: 'j' key increments selected when not at end
-- [ ] Unit test: 'j' key does not increment when at last section
-- [ ] Unit test: 'j' key resets viewport to top (GotoTop called)
-- [ ] Unit test: 'k' key decrements selected when not at start
-- [ ] Unit test: 'k' key does not decrement when at first section
-- [ ] Unit test: 'k' key resets viewport to top
-- [ ] Unit test: Down arrow works same as 'j'
-- [ ] Unit test: Up arrow works same as 'k'
-- [ ] Unit test: Selected section has "› " prefix
-- [ ] Unit test: Non-selected sections have "  " prefix
-- [ ] Unit test: WindowSizeMsg initializes viewport on first call
-- [ ] Unit test: WindowSizeMsg resizes viewport on subsequent calls
-- [ ] Unit test: Long diff content doesn't break layout (viewport clips)
+- [x] `go build ./...` compiles without errors
+- [x] `go test ./...` passes all tests
+- [x] `go test -race ./...` passes (no race conditions)
+- [x] Unit test: View with review shows section list in left pane
+- [x] Unit test: View with review shows hunks in right pane (via viewport)
+- [x] Unit test: 'j' key increments selected when not at end
+- [x] Unit test: 'j' key does not increment when at last section
+- [x] Unit test: 'j' key resets viewport to top (GotoTop called)
+- [x] Unit test: 'k' key decrements selected when not at start
+- [x] Unit test: 'k' key does not decrement when at first section
+- [x] Unit test: 'k' key resets viewport to top
+- [x] Unit test: Down arrow works same as 'j'
+- [x] Unit test: Up arrow works same as 'k'
+- [x] Unit test: Selected section has "› " prefix
+- [x] Unit test: Non-selected sections have "  " prefix
+- [x] Unit test: WindowSizeMsg initializes viewport on first call
+- [x] Unit test: WindowSizeMsg resizes viewport on subsequent calls
+- [x] Unit test: Long diff content doesn't break layout (viewport clips)
 
 #### Manual Verification:
 - [ ] Two panes visible with proper proportions (~1/3 left, ~2/3 right)
