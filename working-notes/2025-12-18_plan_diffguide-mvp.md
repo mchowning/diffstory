@@ -7,7 +7,7 @@ topic: "Diffguide MVP Implementation"
 tags: [plans, tui, bubble-tea, go, mvp, server-viewer]
 status: in_progress
 last_updated: 2025-12-18
-last_updated_note: "Completed Phase 4: Two-pane layout with navigation and viewport"
+last_updated_note: "Completed Phase 5 + section list text wrapping and spacing"
 ---
 
 # Diffguide MVP Implementation Plan
@@ -119,7 +119,7 @@ The phases are ordered to:
 2. ✅ Phase 2: Server mode (HTTP → file writing) - COMPLETE
 3. ✅ Phase 3: Viewer mode (file watching → TUI display) - COMPLETE
 4. ✅ Phase 4: Two-pane layout with navigation - COMPLETE
-5. Phase 5: Syntax highlighting and diff colors
+5. ✅ Phase 5: Syntax highlighting and diff colors - COMPLETE
 6. Phase 6: Scrolling and polish
 
 ---
@@ -1367,7 +1367,7 @@ func (m Model) renderDiffContent(section model.Section) string {
 
 ---
 
-## Phase 5: Syntax Highlighting and Diff Colors
+## Phase 5: Syntax Highlighting and Diff Colors ✓ COMPLETE
 
 ### Overview
 
@@ -1500,17 +1500,17 @@ func (m Model) renderDiffContent(section model.Section) string {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `go build ./...` compiles without errors
-- [ ] `go test ./...` passes all tests
-- [ ] `go test -race ./...` passes (no race conditions)
-- [ ] Unit test: HighlightCode with "foo.go" returns string containing ANSI escape sequences
-- [ ] Unit test: HighlightCode with "foo.py" returns string containing ANSI escape sequences
-- [ ] Unit test: HighlightCode with unknown extension returns original code (no error)
-- [ ] Unit test: ColorizeDiffLine with '+' prefix returns string containing ANSI green
-- [ ] Unit test: ColorizeDiffLine with '-' prefix returns string containing ANSI red
-- [ ] Unit test: ColorizeDiffLine with '@' prefix returns string containing ANSI yellow
-- [ ] Unit test: ColorizeDiffLine with ' ' prefix returns string containing ANSI gray
-- [ ] Unit test: ColorizeDiff colors multiple lines correctly
+- [x] `go build ./...` compiles without errors
+- [x] `go test ./...` passes all tests
+- [x] `go test -race ./...` passes (no race conditions)
+- [x] Unit test: HighlightCode with "foo.go" returns string containing ANSI escape sequences
+- [x] Unit test: HighlightCode with "foo.py" returns string containing ANSI escape sequences
+- [x] Unit test: HighlightCode with unknown extension returns original code (no error)
+- [x] Unit test: ColorizeDiffLine with '+' prefix returns string containing ANSI green
+- [x] Unit test: ColorizeDiffLine with '-' prefix returns string containing ANSI red
+- [x] Unit test: ColorizeDiffLine with '@' prefix returns string containing ANSI yellow
+- [x] Unit test: ColorizeDiffLine with ' ' prefix returns string containing ANSI gray
+- [x] Unit test: ColorizeDiff colors multiple lines correctly
 
 #### Manual Verification:
 - [ ] Code in diffs is syntax highlighted based on file extension
@@ -1519,6 +1519,19 @@ func (m Model) renderDiffContent(section model.Section) string {
 - [ ] Hunk headers (@@) appear in yellow
 - [ ] Context lines appear in gray
 - [ ] Colors visible in 256-color terminal
+
+### Additional Enhancements (Post Phase 5)
+
+The following improvements were made to the section list (left pane):
+
+1. **Text wrapping instead of truncation**: Section narratives now wrap to multiple lines instead of being truncated with "…". This allows users to see the full narrative text.
+
+2. **Spacing between sections**: Added a blank line between section items to improve visual separation and readability.
+
+**Implementation details:**
+- `renderSectionList()` now uses `lipgloss.Width()` for text wrapping
+- Sections are joined with `"\n\n"` for spacing
+- Tests added: `TestView_SectionListDoesNotTruncateText`, `TestView_SectionListHasSpacingBetweenSections`
 
 ---
 

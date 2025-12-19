@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mchowning/diffguide/internal/highlight"
 	"github.com/mchowning/diffguide/internal/model"
 )
 
@@ -53,6 +54,8 @@ func (m Model) renderReviewState() string {
 
 func (m Model) renderSectionList(width, height int) string {
 	var items []string
+	// Account for border padding
+	contentWidth := width - 4
 	for i, section := range m.review.Sections {
 		style := normalStyle
 		prefix := normalPrefix
@@ -60,11 +63,13 @@ func (m Model) renderSectionList(width, height int) string {
 			style = selectedStyle
 			prefix = selectedPrefix
 		}
-		// Truncate narrative for display (account for prefix)
-		text := prefix + Truncate(section.Narrative, width-len(prefix)-4)
-		items = append(items, style.Render(text))
+		// Use lipgloss width to wrap text instead of truncating
+		wrappedStyle := style.Width(contentWidth)
+		text := prefix + section.Narrative
+		items = append(items, wrappedStyle.Render(text))
 	}
-	content := strings.Join(items, "\n")
+	// Join with blank line between sections for spacing
+	content := strings.Join(items, "\n\n")
 	return activeBorderStyle.Width(width).Height(height).Render(content)
 }
 
@@ -78,7 +83,8 @@ func (m Model) renderDiffContent(section model.Section) string {
 	for _, hunk := range section.Hunks {
 		content.WriteString(hunk.File + "\n")
 		content.WriteString(strings.Repeat("─", 40) + "\n")
-		content.WriteString(hunk.Diff + "\n\n")
+		coloredDiff := highlight.ColorizeDiff(hunk.Diff)
+		content.WriteString(coloredDiff + "\n\n")
 	}
 
 	return content.String()

@@ -139,3 +139,57 @@ func TestView_NotReadyShowsInitializing(t *testing.T) {
 		t.Error("view should show 'Initializing' when viewport not ready")
 	}
 }
+
+func TestView_SectionListDoesNotTruncateText(t *testing.T) {
+	m := tui.NewModel("/test/project")
+
+	// Initialize viewport with narrow width to force wrapping
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a review with a long narrative
+	longNarrative := "This is a very long narrative that should wrap instead of being truncated with an ellipsis character"
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections: []model.Section{
+			{ID: "1", Narrative: longNarrative},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Should NOT contain truncation ellipsis
+	if strings.Contains(view, "…") {
+		t.Error("section list should wrap text, not truncate with ellipsis")
+	}
+	// Should contain the full text (or at least the ending words)
+	if !strings.Contains(view, "ellipsis character") {
+		t.Error("section list should contain full narrative text")
+	}
+}
+
+func TestView_SectionListHasSpacingBetweenSections(t *testing.T) {
+	m := modelWithReviewAndSize(2)
+	view := m.View()
+
+	// Find positions of both sections
+	posA := strings.Index(view, "Section A")
+	posB := strings.Index(view, "Section B")
+
+	if posA == -1 || posB == -1 {
+		t.Fatal("could not find both sections in view")
+	}
+
+	// Extract text between sections and check for blank line
+	between := view[posA+len("Section A") : posB]
+
+	// Should have at least 2 newlines (indicating a blank line between sections)
+	newlineCount := strings.Count(between, "\n")
+	if newlineCount < 2 {
+		t.Errorf("expected at least 2 newlines between sections for spacing, got %d", newlineCount)
+	}
+}
