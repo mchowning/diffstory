@@ -1,0 +1,35 @@
+{
+  "workingDirectory": "/Users/開発者/projects/アプリ",
+  "title": "Add internationalization support 🌍",
+  "sections": [
+    {
+      "id": "sec-i18n",
+      "narrative": "This change adds support for multiple languages including Japanese (日本語), Chinese (中文), Korean (한국어), and various European languages with accented characters like café, naïve, and über.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/i18n/messages_ja.go",
+          "startLine": 1,
+          "diff": "@@ -0,0 +1,15 @@\n+package i18n\n+\n+var MessagesJA = map[string]string{\n+\t\"welcome\":      \"ようこそ\",\n+\t\"goodbye\":      \"さようなら\",\n+\t\"error\":        \"エラーが発生しました\",\n+\t\"user_created\": \"ユーザー「%s」が作成されました\",\n+}"
+        },
+        {
+          "file": "internal/i18n/messages_emoji.go",
+          "startLine": 1,
+          "diff": "@@ -0,0 +1,10 @@\n+package i18n\n+\n+var StatusEmojis = map[string]string{\n+\t\"success\": \"✅\",\n+\t\"error\":   \"❌\",\n+\t\"warning\": \"⚠️\",\n+\t\"info\":    \"ℹ️\",\n+\t\"loading\": \"⏳\",\n+}"
+        }
+      ]
+    },
+    {
+      "id": "sec-rtl",
+      "narrative": "Added right-to-left (RTL) language support for Arabic (العربية) and Hebrew (עברית).",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/i18n/messages_ar.go",
+          "startLine": 1,
+          "diff": "@@ -0,0 +1,8 @@\n+package i18n\n+\n+var MessagesAR = map[string]string{\n+\t\"welcome\": \"مرحبا\",\n+\t\"goodbye\": \"مع السلامة\",\n+\t\"error\":   \"حدث خطأ\",\n+}"
+        }
+      ]
+    }
+  ]
+}

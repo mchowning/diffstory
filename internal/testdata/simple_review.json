@@ -1,0 +1,18 @@
+{
+  "workingDirectory": "/Users/dev/projects/myapp",
+  "title": "Fix null pointer in user service",
+  "sections": [
+    {
+      "id": "sec-1",
+      "narrative": "Added null check before accessing user properties to prevent panic.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/service/user.go",
+          "startLine": 42,
+          "diff": "@@ -42,6 +42,9 @@ func (s *UserService) GetUser(id string) (*User, error) {\n     user, err := s.repo.FindByID(id)\n     if err != nil {\n         return nil, err\n     }\n+    if user == nil {\n+        return nil, ErrUserNotFound\n+    }\n     return user, nil\n }"
+        }
+      ]
+    }
+  ]
+}

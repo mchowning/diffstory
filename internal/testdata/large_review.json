@@ -1,0 +1,2916 @@
+{
+  "workingDirectory": "/Users/dev/projects/large-refactor",
+  "title": "Large-scale refactoring: migrate to new API patterns",
+  "sections": [
+    {
+      "id": "sec-1",
+      "narrative": "Section 1: Migrated module0 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-2",
+      "narrative": "Section 2: Migrated module0 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-3",
+      "narrative": "Section 3: Migrated module0 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-4",
+      "narrative": "Section 4: Migrated module0 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-5",
+      "narrative": "Section 5: Migrated module0 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-6",
+      "narrative": "Section 6: Migrated module0 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-7",
+      "narrative": "Section 7: Migrated module0 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-8",
+      "narrative": "Section 8: Migrated module0 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-9",
+      "narrative": "Section 9: Migrated module0 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-10",
+      "narrative": "Section 10: Migrated module0 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module0/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module0/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-11",
+      "narrative": "Section 11: Migrated module1 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-12",
+      "narrative": "Section 12: Migrated module1 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-13",
+      "narrative": "Section 13: Migrated module1 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-14",
+      "narrative": "Section 14: Migrated module1 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-15",
+      "narrative": "Section 15: Migrated module1 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-16",
+      "narrative": "Section 16: Migrated module1 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-17",
+      "narrative": "Section 17: Migrated module1 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-18",
+      "narrative": "Section 18: Migrated module1 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-19",
+      "narrative": "Section 19: Migrated module1 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-20",
+      "narrative": "Section 20: Migrated module1 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module1/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module1/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-21",
+      "narrative": "Section 21: Migrated module2 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-22",
+      "narrative": "Section 22: Migrated module2 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-23",
+      "narrative": "Section 23: Migrated module2 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-24",
+      "narrative": "Section 24: Migrated module2 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-25",
+      "narrative": "Section 25: Migrated module2 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-26",
+      "narrative": "Section 26: Migrated module2 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-27",
+      "narrative": "Section 27: Migrated module2 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-28",
+      "narrative": "Section 28: Migrated module2 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-29",
+      "narrative": "Section 29: Migrated module2 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-30",
+      "narrative": "Section 30: Migrated module2 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module2/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module2/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-31",
+      "narrative": "Section 31: Migrated module3 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-32",
+      "narrative": "Section 32: Migrated module3 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-33",
+      "narrative": "Section 33: Migrated module3 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-34",
+      "narrative": "Section 34: Migrated module3 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-35",
+      "narrative": "Section 35: Migrated module3 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-36",
+      "narrative": "Section 36: Migrated module3 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-37",
+      "narrative": "Section 37: Migrated module3 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-38",
+      "narrative": "Section 38: Migrated module3 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-39",
+      "narrative": "Section 39: Migrated module3 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-40",
+      "narrative": "Section 40: Migrated module3 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module3/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module3/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-41",
+      "narrative": "Section 41: Migrated module4 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-42",
+      "narrative": "Section 42: Migrated module4 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-43",
+      "narrative": "Section 43: Migrated module4 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-44",
+      "narrative": "Section 44: Migrated module4 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-45",
+      "narrative": "Section 45: Migrated module4 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-46",
+      "narrative": "Section 46: Migrated module4 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-47",
+      "narrative": "Section 47: Migrated module4 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-48",
+      "narrative": "Section 48: Migrated module4 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-49",
+      "narrative": "Section 49: Migrated module4 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-50",
+      "narrative": "Section 50: Migrated module4 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module4/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module4/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-51",
+      "narrative": "Section 51: Migrated module5 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-52",
+      "narrative": "Section 52: Migrated module5 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-53",
+      "narrative": "Section 53: Migrated module5 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-54",
+      "narrative": "Section 54: Migrated module5 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-55",
+      "narrative": "Section 55: Migrated module5 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-56",
+      "narrative": "Section 56: Migrated module5 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-57",
+      "narrative": "Section 57: Migrated module5 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-58",
+      "narrative": "Section 58: Migrated module5 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-59",
+      "narrative": "Section 59: Migrated module5 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-60",
+      "narrative": "Section 60: Migrated module5 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module5/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module5/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-61",
+      "narrative": "Section 61: Migrated module6 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-62",
+      "narrative": "Section 62: Migrated module6 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-63",
+      "narrative": "Section 63: Migrated module6 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-64",
+      "narrative": "Section 64: Migrated module6 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-65",
+      "narrative": "Section 65: Migrated module6 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-66",
+      "narrative": "Section 66: Migrated module6 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-67",
+      "narrative": "Section 67: Migrated module6 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-68",
+      "narrative": "Section 68: Migrated module6 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-69",
+      "narrative": "Section 69: Migrated module6 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-70",
+      "narrative": "Section 70: Migrated module6 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module6/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module6/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-71",
+      "narrative": "Section 71: Migrated module7 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-72",
+      "narrative": "Section 72: Migrated module7 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-73",
+      "narrative": "Section 73: Migrated module7 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-74",
+      "narrative": "Section 74: Migrated module7 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-75",
+      "narrative": "Section 75: Migrated module7 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-76",
+      "narrative": "Section 76: Migrated module7 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-77",
+      "narrative": "Section 77: Migrated module7 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-78",
+      "narrative": "Section 78: Migrated module7 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-79",
+      "narrative": "Section 79: Migrated module7 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-80",
+      "narrative": "Section 80: Migrated module7 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module7/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module7/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-81",
+      "narrative": "Section 81: Migrated module8 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-82",
+      "narrative": "Section 82: Migrated module8 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-83",
+      "narrative": "Section 83: Migrated module8 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-84",
+      "narrative": "Section 84: Migrated module8 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-85",
+      "narrative": "Section 85: Migrated module8 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-86",
+      "narrative": "Section 86: Migrated module8 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-87",
+      "narrative": "Section 87: Migrated module8 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-88",
+      "narrative": "Section 88: Migrated module8 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-89",
+      "narrative": "Section 89: Migrated module8 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-90",
+      "narrative": "Section 90: Migrated module8 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module8/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module8/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-91",
+      "narrative": "Section 91: Migrated module9 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-92",
+      "narrative": "Section 92: Migrated module9 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-93",
+      "narrative": "Section 93: Migrated module9 handlers to use the new API patterns. This change updates 5 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-94",
+      "narrative": "Section 94: Migrated module9 handlers to use the new API patterns. This change updates 6 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-95",
+      "narrative": "Section 95: Migrated module9 handlers to use the new API patterns. This change updates 7 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-96",
+      "narrative": "Section 96: Migrated module9 handlers to use the new API patterns. This change updates 8 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler4.go",
+          "startLine": 50,
+          "diff": "@@ -50,7 +50,9 @@ func Handler4() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler5.go",
+          "startLine": 60,
+          "diff": "@@ -60,7 +60,9 @@ func Handler5() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler6.go",
+          "startLine": 70,
+          "diff": "@@ -70,7 +70,9 @@ func Handler6() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler7.go",
+          "startLine": 80,
+          "diff": "@@ -80,7 +80,9 @@ func Handler7() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-97",
+      "narrative": "Section 97: Migrated module9 handlers to use the new API patterns. This change updates 1 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-98",
+      "narrative": "Section 98: Migrated module9 handlers to use the new API patterns. This change updates 2 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "medium",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-99",
+      "narrative": "Section 99: Migrated module9 handlers to use the new API patterns. This change updates 3 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "low",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    },
+    {
+      "id": "sec-100",
+      "narrative": "Section 100: Migrated module9 handlers to use the new API patterns. This change updates 4 handler(s) to replace deprecated calls with the new standardized approach.",
+      "importance": "high",
+      "hunks": [
+        {
+          "file": "internal/module9/handler0.go",
+          "startLine": 10,
+          "diff": "@@ -10,7 +10,9 @@ func Handler0() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler1.go",
+          "startLine": 20,
+          "diff": "@@ -20,7 +20,9 @@ func Handler1() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler2.go",
+          "startLine": 30,
+          "diff": "@@ -30,7 +30,9 @@ func Handler2() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        },
+        {
+          "file": "internal/module9/handler3.go",
+          "startLine": 40,
+          "diff": "@@ -40,7 +40,9 @@ func Handler3() {\n     // existing code\n     oldFunc()\n-    deprecatedCall()\n+    newAPICall()\n+    additionalSetup()\n     // more code\n }"
+        }
+      ]
+    }
+  ]
+}
