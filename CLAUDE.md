@@ -19,3 +19,10 @@ Build and install to `~/dotfiles/bin/`:
 ```bash
 nix develop -c go build -o ~/dotfiles/bin/diffguide ./cmd/diffguide/
 ```
+
+## Reference Implementation
+
+Use [lazygit](https://github.com/jesseduffield/lazygit) as inspiration for UI patterns and codebase structure. The lazygit source code is available at:
+
+- Local: `~/code/lazygit`
+- Online: https://github.com/jesseduffield/lazygit
