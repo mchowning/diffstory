@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:charm.land)",
+      "WebFetch(domain:leg100.github.io)",
+      "WebFetch(domain:charm.sh)",
+      "Bash(nix develop:*)",
+      "Read(~/go/**)",
+      "Read(~/code/lazygit/**)",
+      "Bash(timeout 2 /tmp/diffguide mcp:*)",
+      "mcp__diffguide__submit_review",
+      "Bash(git remote get-url:*)",
+      "Skill(workflow-tools:frontmatter)",
+      "Bash(/Users/mchowning/.claude/plugins/cache/mchowning-marketplace/workflow-tools/1.0.0/skills/frontmatter/workflow-tools-frontmatter.sh)"
+    ]
+  }
+}
