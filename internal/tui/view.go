@@ -76,31 +76,6 @@ func (m Model) renderReviewState() string {
 	return lipgloss.JoinVertical(lipgloss.Left, header, content, footer)
 }
 
-func (m Model) renderSectionList(width, height int) string {
-	var items []string
-	// Account for border padding
-	contentWidth := width - 4
-	for i, section := range m.review.Sections {
-		style := normalStyle
-		prefix := normalPrefix
-		if i == m.selected {
-			style = selectedStyle
-			prefix = selectedPrefix
-		}
-		// Use lipgloss width to wrap text instead of truncating
-		wrappedStyle := style.Width(contentWidth)
-		text := prefix + section.Narrative
-		items = append(items, wrappedStyle.Render(text))
-	}
-	// Join with blank line between sections for spacing
-	content := strings.Join(items, "\n\n")
-	return activeBorderStyle.Width(width).Height(height).Render(content)
-}
-
-func (m Model) renderDiffPane(width, height int) string {
-	return inactiveBorderStyle.Width(width).Height(height).Render(m.viewport.View())
-}
-
 func (m Model) renderSectionPane(width, height int) string {
 	var items []string
 	contentWidth := width - 4
@@ -117,19 +92,12 @@ func (m Model) renderSectionPane(width, height int) string {
 	}
 	content := strings.Join(items, "\n\n")
 
-	// Build title with position indicator
 	title := "[1] Sections"
 	if len(m.review.Sections) > 0 {
 		title = fmt.Sprintf("[1] Sections [%d/%d]", m.selected+1, len(m.review.Sections))
 	}
 
-	borderStyle := inactiveBorderStyle
-	if m.focusedPanel == PanelSection {
-		borderStyle = activeBorderStyle
-	}
-	return borderStyle.Width(width).Height(height).BorderTop(true).
-		BorderTopForeground(borderStyle.GetBorderTopForeground()).
-		Render(title + "\n" + content)
+	return renderBorderedPanel(title, content, width, height, m.focusedPanel == PanelSection)
 }
 
 func (m Model) renderFilesPane(width, height int) string {
@@ -143,13 +111,7 @@ func (m Model) renderFilesPane(width, height int) string {
 		content += "\n" + positionStr
 	}
 
-	borderStyle := inactiveBorderStyle
-	if m.focusedPanel == PanelFiles {
-		borderStyle = activeBorderStyle
-	}
-	return borderStyle.Width(width).Height(height).BorderTop(true).
-		BorderTopForeground(borderStyle.GetBorderTopForeground()).
-		Render("[2] Files\n" + content)
+	return renderBorderedPanel("[2] Files", content, width, height, m.focusedPanel == PanelFiles)
 }
 
 func countFiles(nodes []*FileNode) int {
@@ -201,11 +163,6 @@ func (m Model) renderFilesContent(width int) string {
 }
 
 func (m Model) renderDiffPaneWithTitle(width, height int) string {
-	borderStyle := inactiveBorderStyle
-	if m.focusedPanel == PanelDiff {
-		borderStyle = activeBorderStyle
-	}
-
 	// Build context header - always show selected file/directory
 	var contextHeader string
 	if m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles) {
@@ -221,9 +178,7 @@ func (m Model) renderDiffPaneWithTitle(width, height int) string {
 
 	content := contextHeader + "\n" + strings.Repeat("─", width-6) + "\n" + m.viewport.View()
 
-	return borderStyle.Width(width).Height(height).BorderTop(true).
-		BorderTopForeground(borderStyle.GetBorderTopForeground()).
-		Render("[0] Diff\n" + content)
+	return renderBorderedPanel("[0] Diff", content, width, height, m.focusedPanel == PanelDiff)
 }
 
 func (m Model) renderDiffContent(section model.Section) string {

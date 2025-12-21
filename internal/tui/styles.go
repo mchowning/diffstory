@@ -3,14 +3,9 @@ package tui
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	// Pane borders
-	activeBorderStyle = lipgloss.NewStyle().
-				BorderStyle(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("63"))
-
-	inactiveBorderStyle = lipgloss.NewStyle().
-				BorderStyle(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("240"))
+	// Border colors
+	activeBorderColor   = lipgloss.Color("63")
+	inactiveBorderColor = lipgloss.Color("240")
 
 	// Section list - use prefix glyph for accessibility
 	selectedPrefix = "› "
