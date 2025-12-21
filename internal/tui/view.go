@@ -206,9 +206,9 @@ func (m Model) renderDiffPaneWithTitle(width, height int) string {
 		borderStyle = activeBorderStyle
 	}
 
-	// Build context header
+	// Build context header - always show selected file/directory
 	var contextHeader string
-	if m.focusedPanel == PanelFiles && m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles) {
+	if m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles) {
 		selectedNode := m.flattenedFiles[m.selectedFile]
 		if selectedNode.IsDir {
 			contextHeader = "Viewing: " + selectedNode.FullPath + "/"
@@ -228,12 +228,21 @@ func (m Model) renderDiffPaneWithTitle(width, height int) string {
 
 func (m Model) renderDiffContent(section model.Section) string {
 	var content strings.Builder
+	var lastFile string
 
 	for _, hunk := range section.Hunks {
-		content.WriteString(hunk.File + "\n")
-		content.WriteString(strings.Repeat("─", 40) + "\n")
+		if hunk.File != lastFile {
+			if lastFile != "" {
+				content.WriteString("\n\n\n")
+			}
+			content.WriteString(hunk.File + "\n")
+			content.WriteString(strings.Repeat("─", 40) + "\n")
+			lastFile = hunk.File
+		} else {
+			content.WriteString("\n\n\n")
+		}
 		coloredDiff := highlight.ColorizeDiff(hunk.Diff)
-		content.WriteString(coloredDiff + "\n\n")
+		content.WriteString(coloredDiff + "\n")
 	}
 
 	return content.String()
@@ -241,13 +250,19 @@ func (m Model) renderDiffContent(section model.Section) string {
 
 func (m Model) renderDiffForFile(section model.Section, filePath string) string {
 	var content strings.Builder
+	first := true
 
 	for _, hunk := range section.Hunks {
 		if hunk.File == filePath {
-			content.WriteString(hunk.File + "\n")
-			content.WriteString(strings.Repeat("─", 40) + "\n")
+			if first {
+				content.WriteString(hunk.File + "\n")
+				content.WriteString(strings.Repeat("─", 40) + "\n")
+				first = false
+			} else {
+				content.WriteString("\n\n\n")
+			}
 			coloredDiff := highlight.ColorizeDiff(hunk.Diff)
-			content.WriteString(coloredDiff + "\n\n")
+			content.WriteString(coloredDiff + "\n")
 		}
 	}
 
@@ -256,13 +271,22 @@ func (m Model) renderDiffForFile(section model.Section, filePath string) string 
 
 func (m Model) renderDiffForDirectory(section model.Section, dirPath string) string {
 	var content strings.Builder
+	var lastFile string
 
 	for _, hunk := range section.Hunks {
 		if strings.HasPrefix(hunk.File, dirPath+"/") || hunk.File == dirPath {
-			content.WriteString(hunk.File + "\n")
-			content.WriteString(strings.Repeat("─", 40) + "\n")
+			if hunk.File != lastFile {
+				if lastFile != "" {
+					content.WriteString("\n\n\n")
+				}
+				content.WriteString(hunk.File + "\n")
+				content.WriteString(strings.Repeat("─", 40) + "\n")
+				lastFile = hunk.File
+			} else {
+				content.WriteString("\n\n\n")
+			}
 			coloredDiff := highlight.ColorizeDiff(hunk.Diff)
-			content.WriteString(coloredDiff + "\n\n")
+			content.WriteString(coloredDiff + "\n")
 		}
 	}
 

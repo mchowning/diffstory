@@ -472,14 +472,15 @@ func TestView_DiffShowsAllFilesWhenDirectorySelected(t *testing.T) {
 	}
 }
 
-func TestView_DiffContextHeaderShowsAllFiles(t *testing.T) {
+func TestView_DiffContextHeaderShowsSelectedFile(t *testing.T) {
 	m := modelWithMultipleFilesForDiff()
 
-	// Section panel focused by default
+	// Section panel focused by default, but header still shows selected file/dir
+	// First item in flattened files is "pkg" directory
 	view := m.View()
 
-	if !strings.Contains(view, "All files") {
-		t.Error("diff header should show 'All files' when section focused")
+	if !strings.Contains(view, "Viewing: pkg/") {
+		t.Error("diff header should show selected file/directory regardless of focus")
 	}
 }
 
@@ -531,7 +532,7 @@ func TestUpdate_FileSelectionUpdatesDiffContent(t *testing.T) {
 	}
 }
 
-func TestUpdate_FocusSwitchUpdatesDiffContent(t *testing.T) {
+func TestView_FileSelectionControlsDiffRegardlessOfFocus(t *testing.T) {
 	m := modelWithMultipleFilesForDiff()
 
 	// Focus files panel and navigate to a file
@@ -552,9 +553,21 @@ func TestUpdate_FocusSwitchUpdatesDiffContent(t *testing.T) {
 
 	viewSectionPanel := m.View()
 
-	// Views should be different (all files vs single file)
-	if viewFilesPanel == viewSectionPanel {
-		t.Error("diff content should change when focus switches between panels")
+	// Diff content should show the selected file regardless of focus
+	// The selected file is pkg/lib.go, so both views should show "added in lib"
+	if !strings.Contains(viewFilesPanel, "added in lib") {
+		t.Error("diff should show selected file content when files panel focused")
+	}
+	if !strings.Contains(viewSectionPanel, "added in lib") {
+		t.Error("diff should still show selected file content when section panel focused")
+	}
+
+	// Neither view should show content from other files
+	if strings.Contains(viewSectionPanel, "added in main") {
+		t.Error("diff should not show other files when a specific file is selected")
+	}
+	if strings.Contains(viewSectionPanel, "added in util") {
+		t.Error("diff should not show other files when a specific file is selected")
 	}
 }
 
@@ -682,6 +695,54 @@ func TestView_FilesPanelShowsPositionIndicator(t *testing.T) {
 	// Should show "2 of 5" position indicator
 	if !strings.Contains(view, "2 of 5") {
 		t.Error("files panel should show '2 of 5' position indicator")
+	}
+}
+
+func TestView_FileHeadingAppearsOnceForMultipleHunks(t *testing.T) {
+	m := tui.NewModel("/test/project")
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review with multiple hunks for the same file
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "Test section",
+				Hunks: []model.Hunk{
+					{File: "src/main.go", Diff: "+first hunk"},
+					{File: "src/main.go", Diff: "+second hunk"},
+					{File: "src/main.go", Diff: "+third hunk"},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Count occurrences of the file name "src/main.go"
+	count := strings.Count(view, "src/main.go")
+
+	// File heading should appear only once, not three times
+	if count != 1 {
+		t.Errorf("file heading 'src/main.go' should appear once, but appeared %d times", count)
+	}
+
+	// All hunk content should still be present
+	if !strings.Contains(view, "first hunk") {
+		t.Error("diff should contain first hunk content")
+	}
+	if !strings.Contains(view, "second hunk") {
+		t.Error("diff should contain second hunk content")
+	}
+	if !strings.Contains(view, "third hunk") {
+		t.Error("diff should contain third hunk content")
 	}
 }
 
