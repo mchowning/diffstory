@@ -10,15 +10,15 @@ import (
 )
 
 type SubmitReviewInput struct {
-	WorkingDirectory string          `json:"workingDirectory" jsonschema:"The absolute path to the project directory"`
-	Title            string          `json:"title" jsonschema:"Title of the review"`
-	Sections         []model.Section `json:"sections" jsonschema:"Review sections with hunks"`
+	WorkingDirectory string          `json:"workingDirectory" jsonschema_description:"The absolute path to the project directory"`
+	Title            string          `json:"title" jsonschema_description:"Title of the review"`
+	Sections         []model.Section `json:"sections" jsonschema_description:"Review sections with hunks"`
 }
 
 type SubmitReviewOutput struct {
-	Success  bool   `json:"success" jsonschema:"Whether the review was stored successfully"`
-	FilePath string `json:"filePath,omitempty" jsonschema:"Path where review was stored"`
-	Error    string `json:"error,omitempty" jsonschema:"Error message if Success is false"`
+	Success  bool   `json:"success" jsonschema_description:"Whether the review was stored successfully"`
+	FilePath string `json:"filePath,omitempty" jsonschema_description:"Path where review was stored"`
+	Error    string `json:"error,omitempty" jsonschema_description:"Error message if Success is false"`
 }
 
 type Server struct {
