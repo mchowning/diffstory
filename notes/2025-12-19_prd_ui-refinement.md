@@ -181,7 +181,6 @@ Users need a layout that efficiently uses terminal space, provides granular file
 - **NFR3**: File tree expansion/collapse must be instantaneous
 - **NFR4**: UI must gracefully handle terminal resize events
 - **NFR5**: Minimum supported terminal size: 80 columns × 24 rows
-- **NFR6**: Debounce diff panel re-renders during rapid file navigation (50-100ms) to prevent flicker while maintaining responsiveness
 
 ---
 
