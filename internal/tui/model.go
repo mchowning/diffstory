@@ -104,7 +104,7 @@ func (m *Model) updateViewportContent() {
 	section := m.review.Sections[m.selected]
 	var content string
 
-	if m.focusedPanel == PanelFiles && m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles) {
+	if m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles) {
 		selectedNode := m.flattenedFiles[m.selectedFile]
 		if selectedNode.IsDir {
 			content = m.renderDiffForDirectory(section, selectedNode.FullPath)
