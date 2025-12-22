@@ -10,8 +10,11 @@
       "Bash(timeout 2 /tmp/diffguide mcp:*)",
       "mcp__diffguide__submit_review",
       "Bash(git remote get-url:*)",
-      "Skill(workflow-tools:frontmatter)",
-      "Bash(/Users/mchowning/.claude/plugins/cache/mchowning-marketplace/workflow-tools/1.0.0/skills/frontmatter/workflow-tools-frontmatter.sh)"
+      "Bash(timeout:*)",
+      "Bash(~/.claude/plugins/cache/mchowning-marketplace/workflow-tools/1.0.0/skills/frontmatter/workflow-tools-frontmatter.sh)",
+      "WebFetch(domain:docs.claude.com)",
+      "WebFetch(domain:llm.datasette.io)",
+      "WebFetch(domain:opencode.ai)"
     ]
   }
 }
