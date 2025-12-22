@@ -249,28 +249,32 @@ func (m Model) renderDiffForDirectory(section model.Section, dirPath string) str
 }
 
 func (m Model) renderHelpOverlay(base string) string {
-	help := `Keybindings:
+	var sb strings.Builder
+	sb.WriteString("Keybindings:\n\n")
 
-  j/k or ↑/↓    Navigate within focused panel
-  h/l or ←/→    Cycle focus: Section ↔ Files
-  0             Focus Diff panel
-  1             Focus Section panel
-  2             Focus Files panel
+	// Group by context in display order
+	contexts := []struct {
+		name  string
+		title string
+	}{
+		{"global", "Global"},
+		{"navigation", "Navigation"},
+		{"files", "Files"},
+	}
 
-  J/K           Scroll diff (always)
-  </>           Jump to top/bottom
-  ,/.           Page up/down
+	for _, ctx := range contexts {
+		bindings := m.keybindings.GetByContext(ctx.name)
+		if len(bindings) == 0 {
+			continue
+		}
+		sb.WriteString(ctx.title + "\n")
+		for _, b := range bindings {
+			sb.WriteString(fmt.Sprintf("  %-12s %s\n", b.Key, b.Description))
+		}
+		sb.WriteString("\n")
+	}
 
-  Enter         Expand/collapse directory
-
-  q             Quit
-  ?             Toggle this help
-
-HTTP API:
-
-  POST /review  Send review data`
-
-	overlay := helpStyle.Render(help)
+	overlay := helpStyle.Render(strings.TrimSuffix(sb.String(), "\n"))
 
 	return lipgloss.Place(
 		m.width, m.height,

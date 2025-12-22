@@ -83,6 +83,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "?":
 			m.showHelp = !m.showHelp
+		case "esc":
+			if m.showHelp {
+				m.showHelp = false
+			}
 		case "0":
 			m.focusedPanel = PanelDiff
 			m.updateViewportContent()

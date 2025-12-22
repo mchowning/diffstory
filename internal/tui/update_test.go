@@ -385,6 +385,28 @@ func TestUpdate_QuestionMarkTogglesShowHelp(t *testing.T) {
 	}
 }
 
+func TestUpdate_EscapeClosesHelpOverlay(t *testing.T) {
+	m := tui.NewModel("/test/project")
+
+	// Show help first
+	helpMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("?")}
+	updated, _ := m.Update(helpMsg)
+	m = updated.(tui.Model)
+
+	if !m.ShowHelp() {
+		t.Fatal("expected ShowHelp() to be true after ? key")
+	}
+
+	// Press Escape to close help
+	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
+	updated, _ = m.Update(escMsg)
+	result := updated.(tui.Model)
+
+	if result.ShowHelp() {
+		t.Error("expected ShowHelp() to be false after Escape key")
+	}
+}
+
 func TestUpdate_QuitWorksWhenHelpShown(t *testing.T) {
 	m := tui.NewModel("/test/project")
 

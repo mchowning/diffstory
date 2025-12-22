@@ -61,9 +61,12 @@ func (s *Server) Run(ctx context.Context) error {
 	mcp.AddTool(mcpServer, &mcp.Tool{
 		Name: "submit_review",
 		Description: "Submit a code review for display in the diffguide TUI viewer. " +
-			"Structure the review as a narrative that tells the story of the changes - " +
-			"someone reading just the section summaries in order should understand what changed and why. " +
-			"Each section groups related changes with a narrative explaining the intent and context. " +
+			"Structure the review as a narrative that tells the story of the changes. " +
+			"Each section's narrative should both stand alone AND flow naturally into the next - " +
+			"reading just the narratives in sequence should feel like a guided tour through the changes, " +
+			"building context progressively and helping the reader understand not just what changed, but the logical progression of why. " +
+			"Order sections to tell a coherent story (e.g., setup before usage, core changes before peripheral ones). " +
+			"Include ALL changes - every diff hunk must appear in exactly one section. Do not omit any changes, even minor ones like imports or formatting. " +
 			"IMPORTANT: Include COMPLETE diff content for each hunk - do not summarize or truncate diffs.",
 	}, s.handleSubmitReview)
 

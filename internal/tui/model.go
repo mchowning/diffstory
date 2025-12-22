@@ -31,12 +31,16 @@ type Model struct {
 	collapsedPaths CollapsedPaths
 	selectedFile   int
 	flattenedFiles []*FileNode
+
+	// Keybinding registry for help display
+	keybindings *KeybindingRegistry
 }
 
 func NewModel(workDir string) Model {
 	return Model{
 		workDir:      workDir,
 		focusedPanel: PanelSection,
+		keybindings:  initKeybindings(),
 	}
 }
 

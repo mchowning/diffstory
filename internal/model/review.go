@@ -8,7 +8,7 @@ type Review struct {
 
 type Section struct {
 	ID         string `json:"id" jsonschema_description:"Unique identifier for this section"`
-	Narrative  string `json:"narrative" jsonschema_description:"Summary explaining what changed and why - should be understandable without reading the diff"`
+	Narrative  string `json:"narrative" jsonschema_description:"Summary explaining what changed and why - should be understandable on its own AND connect smoothly to adjacent sections, building a coherent narrative arc"`
 	Importance string `json:"importance" jsonschema_description:"Importance level: high, medium, or low"`
 	Hunks      []Hunk `json:"hunks" jsonschema_description:"Code changes belonging to this section"`
 }
