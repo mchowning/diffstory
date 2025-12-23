@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 
 	"github.com/fsnotify/fsnotify"
@@ -15,6 +16,7 @@ type Watcher struct {
 	reviewPath string
 	reviewDir  string
 	fsWatcher  *fsnotify.Watcher
+	logger     *slog.Logger
 	Reviews    chan model.Review
 	Cleared    chan struct{}
 	Errors     chan error
@@ -23,17 +25,17 @@ type Watcher struct {
 
 // New creates a watcher for the given working directory.
 // Uses the default storage location (~/.diffguide/reviews).
-func New(workDir string) (*Watcher, error) {
+func New(workDir string, logger *slog.Logger) (*Watcher, error) {
 	store, err := storage.NewStore()
 	if err != nil {
 		return nil, err
 	}
-	return NewWithStore(workDir, store)
+	return NewWithStore(workDir, store, logger)
 }
 
 // NewWithStore creates a watcher using a custom store (for testing).
 // This enables tests to use t.TempDir() for isolation.
-func NewWithStore(workDir string, store *storage.Store) (*Watcher, error) {
+func NewWithStore(workDir string, store *storage.Store, logger *slog.Logger) (*Watcher, error) {
 	normalized, err := storage.NormalizePath(workDir)
 	if err != nil {
 		return nil, err
@@ -65,6 +67,7 @@ func NewWithStore(workDir string, store *storage.Store) (*Watcher, error) {
 		reviewPath: reviewPath,
 		reviewDir:  reviewDir,
 		fsWatcher:  fsWatcher,
+		logger:     logger,
 		Reviews:    make(chan model.Review, 1),
 		Cleared:    make(chan struct{}, 1),
 		Errors:     make(chan error, 1),
@@ -120,6 +123,9 @@ func (w *Watcher) watch() {
 						}
 						continue
 					}
+					if w.logger != nil {
+						w.logger.Error("failed to load review", "path", w.reviewPath, "error", err)
+					}
 					select {
 					case w.Errors <- err:
 					case <-w.done:
@@ -136,6 +142,9 @@ func (w *Watcher) watch() {
 		case err, ok := <-w.fsWatcher.Errors:
 			if !ok {
 				return
+			}
+			if w.logger != nil {
+				w.logger.Error("fsnotify error", "error", err)
 			}
 			select {
 			case w.Errors <- err:

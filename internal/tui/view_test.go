@@ -11,7 +11,7 @@ import (
 )
 
 func TestView_EmptyStateContainsWorkingDirectory(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	view := m.View()
 
 	if !strings.Contains(view, "/test/project") {
@@ -20,7 +20,7 @@ func TestView_EmptyStateContainsWorkingDirectory(t *testing.T) {
 }
 
 func TestView_EmptyStateContainsQuitInstruction(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	view := m.View()
 
 	if !strings.Contains(view, "q: quit") {
@@ -29,7 +29,7 @@ func TestView_EmptyStateContainsQuitInstruction(t *testing.T) {
 }
 
 func TestView_EmptyStateContainsServerInstructions(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	view := m.View()
 
 	if !strings.Contains(view, "diffguide server") {
@@ -41,7 +41,7 @@ func TestView_EmptyStateContainsServerInstructions(t *testing.T) {
 }
 
 func modelWithReviewAndSize(numSections int) tui.Model {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Initialize viewport via WindowSizeMsg
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -124,7 +124,7 @@ func TestView_ReviewStateShowsHunkContent(t *testing.T) {
 }
 
 func TestView_NotReadyShowsInitializing(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Set a review but don't send WindowSizeMsg (so viewport not initialized)
 	review := model.Review{
 		WorkingDirectory: "/test/project",
@@ -142,7 +142,7 @@ func TestView_NotReadyShowsInitializing(t *testing.T) {
 }
 
 func TestView_SectionListDoesNotTruncateText(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Initialize viewport - width 120 gives section pane ~30 chars for wrapping test
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -174,7 +174,7 @@ func TestView_SectionListDoesNotTruncateText(t *testing.T) {
 }
 
 func TestView_StatusBarShowsErrorText(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Initialize viewport
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -203,7 +203,7 @@ func TestView_StatusBarShowsErrorText(t *testing.T) {
 }
 
 func TestView_HelpOverlayContainsKeybindings(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Initialize viewport
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -301,7 +301,7 @@ func TestView_DiffPanelShowsTitle0(t *testing.T) {
 // Files Panel View Tests
 
 func modelWithFilesForView() tui.Model {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
@@ -389,7 +389,7 @@ func TestView_CollapsedDirHasRightArrow(t *testing.T) {
 // Context-Sensitive Diff Display Tests
 
 func modelWithMultipleFilesForDiff() tui.Model {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
@@ -574,7 +574,7 @@ func TestView_FileSelectionControlsDiffRegardlessOfFocus(t *testing.T) {
 // Phase 4: Help Overlay Tests
 
 func TestView_HelpOverlayShowsNewKeybindings(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Initialize viewport
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -621,7 +621,7 @@ func TestView_HelpOverlayShowsNewKeybindings(t *testing.T) {
 // Phase 5: Position Indicators and Visual Polish Tests
 
 func TestView_SectionPanelShowsPositionIndicator(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
@@ -658,7 +658,7 @@ func TestView_SectionPanelShowsPositionIndicator(t *testing.T) {
 }
 
 func TestView_FilesPanelShowsPositionIndicator(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
@@ -699,7 +699,7 @@ func TestView_FilesPanelShowsPositionIndicator(t *testing.T) {
 }
 
 func TestView_FileHeadingAppearsOnceForMultipleHunks(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)

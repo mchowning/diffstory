@@ -6,12 +6,14 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mchowning/diffguide/internal/config"
 	"github.com/mchowning/diffguide/internal/model"
+	"github.com/mchowning/diffguide/internal/storage"
 	"github.com/mchowning/diffguide/internal/tui"
 )
 
 func TestUpdate_QuitWithQKey(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")}
 
 	_, cmd := m.Update(msg)
@@ -27,7 +29,7 @@ func TestUpdate_QuitWithQKey(t *testing.T) {
 }
 
 func TestUpdate_QuitWithCtrlC(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	msg := tea.KeyMsg{Type: tea.KeyCtrlC}
 
 	_, cmd := m.Update(msg)
@@ -43,7 +45,7 @@ func TestUpdate_QuitWithCtrlC(t *testing.T) {
 }
 
 func TestUpdate_WindowSizeMsg(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	msg := tea.WindowSizeMsg{Width: 100, Height: 50}
 
 	updated, _ := m.Update(msg)
@@ -58,7 +60,7 @@ func TestUpdate_WindowSizeMsg(t *testing.T) {
 }
 
 func TestUpdate_ReviewReceivedMsgSetsReview(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	review := model.Review{
 		WorkingDirectory: "/test/project",
 		Title:            "Test Review",
@@ -80,7 +82,7 @@ func TestUpdate_ReviewReceivedMsgSetsReview(t *testing.T) {
 }
 
 func TestUpdate_ReviewReceivedMsgResetsSelected(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Simulate having previously selected something
 	review := model.Review{
 		WorkingDirectory: "/test/project",
@@ -101,7 +103,7 @@ func TestUpdate_ReviewReceivedMsgResetsSelected(t *testing.T) {
 }
 
 func TestUpdate_ReviewClearedMsgClearsReview(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// First set a review
 	review := model.Review{
 		WorkingDirectory: "/test/project",
@@ -120,7 +122,7 @@ func TestUpdate_ReviewClearedMsgClearsReview(t *testing.T) {
 }
 
 func TestUpdate_ReviewClearedMsgResetsSelected(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// First set a review
 	review := model.Review{
 		WorkingDirectory: "/test/project",
@@ -152,7 +154,7 @@ func modelWithReview(numSections int) tui.Model {
 		Title:            "Test",
 		Sections:         sections,
 	}
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	updated, _ := m.Update(tui.ReviewReceivedMsg{Review: review})
 	return updated.(tui.Model)
 }
@@ -244,7 +246,7 @@ func TestUpdate_UpArrowWorksSameAsK(t *testing.T) {
 }
 
 func TestUpdate_NavigationDoesNothingWithNoReview(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")}
 	updated, _ := m.Update(msg)
@@ -256,7 +258,7 @@ func TestUpdate_NavigationDoesNothingWithNoReview(t *testing.T) {
 }
 
 func TestUpdate_WindowSizeMsgInitializesViewport(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	if m.Ready() {
 		t.Error("expected Ready() to be false initially")
 	}
@@ -271,7 +273,7 @@ func TestUpdate_WindowSizeMsgInitializesViewport(t *testing.T) {
 }
 
 func TestUpdate_WindowSizeMsgResizesViewport(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// First size
 	msg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(msg)
@@ -292,7 +294,7 @@ func TestUpdate_WindowSizeMsgResizesViewport(t *testing.T) {
 }
 
 func TestUpdate_ShiftJScrollsViewportDown(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Initialize viewport
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
@@ -324,7 +326,7 @@ func TestUpdate_ShiftJScrollsViewportDown(t *testing.T) {
 }
 
 func TestUpdate_ShiftKScrollsViewportUp(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Initialize viewport
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
@@ -361,7 +363,7 @@ func TestUpdate_ShiftKScrollsViewportUp(t *testing.T) {
 }
 
 func TestUpdate_QuestionMarkTogglesShowHelp(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	if m.ShowHelp() {
 		t.Error("expected ShowHelp() to be false initially")
@@ -386,7 +388,7 @@ func TestUpdate_QuestionMarkTogglesShowHelp(t *testing.T) {
 }
 
 func TestUpdate_EscapeClosesHelpOverlay(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Show help first
 	helpMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("?")}
@@ -408,7 +410,7 @@ func TestUpdate_EscapeClosesHelpOverlay(t *testing.T) {
 }
 
 func TestUpdate_QuitWorksWhenHelpShown(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Show help
 	helpMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("?")}
@@ -430,7 +432,7 @@ func TestUpdate_QuitWorksWhenHelpShown(t *testing.T) {
 }
 
 func TestUpdate_ErrorMsgSetsStatusMsg(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	testErr := errors.New("test error")
 	msg := tui.ErrorMsg{Err: testErr}
 
@@ -443,8 +445,22 @@ func TestUpdate_ErrorMsgSetsStatusMsg(t *testing.T) {
 	}
 }
 
+func TestUpdate_WatchErrorMsgSetsStatusMsg(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	testErr := errors.New("filesystem error")
+	msg := tui.WatchErrorMsg{Err: testErr}
+
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	expected := "Watch error: filesystem error"
+	if result.StatusMsg() != expected {
+		t.Errorf("StatusMsg() = %q, want %q", result.StatusMsg(), expected)
+	}
+}
+
 func TestUpdate_ErrorMsgReturnsTickCommandForAutoClear(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	testErr := errors.New("test error")
 	msg := tui.ErrorMsg{Err: testErr}
 
@@ -456,7 +472,7 @@ func TestUpdate_ErrorMsgReturnsTickCommandForAutoClear(t *testing.T) {
 }
 
 func TestUpdate_ClearStatusMsgClearsStatusMsg(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// First set an error
 	errMsg := tui.ErrorMsg{Err: errors.New("test error")}
@@ -475,7 +491,7 @@ func TestUpdate_ClearStatusMsgClearsStatusMsg(t *testing.T) {
 
 func TestIntegration_FullWorkflow(t *testing.T) {
 	// 1. Start - create model
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// 2. Initialize viewport (simulates terminal startup)
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -600,7 +616,7 @@ func TestIntegration_FullWorkflow(t *testing.T) {
 }
 
 func TestUpdate_NavigationResetsViewportToTop(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Initialize viewport
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
@@ -632,7 +648,7 @@ func TestUpdate_NavigationResetsViewportToTop(t *testing.T) {
 // Focus Management Tests
 
 func TestModel_FocusedPanelDefaultsToSection(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	if m.FocusedPanel() != tui.PanelSection {
 		t.Errorf("FocusedPanel() = %d, want %d (PanelSection)", m.FocusedPanel(), tui.PanelSection)
@@ -640,7 +656,7 @@ func TestModel_FocusedPanelDefaultsToSection(t *testing.T) {
 }
 
 func TestUpdate_0KeyFocusesDiffPanel(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("0")}
 
 	updated, _ := m.Update(msg)
@@ -652,7 +668,7 @@ func TestUpdate_0KeyFocusesDiffPanel(t *testing.T) {
 }
 
 func TestUpdate_1KeyFocusesSectionPanel(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// First switch to diff panel
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("0")}
 	updated, _ := m.Update(msg)
@@ -669,7 +685,7 @@ func TestUpdate_1KeyFocusesSectionPanel(t *testing.T) {
 }
 
 func TestUpdate_2KeyFocusesFilesPanel(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
 
 	updated, _ := m.Update(msg)
@@ -681,7 +697,7 @@ func TestUpdate_2KeyFocusesFilesPanel(t *testing.T) {
 }
 
 func TestUpdate_LKeyCyclesFocusFromSectionToFiles(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Ensure we start on section panel
 	if m.FocusedPanel() != tui.PanelSection {
 		t.Fatal("expected to start on section panel")
@@ -697,7 +713,7 @@ func TestUpdate_LKeyCyclesFocusFromSectionToFiles(t *testing.T) {
 }
 
 func TestUpdate_LKeyCyclesFocusFromFilesToSection(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Move to files panel first
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
 	updated, _ := m.Update(msg)
@@ -714,7 +730,7 @@ func TestUpdate_LKeyCyclesFocusFromFilesToSection(t *testing.T) {
 }
 
 func TestUpdate_HKeyCyclesFocusFromFilesToSection(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Move to files panel first
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
 	updated, _ := m.Update(msg)
@@ -731,7 +747,7 @@ func TestUpdate_HKeyCyclesFocusFromFilesToSection(t *testing.T) {
 }
 
 func TestUpdate_HKeyCyclesFocusFromSectionToFiles(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Ensure we start on section panel
 	if m.FocusedPanel() != tui.PanelSection {
 		t.Fatal("expected to start on section panel")
@@ -748,7 +764,7 @@ func TestUpdate_HKeyCyclesFocusFromSectionToFiles(t *testing.T) {
 }
 
 func TestUpdate_HAndLDoNotAffectDiffPanel(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Move to diff panel
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("0")}
 	updated, _ := m.Update(msg)
@@ -774,7 +790,7 @@ func TestUpdate_HAndLDoNotAffectDiffPanel(t *testing.T) {
 }
 
 func TestUpdate_FocusSwitchingWorksWithNoReview(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Should be able to switch focus even without a review loaded
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
@@ -789,7 +805,7 @@ func TestUpdate_FocusSwitchingWorksWithNoReview(t *testing.T) {
 // Files Panel Navigation Tests
 
 func modelWithReviewAndSizeForFiles() tui.Model {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Initialize viewport
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -893,7 +909,7 @@ func TestUpdate_EnterTogglesDirectoryCollapse(t *testing.T) {
 }
 
 func TestUpdate_SectionChangeResetsFileSelection(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Initialize viewport
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -983,7 +999,7 @@ func TestUpdate_SectionChangeExpandsAllDirs(t *testing.T) {
 // Phase 4: Navigation Enhancement Tests
 
 func modelWithManySections(count int) tui.Model {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
@@ -1009,7 +1025,7 @@ func modelWithManySections(count int) tui.Model {
 }
 
 func modelWithManyFiles() tui.Model {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
@@ -1310,7 +1326,7 @@ func TestUpdate_PeriodPageDownInDiffPanel(t *testing.T) {
 // Arrow Key Tests
 
 func TestUpdate_LeftArrowCyclesFocusLikeH(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Starting on section panel, left arrow should go to files
 	msg := tea.KeyMsg{Type: tea.KeyLeft}
@@ -1323,7 +1339,7 @@ func TestUpdate_LeftArrowCyclesFocusLikeH(t *testing.T) {
 }
 
 func TestUpdate_RightArrowCyclesFocusLikeL(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Starting on section panel, right arrow should go to files
 	msg := tea.KeyMsg{Type: tea.KeyRight}
@@ -1336,7 +1352,7 @@ func TestUpdate_RightArrowCyclesFocusLikeL(t *testing.T) {
 }
 
 func TestUpdate_ArrowKeysDoNotAffectDiffPanel(t *testing.T) {
-	m := tui.NewModel("/test/project")
+	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	// Focus diff panel
 	focusMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("0")}
@@ -1359,5 +1375,343 @@ func TestUpdate_ArrowKeysDoNotAffectDiffPanel(t *testing.T) {
 
 	if result.FocusedPanel() != tui.PanelDiff {
 		t.Errorf("after right: FocusedPanel() = %d, want %d (PanelDiff)", result.FocusedPanel(), tui.PanelDiff)
+	}
+}
+
+// LLM Generation Tests
+
+func TestUpdate_GKeyWithoutConfigShowsError(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	expected := "LLM not configured. Create ~/.config/diffguide/config.json"
+	if result.StatusMsg() != expected {
+		t.Errorf("StatusMsg() = %q, want %q", result.StatusMsg(), expected)
+	}
+	if result.IsGenerating() {
+		t.Error("expected IsGenerating() to be false")
+	}
+}
+
+func TestUpdate_GKeyWithEmptyLLMCommandShowsError(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{}}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	expected := "LLM not configured. Create ~/.config/diffguide/config.json"
+	if result.StatusMsg() != expected {
+		t.Errorf("StatusMsg() = %q, want %q", result.StatusMsg(), expected)
+	}
+}
+
+func TestUpdate_GKeyWithoutStoreShowsError(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	expected := "Storage not initialized"
+	if result.StatusMsg() != expected {
+		t.Errorf("StatusMsg() = %q, want %q", result.StatusMsg(), expected)
+	}
+}
+
+func TestUpdate_GKeyStartsGeneration(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+
+	updated, cmd := m.Update(msg)
+	result := updated.(tui.Model)
+
+	if !result.IsGenerating() {
+		t.Error("expected IsGenerating() to be true")
+	}
+	if cmd == nil {
+		t.Error("expected command to be returned")
+	}
+}
+
+func TestUpdate_GKeyIgnoredWhenAlreadyGenerating(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Start generation
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(msg)
+	m = updated.(tui.Model)
+
+	// Try to start again
+	updated, cmd := m.Update(msg)
+	result := updated.(tui.Model)
+
+	if !result.IsGenerating() {
+		t.Error("expected IsGenerating() to still be true")
+	}
+	if cmd != nil {
+		t.Error("expected no command when already generating")
+	}
+}
+
+func TestUpdate_GenerateSuccessMsgStopsSpinner(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Start generation
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	if !m.IsGenerating() {
+		t.Fatal("expected IsGenerating() to be true after G key")
+	}
+
+	// Simulate success
+	successMsg := tui.GenerateSuccessMsg{}
+	updated, _ = m.Update(successMsg)
+	result := updated.(tui.Model)
+
+	if result.IsGenerating() {
+		t.Error("expected IsGenerating() to be false after success")
+	}
+}
+
+func TestUpdate_GenerateErrorMsgShowsError(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Start generation
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	// Simulate error
+	errorMsg := tui.GenerateErrorMsg{Err: errors.New("LLM failed")}
+	updated, _ = m.Update(errorMsg)
+	result := updated.(tui.Model)
+
+	if result.IsGenerating() {
+		t.Error("expected IsGenerating() to be false after error")
+	}
+	if !strings.Contains(result.StatusMsg(), "LLM failed") {
+		t.Errorf("StatusMsg() = %q, want to contain 'LLM failed'", result.StatusMsg())
+	}
+}
+
+func TestUpdate_GenerateErrorMsgClearsReview(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// First set a review
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Existing Review",
+		Sections:         []model.Section{{ID: "1", Narrative: "test"}},
+	}
+	reviewMsg := tui.ReviewReceivedMsg{Review: review}
+	updated, _ := m.Update(reviewMsg)
+	m = updated.(tui.Model)
+
+	if m.Review() == nil {
+		t.Fatal("expected review to be set")
+	}
+
+	// Start generation
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ = m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	// Simulate error
+	errorMsg := tui.GenerateErrorMsg{Err: errors.New("failed")}
+	updated, _ = m.Update(errorMsg)
+	result := updated.(tui.Model)
+
+	if result.Review() != nil {
+		t.Error("expected review to be cleared after generation error")
+	}
+}
+
+// Cancellation Flow Tests
+
+func TestUpdate_EscapeWhileGeneratingShowsCancelPrompt(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Start generation
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	if !m.IsGenerating() {
+		t.Fatal("expected IsGenerating() to be true")
+	}
+
+	// Press escape
+	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
+	updated, _ = m.Update(escMsg)
+	result := updated.(tui.Model)
+
+	if !result.ShowCancelPrompt() {
+		t.Error("expected ShowCancelPrompt() to be true after escape while generating")
+	}
+	if !result.IsGenerating() {
+		t.Error("expected IsGenerating() to still be true (not cancelled yet)")
+	}
+}
+
+func TestUpdate_YKeyConfirmsCancellation(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Start generation
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	// Press escape to show cancel prompt
+	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
+	updated, _ = m.Update(escMsg)
+	m = updated.(tui.Model)
+
+	// Press y to confirm cancellation
+	yMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("y")}
+	updated, _ = m.Update(yMsg)
+	result := updated.(tui.Model)
+
+	if result.IsGenerating() {
+		t.Error("expected IsGenerating() to be false after y confirmation")
+	}
+	if result.ShowCancelPrompt() {
+		t.Error("expected ShowCancelPrompt() to be false after y confirmation")
+	}
+	if !strings.Contains(result.StatusMsg(), "cancelled") {
+		t.Errorf("StatusMsg() = %q, want to contain 'cancelled'", result.StatusMsg())
+	}
+}
+
+func TestUpdate_NKeyDismissesCancelPrompt(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Start generation
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	// Press escape to show cancel prompt
+	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
+	updated, _ = m.Update(escMsg)
+	m = updated.(tui.Model)
+
+	// Press n to dismiss prompt
+	nMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("n")}
+	updated, _ = m.Update(nMsg)
+	result := updated.(tui.Model)
+
+	if result.ShowCancelPrompt() {
+		t.Error("expected ShowCancelPrompt() to be false after n")
+	}
+	if !result.IsGenerating() {
+		t.Error("expected IsGenerating() to still be true after n (generation continues)")
+	}
+}
+
+func TestUpdate_EscapeOnCancelPromptDismissesIt(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Start generation
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	// Press escape to show cancel prompt
+	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
+	updated, _ = m.Update(escMsg)
+	m = updated.(tui.Model)
+
+	if !m.ShowCancelPrompt() {
+		t.Fatal("expected ShowCancelPrompt() to be true")
+	}
+
+	// Press escape again to dismiss prompt
+	updated, _ = m.Update(escMsg)
+	result := updated.(tui.Model)
+
+	if result.ShowCancelPrompt() {
+		t.Error("expected ShowCancelPrompt() to be false after second escape")
+	}
+	if !result.IsGenerating() {
+		t.Error("expected IsGenerating() to still be true")
+	}
+}
+
+func TestUpdate_GenerateCancelledMsgStopsSpinner(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Start generation
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	// Simulate cancelled message from command
+	cancelledMsg := tui.GenerateCancelledMsg{}
+	updated, _ = m.Update(cancelledMsg)
+	result := updated.(tui.Model)
+
+	if result.IsGenerating() {
+		t.Error("expected IsGenerating() to be false after cancelled message")
+	}
+	if !strings.Contains(result.StatusMsg(), "cancelled") {
+		t.Errorf("StatusMsg() = %q, want to contain 'cancelled'", result.StatusMsg())
 	}
 }

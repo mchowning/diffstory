@@ -22,3 +22,15 @@ type ErrorMsg struct {
 
 // ClearStatusMsg is sent to clear the status bar message
 type ClearStatusMsg struct{}
+
+// GenerateSuccessMsg signals that LLM generation completed successfully.
+// The review is written to disk and will be delivered via the watcher.
+type GenerateSuccessMsg struct{}
+
+// GenerateErrorMsg indicates LLM generation failed
+type GenerateErrorMsg struct {
+	Err error
+}
+
+// GenerateCancelledMsg indicates user cancelled generation
+type GenerateCancelledMsg struct{}

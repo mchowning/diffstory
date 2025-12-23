@@ -1,9 +1,17 @@
 package tui
 
 import (
+	"context"
+	"log/slog"
+	"time"
+
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/mchowning/diffguide/internal/config"
 	"github.com/mchowning/diffguide/internal/model"
+	"github.com/mchowning/diffguide/internal/storage"
 )
 
 type Panel int
@@ -34,18 +42,38 @@ type Model struct {
 
 	// Keybinding registry for help display
 	keybindings *KeybindingRegistry
+
+	// LLM generation state
+	config             *config.Config
+	store              *storage.Store
+	isGenerating       bool
+	generateStartTime  time.Time
+	cancelGenerate     context.CancelFunc
+	showCancelPrompt   bool
+	spinner            spinner.Model
+
+	// Logging
+	logger *slog.Logger
 }
 
-func NewModel(workDir string) Model {
+func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *slog.Logger) Model {
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
+
 	return Model{
 		workDir:      workDir,
 		focusedPanel: PanelSection,
 		keybindings:  initKeybindings(),
+		config:       cfg,
+		store:        store,
+		spinner:      s,
+		logger:       logger,
 	}
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return m.spinner.Tick
 }
 
 func (m Model) Width() int {
@@ -97,6 +125,14 @@ func (m Model) FlattenedFilesCount() int {
 		return 0
 	}
 	return len(m.flattenedFiles)
+}
+
+func (m Model) IsGenerating() bool {
+	return m.isGenerating
+}
+
+func (m Model) ShowCancelPrompt() bool {
+	return m.showCancelPrompt
 }
 
 func (m *Model) updateViewportContent() {

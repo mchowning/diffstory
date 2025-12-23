@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mchowning/diffguide/internal/highlight"
@@ -10,6 +11,23 @@ import (
 )
 
 func (m Model) View() string {
+	// Cancel confirmation prompt
+	if m.showCancelPrompt {
+		prompt := helpStyle.Render("Cancel review generation? (y/n)")
+		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, prompt)
+	}
+
+	// Loading state
+	if m.isGenerating {
+		elapsed := time.Since(m.generateStartTime).Truncate(time.Second)
+		line1 := m.spinner.View() + " Generating review..."
+		line2 := elapsed.String()
+		// Center both lines
+		centered := lipgloss.NewStyle().Align(lipgloss.Center).Render(line1 + "\n\n" + line2)
+		content := helpStyle.Render(centered)
+		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, content)
+	}
+
 	if m.review == nil {
 		return m.renderEmptyState()
 	}
@@ -24,6 +42,11 @@ func (m Model) View() string {
 }
 
 func (m Model) renderEmptyState() string {
+	status := ""
+	if m.statusMsg != "" {
+		status = "\n    " + statusStyle.Render(m.statusMsg) + "\n"
+	}
+
 	return `
     ╔═══════════════════════════════════════════╗
     ║                                           ║
@@ -36,7 +59,8 @@ func (m Model) renderEmptyState() string {
 
     Start server: diffguide server
     Send review:  POST http://localhost:8765/review
-
+    Generate:     Press Shift+G
+` + status + `
     q: quit | ?: help
 `
 }

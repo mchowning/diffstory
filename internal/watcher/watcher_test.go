@@ -2,6 +2,8 @@ package watcher_test
 
 import (
 	"encoding/json"
+	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,13 +14,17 @@ import (
 	"github.com/mchowning/diffguide/internal/watcher"
 )
 
+func discardLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
+}
+
 func TestWatcher_NewCreatesWatcherForDirectory(t *testing.T) {
 	dir := t.TempDir()
 	store := createTestStore(t, dir)
 	workDir := filepath.Join(dir, "project")
 	os.MkdirAll(workDir, 0755)
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -35,7 +41,7 @@ func TestWatcher_NewWithStoreAcceptsCustomStore(t *testing.T) {
 	workDir := filepath.Join(dir, "project")
 	os.MkdirAll(workDir, 0755)
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -55,14 +61,14 @@ func TestWatcher_NormalizesWorkingDirectoryPath(t *testing.T) {
 	os.MkdirAll(workDir, 0755)
 
 	// Create watcher with trailing slash - should normalize
-	w, err := watcher.NewWithStore(workDir+"/", store)
+	w, err := watcher.NewWithStore(workDir+"/", store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
 	defer w.Close()
 
 	// Create watcher without trailing slash
-	w2, err := watcher.NewWithStore(workDir, store)
+	w2, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -80,7 +86,7 @@ func TestWatcher_WatchesCorrectFileBasedOnDirectoryHash(t *testing.T) {
 	workDir := filepath.Join(dir, "project")
 	os.MkdirAll(workDir, 0755)
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -98,7 +104,7 @@ func TestWatcher_SendsReviewWhenFileCreated(t *testing.T) {
 	workDir := filepath.Join(dir, "project")
 	os.MkdirAll(workDir, 0755)
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -144,7 +150,7 @@ func TestWatcher_SendsReviewWhenFileModified(t *testing.T) {
 		t.Fatalf("store.Write failed: %v", err)
 	}
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -186,7 +192,7 @@ func TestWatcher_SendsReviewOnRenameEvent(t *testing.T) {
 	workDir := filepath.Join(dir, "project")
 	os.MkdirAll(workDir, 0755)
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -228,7 +234,7 @@ func TestWatcher_SendsClearedWhenFileDeleted(t *testing.T) {
 		t.Fatalf("store.Write failed: %v", err)
 	}
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -264,7 +270,7 @@ func TestWatcher_IgnoresOtherFilesInReviewsDirectory(t *testing.T) {
 	workDir := filepath.Join(dir, "project")
 	os.MkdirAll(workDir, 0755)
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -305,7 +311,7 @@ func TestWatcher_ChannelsAreBuffered(t *testing.T) {
 		t.Fatalf("store.Write failed: %v", err)
 	}
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -346,7 +352,7 @@ func TestWatcher_LoadsExistingReviewFileOnStart(t *testing.T) {
 		t.Fatalf("store.Write failed: %v", err)
 	}
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
@@ -374,7 +380,7 @@ func TestWatcher_CloseStopsWatching(t *testing.T) {
 	workDir := filepath.Join(dir, "project")
 	os.MkdirAll(workDir, 0755)
 
-	w, err := watcher.NewWithStore(workDir, store)
+	w, err := watcher.NewWithStore(workDir, store, discardLogger())
 	if err != nil {
 		t.Fatalf("NewWithStore failed: %v", err)
 	}
