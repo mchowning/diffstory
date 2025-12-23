@@ -117,10 +117,6 @@ func TestPayloadRoundTrip_SimpleReview(t *testing.T) {
 		if section.Narrative != origSection.Narrative {
 			t.Errorf("Section[%d].Narrative mismatch: got %q, want %q", i, section.Narrative, origSection.Narrative)
 		}
-		if section.Importance != origSection.Importance {
-			t.Errorf("Section[%d].Importance mismatch: got %q, want %q", i, section.Importance, origSection.Importance)
-		}
-
 		if len(section.Hunks) != len(origSection.Hunks) {
 			t.Fatalf("Section[%d].Hunks count mismatch: got %d, want %d", i, len(section.Hunks), len(origSection.Hunks))
 		}
@@ -389,9 +385,10 @@ func TestDiffContentIntegrity_HunkHeaders(t *testing.T) {
 				Narrative: "Test",
 				Hunks: []model.Hunk{
 					{
-						File:      "test.go",
-						StartLine: 10,
-						Diff:      "@@ -10,7 +10,9 @@ func TestFunc() {\n context line\n-removed\n+added\n context\n }",
+						File:       "test.go",
+						StartLine:  10,
+						Diff:       "@@ -10,7 +10,9 @@ func TestFunc() {\n context line\n-removed\n+added\n context\n }",
+						Importance: "medium",
 					},
 				},
 			},
@@ -430,9 +427,10 @@ func TestDiffContentIntegrity_ContextLines(t *testing.T) {
 				Narrative: "Test",
 				Hunks: []model.Hunk{
 					{
-						File:      "test.go",
-						StartLine: 1,
-						Diff:      " func foo() {\n     indented context\n-    old line\n+    new line\n     more indented context\n }",
+						File:       "test.go",
+						StartLine:  1,
+						Diff:       " func foo() {\n     indented context\n-    old line\n+    new line\n     more indented context\n }",
+						Importance: "medium",
 					},
 				},
 			},
@@ -478,9 +476,10 @@ Final paragraph.`
 				Narrative: multilineNarrative,
 				Hunks: []model.Hunk{
 					{
-						File:      "test.go",
-						StartLine: 1,
-						Diff:      "+new line",
+						File:       "test.go",
+						StartLine:  1,
+						Diff:       "+new line",
+						Importance: "low",
 					},
 				},
 			},

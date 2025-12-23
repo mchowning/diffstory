@@ -99,14 +99,14 @@ func TestServer_SubmitReviewStoresCorrectly(t *testing.T) {
 		Title:            "Full Review",
 		Sections: []model.Section{
 			{
-				ID:         "section-1",
-				Narrative:  "First section narrative",
-				Importance: "high",
+				ID:        "section-1",
+				Narrative: "First section narrative",
 				Hunks: []model.Hunk{
 					{
-						File:      "main.go",
-						StartLine: 10,
-						Diff:      "@@ -10,3 +10,5 @@",
+						File:       "main.go",
+						StartLine:  10,
+						Diff:       "@@ -10,3 +10,5 @@",
+						Importance: "high",
 					},
 				},
 			},
