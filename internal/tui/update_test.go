@@ -1782,3 +1782,90 @@ func TestUpdate_CtrlKMovesFileSelectionUpRegardlessOfFocus(t *testing.T) {
 		t.Errorf("SelectedFile() = %d, expected %d after Ctrl+K", result.SelectedFile(), initialFileSelection-1)
 	}
 }
+
+// Generate UI State Tests
+
+func TestUpdate_CommitListMsgPopulatesCommits(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Simulate being in commit selector state (after selecting "Specific commit...")
+	// First go to source picker with G, then select source that needs commit
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	// Send CommitListMsg
+	commits := []tui.CommitInfo{
+		{Hash: "abc1234", Subject: "First commit", Age: "2 days ago"},
+		{Hash: "def5678", Subject: "Second commit", Age: "3 days ago"},
+	}
+	commitListMsg := tui.CommitListMsg{Commits: commits}
+	updated, _ = m.Update(commitListMsg)
+	result := updated.(tui.Model)
+
+	if len(result.Commits()) != 2 {
+		t.Fatalf("expected 2 commits, got %d", len(result.Commits()))
+	}
+	if result.Commits()[0].Hash != "abc1234" {
+		t.Errorf("expected first commit hash 'abc1234', got %q", result.Commits()[0].Hash)
+	}
+}
+
+func TestUpdate_CommitListErrorMsgResetsUIState(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Enter source picker
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	// Send error message
+	errorMsg := tui.CommitListErrorMsg{Err: errors.New("git log failed")}
+	updated, _ = m.Update(errorMsg)
+	result := updated.(tui.Model)
+
+	// Should reset to normal state and show error
+	if result.GenerateUIState() != tui.GenerateUIStateNone {
+		t.Errorf("expected GenerateUIStateNone, got %v", result.GenerateUIState())
+	}
+	if !strings.Contains(result.StatusMsg(), "git log failed") {
+		t.Errorf("expected status to contain error message, got %q", result.StatusMsg())
+	}
+}
+
+func TestUpdate_EscapeInSourcePickerCancelsGenerate(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, err := storage.NewStoreWithDir(t.TempDir())
+	if err != nil {
+		t.Fatalf("failed to create store: %v", err)
+	}
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Enter source picker state with G key
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	if m.GenerateUIState() != tui.GenerateUIStateSourcePicker {
+		t.Fatalf("expected GenerateUIStateSourcePicker, got %v", m.GenerateUIState())
+	}
+
+	// Press Escape to cancel
+	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
+	updated, _ = m.Update(escMsg)
+	result := updated.(tui.Model)
+
+	if result.GenerateUIState() != tui.GenerateUIStateNone {
+		t.Errorf("GenerateUIState() = %v, want GenerateUIStateNone after escape", result.GenerateUIState())
+	}
+}
