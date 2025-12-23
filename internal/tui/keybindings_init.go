@@ -16,6 +16,7 @@ func initKeybindings() *KeybindingRegistry {
 	// Navigation
 	r.Register(Keybinding{Key: "j/k", Description: "Navigate up/down", Context: "navigation"})
 	r.Register(Keybinding{Key: "J/K", Description: "Scroll diff", Context: "navigation"})
+	r.Register(Keybinding{Key: "C-j/k", Description: "Navigate files", Context: "navigation"})
 	r.Register(Keybinding{Key: "</>", Description: "Jump to first/last", Context: "navigation"})
 	r.Register(Keybinding{Key: ",/.", Description: "Page up/down", Context: "navigation"})
 

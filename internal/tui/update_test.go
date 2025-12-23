@@ -1424,7 +1424,7 @@ func TestUpdate_GKeyWithoutStoreShowsError(t *testing.T) {
 	}
 }
 
-func TestUpdate_GKeyStartsGeneration(t *testing.T) {
+func TestUpdate_GKeyShowsSourcePicker(t *testing.T) {
 	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
 	store, err := storage.NewStoreWithDir(t.TempDir())
 	if err != nil {
@@ -1433,14 +1433,14 @@ func TestUpdate_GKeyStartsGeneration(t *testing.T) {
 	m := tui.NewModel("/test/project", cfg, store, nil)
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
 
-	updated, cmd := m.Update(msg)
+	updated, _ := m.Update(msg)
 	result := updated.(tui.Model)
 
-	if !result.IsGenerating() {
-		t.Error("expected IsGenerating() to be true")
+	if result.GenerateUIState() != tui.GenerateUIStateSourcePicker {
+		t.Errorf("expected GenerateUIState() to be SourcePicker, got %v", result.GenerateUIState())
 	}
-	if cmd == nil {
-		t.Error("expected command to be returned")
+	if result.IsGenerating() {
+		t.Error("expected IsGenerating() to be false until generation starts")
 	}
 }
 
@@ -1452,12 +1452,11 @@ func TestUpdate_GKeyIgnoredWhenAlreadyGenerating(t *testing.T) {
 	}
 	m := tui.NewModel("/test/project", cfg, store, nil)
 
-	// Start generation
-	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
-	updated, _ := m.Update(msg)
-	m = updated.(tui.Model)
+	// Simulate generation already in progress
+	m = m.SetGenerating(true)
 
-	// Try to start again
+	// Try to start generation (G key)
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
 	updated, cmd := m.Update(msg)
 	result := updated.(tui.Model)
 
@@ -1477,18 +1476,16 @@ func TestUpdate_GenerateSuccessMsgStopsSpinner(t *testing.T) {
 	}
 	m := tui.NewModel("/test/project", cfg, store, nil)
 
-	// Start generation
-	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
-	updated, _ := m.Update(gMsg)
-	m = updated.(tui.Model)
+	// Simulate generation in progress
+	m = m.SetGenerating(true)
 
 	if !m.IsGenerating() {
-		t.Fatal("expected IsGenerating() to be true after G key")
+		t.Fatal("expected IsGenerating() to be true")
 	}
 
 	// Simulate success
 	successMsg := tui.GenerateSuccessMsg{}
-	updated, _ = m.Update(successMsg)
+	updated, _ := m.Update(successMsg)
 	result := updated.(tui.Model)
 
 	if result.IsGenerating() {
@@ -1504,14 +1501,12 @@ func TestUpdate_GenerateErrorMsgShowsError(t *testing.T) {
 	}
 	m := tui.NewModel("/test/project", cfg, store, nil)
 
-	// Start generation
-	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
-	updated, _ := m.Update(gMsg)
-	m = updated.(tui.Model)
+	// Simulate generation in progress
+	m = m.SetGenerating(true)
 
 	// Simulate error
 	errorMsg := tui.GenerateErrorMsg{Err: errors.New("LLM failed")}
-	updated, _ = m.Update(errorMsg)
+	updated, _ := m.Update(errorMsg)
 	result := updated.(tui.Model)
 
 	if result.IsGenerating() {
@@ -1544,10 +1539,8 @@ func TestUpdate_GenerateErrorMsgClearsReview(t *testing.T) {
 		t.Fatal("expected review to be set")
 	}
 
-	// Start generation
-	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
-	updated, _ = m.Update(gMsg)
-	m = updated.(tui.Model)
+	// Simulate generation in progress
+	m = m.SetGenerating(true)
 
 	// Simulate error
 	errorMsg := tui.GenerateErrorMsg{Err: errors.New("failed")}
@@ -1569,10 +1562,8 @@ func TestUpdate_EscapeWhileGeneratingShowsCancelPrompt(t *testing.T) {
 	}
 	m := tui.NewModel("/test/project", cfg, store, nil)
 
-	// Start generation
-	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
-	updated, _ := m.Update(gMsg)
-	m = updated.(tui.Model)
+	// Simulate generation in progress
+	m = m.SetGenerating(true)
 
 	if !m.IsGenerating() {
 		t.Fatal("expected IsGenerating() to be true")
@@ -1580,7 +1571,7 @@ func TestUpdate_EscapeWhileGeneratingShowsCancelPrompt(t *testing.T) {
 
 	// Press escape
 	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
-	updated, _ = m.Update(escMsg)
+	updated, _ := m.Update(escMsg)
 	result := updated.(tui.Model)
 
 	if !result.ShowCancelPrompt() {
@@ -1599,21 +1590,18 @@ func TestUpdate_YKeyConfirmsCancellation(t *testing.T) {
 	}
 	m := tui.NewModel("/test/project", cfg, store, nil)
 
-	// Start generation
-	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
-	updated, _ := m.Update(gMsg)
-	m = updated.(tui.Model)
-
-	// Press escape to show cancel prompt
-	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
-	updated, _ = m.Update(escMsg)
-	m = updated.(tui.Model)
+	// Simulate generation in progress with cancel prompt showing and cancel function set
+	cancelled := false
+	m = m.SetGenerating(true).SetShowCancelPrompt(true).SetCancelFunc(func() { cancelled = true })
 
 	// Press y to confirm cancellation
 	yMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("y")}
-	updated, _ = m.Update(yMsg)
+	updated, _ := m.Update(yMsg)
 	result := updated.(tui.Model)
 
+	if !cancelled {
+		t.Error("expected cancel function to be called")
+	}
 	if result.IsGenerating() {
 		t.Error("expected IsGenerating() to be false after y confirmation")
 	}
@@ -1633,19 +1621,12 @@ func TestUpdate_NKeyDismissesCancelPrompt(t *testing.T) {
 	}
 	m := tui.NewModel("/test/project", cfg, store, nil)
 
-	// Start generation
-	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
-	updated, _ := m.Update(gMsg)
-	m = updated.(tui.Model)
-
-	// Press escape to show cancel prompt
-	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
-	updated, _ = m.Update(escMsg)
-	m = updated.(tui.Model)
+	// Simulate generation in progress with cancel prompt showing
+	m = m.SetGenerating(true).SetShowCancelPrompt(true)
 
 	// Press n to dismiss prompt
 	nMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("n")}
-	updated, _ = m.Update(nMsg)
+	updated, _ := m.Update(nMsg)
 	result := updated.(tui.Model)
 
 	if result.ShowCancelPrompt() {
@@ -1664,26 +1645,20 @@ func TestUpdate_EscapeOnCancelPromptDismissesIt(t *testing.T) {
 	}
 	m := tui.NewModel("/test/project", cfg, store, nil)
 
-	// Start generation
-	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
-	updated, _ := m.Update(gMsg)
-	m = updated.(tui.Model)
-
-	// Press escape to show cancel prompt
-	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
-	updated, _ = m.Update(escMsg)
-	m = updated.(tui.Model)
+	// Simulate generation in progress with cancel prompt showing
+	m = m.SetGenerating(true).SetShowCancelPrompt(true)
 
 	if !m.ShowCancelPrompt() {
 		t.Fatal("expected ShowCancelPrompt() to be true")
 	}
 
-	// Press escape again to dismiss prompt
-	updated, _ = m.Update(escMsg)
+	// Press escape to dismiss prompt
+	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
+	updated, _ := m.Update(escMsg)
 	result := updated.(tui.Model)
 
 	if result.ShowCancelPrompt() {
-		t.Error("expected ShowCancelPrompt() to be false after second escape")
+		t.Error("expected ShowCancelPrompt() to be false after escape")
 	}
 	if !result.IsGenerating() {
 		t.Error("expected IsGenerating() to still be true")
@@ -1698,14 +1673,12 @@ func TestUpdate_GenerateCancelledMsgStopsSpinner(t *testing.T) {
 	}
 	m := tui.NewModel("/test/project", cfg, store, nil)
 
-	// Start generation
-	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
-	updated, _ := m.Update(gMsg)
-	m = updated.(tui.Model)
+	// Simulate generation in progress
+	m = m.SetGenerating(true)
 
 	// Simulate cancelled message from command
 	cancelledMsg := tui.GenerateCancelledMsg{}
-	updated, _ = m.Update(cancelledMsg)
+	updated, _ := m.Update(cancelledMsg)
 	result := updated.(tui.Model)
 
 	if result.IsGenerating() {
@@ -1713,5 +1686,99 @@ func TestUpdate_GenerateCancelledMsgStopsSpinner(t *testing.T) {
 	}
 	if !strings.Contains(result.StatusMsg(), "cancelled") {
 		t.Errorf("StatusMsg() = %q, want to contain 'cancelled'", result.StatusMsg())
+	}
+}
+
+func TestUpdate_CtrlJMovesFileSelectionDownRegardlessOfFocus(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review with multiple files
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "First", Hunks: []model.Hunk{
+				{File: "file1.go", Diff: "diff1"},
+				{File: "file2.go", Diff: "diff2"},
+				{File: "file3.go", Diff: "diff3"},
+			}},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Focus on Section panel (NOT Files panel)
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("1")}
+	updated, _ = m.Update(msg)
+	m = updated.(tui.Model)
+
+	if m.FocusedPanel() != tui.PanelSection {
+		t.Fatalf("expected PanelSection focus, got %v", m.FocusedPanel())
+	}
+
+	initialFileSelection := m.SelectedFile()
+
+	// Press Ctrl+J - should move file selection down even though Section panel is focused
+	ctrlJMsg := tea.KeyMsg{Type: tea.KeyCtrlJ}
+	updated, _ = m.Update(ctrlJMsg)
+	result := updated.(tui.Model)
+
+	if result.SelectedFile() != initialFileSelection+1 {
+		t.Errorf("SelectedFile() = %d, expected %d after Ctrl+J", result.SelectedFile(), initialFileSelection+1)
+	}
+}
+
+func TestUpdate_CtrlKMovesFileSelectionUpRegardlessOfFocus(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review with multiple files
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "First", Hunks: []model.Hunk{
+				{File: "file1.go", Diff: "diff1"},
+				{File: "file2.go", Diff: "diff2"},
+				{File: "file3.go", Diff: "diff3"},
+			}},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Move file selection down first so we can test going up
+	ctrlJMsg := tea.KeyMsg{Type: tea.KeyCtrlJ}
+	updated, _ = m.Update(ctrlJMsg)
+	m = updated.(tui.Model)
+
+	// Focus on Section panel (NOT Files panel)
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("1")}
+	updated, _ = m.Update(msg)
+	m = updated.(tui.Model)
+
+	if m.FocusedPanel() != tui.PanelSection {
+		t.Fatalf("expected PanelSection focus, got %v", m.FocusedPanel())
+	}
+
+	initialFileSelection := m.SelectedFile()
+	if initialFileSelection == 0 {
+		t.Fatal("expected file selection > 0 to test going up")
+	}
+
+	// Press Ctrl+K - should move file selection up even though Section panel is focused
+	ctrlKMsg := tea.KeyMsg{Type: tea.KeyCtrlK}
+	updated, _ = m.Update(ctrlKMsg)
+	result := updated.(tui.Model)
+
+	if result.SelectedFile() != initialFileSelection-1 {
+		t.Errorf("SelectedFile() = %d, expected %d after Ctrl+K", result.SelectedFile(), initialFileSelection-1)
 	}
 }

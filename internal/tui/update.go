@@ -75,6 +75,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.LineDown(1)
 		case "K":
 			m.viewport.LineUp(1)
+		case "ctrl+j":
+			if m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles)-1 {
+				m.selectedFile++
+				m.updateViewportContent()
+				m.viewport.GotoTop()
+			}
+		case "ctrl+k":
+			if m.selectedFile > 0 {
+				m.selectedFile--
+				m.updateViewportContent()
+				m.viewport.GotoTop()
+			}
 		case "enter":
 			if m.focusedPanel == PanelFiles && m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles) {
 				node := m.flattenedFiles[m.selectedFile]
