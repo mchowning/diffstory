@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"context"
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -12,6 +11,18 @@ import (
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// Route to generate UI handlers when in a generate state
+		switch m.generateUIState {
+		case GenerateUIStateSourcePicker:
+			return m.updateSourcePicker(msg)
+		case GenerateUIStateCommitSelector, GenerateUIStateCommitRangeStart, GenerateUIStateCommitRangeEnd:
+			return m.updateCommitSelector(msg)
+		case GenerateUIStateContextInput:
+			return m.updateContextInput(msg)
+		case GenerateUIStateValidationError:
+			return m.updateValidationError(msg)
+		}
+
 		// Handle arrow keys for panel focus cycling
 		switch msg.Type {
 		case tea.KeyLeft:
@@ -111,21 +122,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if m.config == nil || len(m.config.LLMCommand) == 0 {
 				m.statusMsg = "LLM not configured. Create ~/.config/diffguide/config.json"
-				return m, tea.Tick(5*time.Second, func(time.Time) tea.Msg {
-					return ClearStatusMsg{}
-				})
+				return m, nil
 			}
 			if m.store == nil {
 				m.statusMsg = "Storage not initialized"
-				return m, tea.Tick(5*time.Second, func(time.Time) tea.Msg {
-					return ClearStatusMsg{}
-				})
+				return m, nil
 			}
-			ctx, cancel := context.WithCancel(context.Background())
-			m.cancelGenerate = cancel
-			m.isGenerating = true
-			m.generateStartTime = time.Now()
-			return m, tea.Batch(m.spinner.Tick, generateReviewCmd(ctx, m.config, m.workDir, m.store, m.logger))
+			m.generateUIState = GenerateUIStateSourcePicker
+			m.diffSourceSelected = 0
+			return m, nil
 		case "y":
 			if m.showCancelPrompt && m.cancelGenerate != nil {
 				m.cancelGenerate()
@@ -300,6 +305,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cancelGenerate = nil
 		m.statusMsg = "Generation cancelled"
 		return m, tea.Tick(3*time.Second, func(time.Time) tea.Msg {
+			return ClearStatusMsg{}
+		})
+	case CommitListMsg:
+		m.commits = msg.Commits
+		m.commitSelected = 0
+		return m, nil
+	case CommitListErrorMsg:
+		m.generateUIState = GenerateUIStateNone
+		m.statusMsg = "Failed to load commits: " + msg.Err.Error()
+		return m, tea.Tick(5*time.Second, func(time.Time) tea.Msg {
 			return ClearStatusMsg{}
 		})
 	case spinner.TickMsg:

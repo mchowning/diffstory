@@ -11,6 +11,18 @@ import (
 )
 
 func (m Model) View() string {
+	// Generate UI states take priority
+	switch m.generateUIState {
+	case GenerateUIStateSourcePicker:
+		return m.renderSourcePicker()
+	case GenerateUIStateCommitSelector, GenerateUIStateCommitRangeStart, GenerateUIStateCommitRangeEnd:
+		return m.renderCommitSelector()
+	case GenerateUIStateContextInput:
+		return m.renderContextInput()
+	case GenerateUIStateValidationError:
+		return m.renderValidationError()
+	}
+
 	// Cancel confirmation prompt
 	if m.showCancelPrompt {
 		prompt := helpStyle.Render("Cancel review generation? (y/n)")

@@ -6,10 +6,13 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mchowning/diffguide/internal/config"
+	"github.com/mchowning/diffguide/internal/diff"
 	"github.com/mchowning/diffguide/internal/model"
 	"github.com/mchowning/diffguide/internal/storage"
 )
@@ -20,6 +23,19 @@ const (
 	PanelDiff    Panel = 0
 	PanelSection Panel = 1
 	PanelFiles   Panel = 2
+)
+
+// GenerateUIState represents the current state of the generate flow
+type GenerateUIState int
+
+const (
+	GenerateUIStateNone GenerateUIState = iota
+	GenerateUIStateSourcePicker
+	GenerateUIStateCommitSelector
+	GenerateUIStateCommitRangeStart
+	GenerateUIStateCommitRangeEnd
+	GenerateUIStateContextInput
+	GenerateUIStateValidationError
 )
 
 type Model struct {
@@ -52,6 +68,28 @@ type Model struct {
 	showCancelPrompt   bool
 	spinner            spinner.Model
 
+	// Generate UI state
+	generateUIState    GenerateUIState
+	diffSources        []DiffSource
+	diffSourceSelected int
+	selectedDiffSource *DiffSource // The source selected for generation
+
+	// Commit selector state
+	commits           []CommitInfo
+	commitSelected    int
+	commitInput       textinput.Model
+	commitInputActive bool
+	rangeStartCommit  string // For commit range selection
+
+	// Context input state
+	contextInput textarea.Model
+	lastContext  string // Preserved for retry
+
+	// Validation error state
+	parsedHunks     []diff.ParsedHunk
+	missingHunkIDs  []string
+	lastLLMResponse *LLMResponse // Cached for "proceed with partial" option
+
 	// Logging
 	logger *slog.Logger
 }
@@ -61,6 +99,18 @@ func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
 
+	// Initialize commit input
+	ci := textinput.New()
+	ci.Placeholder = "commit hash or ref"
+	ci.CharLimit = 64
+
+	// Initialize context textarea
+	ctx := textarea.New()
+	ctx.Placeholder = "Additional context for the reviewer (optional)..."
+	ctx.CharLimit = 2000
+	ctx.SetWidth(60)
+	ctx.SetHeight(5)
+
 	return Model{
 		workDir:      workDir,
 		focusedPanel: PanelSection,
@@ -69,6 +119,9 @@ func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *
 		store:        store,
 		spinner:      s,
 		logger:       logger,
+		diffSources:  DefaultDiffSources(),
+		commitInput:  ci,
+		contextInput: ctx,
 	}
 }
 
@@ -131,8 +184,35 @@ func (m Model) IsGenerating() bool {
 	return m.isGenerating
 }
 
+func (m Model) GenerateUIState() GenerateUIState {
+	return m.generateUIState
+}
+
+// SetGenerating is a test helper to set the generating state
+func (m Model) SetGenerating(generating bool) Model {
+	m.isGenerating = generating
+	return m
+}
+
+// SetShowCancelPrompt is a test helper to set the cancel prompt state
+func (m Model) SetShowCancelPrompt(show bool) Model {
+	m.showCancelPrompt = show
+	return m
+}
+
+// SetCancelFunc is a test helper to set a cancel function
+func (m Model) SetCancelFunc(cancel func()) Model {
+	m.cancelGenerate = cancel
+	return m
+}
+
 func (m Model) ShowCancelPrompt() bool {
 	return m.showCancelPrompt
+}
+
+// Commits returns the loaded commit list (for testing)
+func (m Model) Commits() []CommitInfo {
+	return m.commits
 }
 
 func (m *Model) updateViewportContent() {

@@ -1,6 +1,9 @@
 package tui
 
-import "github.com/mchowning/diffguide/internal/model"
+import (
+	"github.com/mchowning/diffguide/internal/diff"
+	"github.com/mchowning/diffguide/internal/model"
+)
 
 // ReviewReceivedMsg is sent when a review file is created/updated
 type ReviewReceivedMsg struct {
@@ -34,3 +37,29 @@ type GenerateErrorMsg struct {
 
 // GenerateCancelledMsg indicates user cancelled generation
 type GenerateCancelledMsg struct{}
+
+// CommitListMsg delivers the list of recent commits
+type CommitListMsg struct {
+	Commits []CommitInfo
+}
+
+// CommitListErrorMsg indicates failure to load commit list
+type CommitListErrorMsg struct {
+	Err error
+}
+
+// GenerateNeedsRetryMsg indicates validation failed and retry is needed
+type GenerateNeedsRetryMsg struct {
+	Hunks      []diff.ParsedHunk
+	MissingIDs []string
+	Context    string
+}
+
+// GenerateValidationFailedMsg indicates validation failed after retry
+type GenerateValidationFailedMsg struct {
+	Hunks      []diff.ParsedHunk
+	Missing    []string
+	Duplicates []string
+	Invalid    []string
+	Response   *LLMResponse // The partial response for "proceed with partial" option
+}

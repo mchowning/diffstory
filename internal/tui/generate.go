@@ -6,97 +6,298 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mchowning/diffguide/internal/config"
+	"github.com/mchowning/diffguide/internal/diff"
 	"github.com/mchowning/diffguide/internal/model"
 	"github.com/mchowning/diffguide/internal/storage"
 )
 
-const promptTemplate = `Summarize the following diff, explaining what changed and why.
+const classificationPromptTemplate = `You are a code review assistant. Classify diff hunks into logical sections.
 
-Guidelines:
-- Structure the summary into logical sections, grouping related changes together
-- Each section's narrative should explain what changed and why
-- The narratives should work independently but also form a cohesive story when read in sequence
-- This is a summary, not a code review. Explain the changes; do not critique them.
+IMPORTANT: You MUST classify ALL hunks. Every hunk ID must appear exactly once in your response.
 
-Return ONLY a JSON object (no markdown fences, no explanation text) matching this schema:
+Read the input hunks from this JSON file: %s
+
+The file contains a JSON array of hunk objects with fields: id, file, startLine, diff.
+
+Respond with JSON in this exact format (no markdown fences, no explanation text):
 {
-  "title": "<brief summary title>",
+  "title": "Brief title for this review",
   "sections": [
     {
-      "id": "<unique section id>",
-      "narrative": "<what changed and why>",
-      "importance": "<high|medium|low>",
+      "id": "section-identifier",
+      "narrative": "2-3 sentence explanation of what this section covers and why these changes matter",
       "hunks": [
-        {
-          "file": "<relative file path>",
-          "startLine": <line number>,
-          "diff": "<complete unified diff content>"
-        }
+        {"id": "file/path.go::45", "importance": "high"},
+        {"id": "file/path.go::120", "importance": "medium"}
       ]
     }
   ]
 }
 
-Diff:
-`
+Guidelines:
+- Group related hunks into logical sections (by feature, component, or concern)
+- Each hunk must have importance: "high", "medium", or "low"
+- high: Critical changes (security, core logic, breaking changes)
+- medium: Important changes (new features, significant refactors)
+- low: Minor changes (formatting, comments, trivial fixes)
+- Write narratives that explain the "why" not just the "what"
+%s`
 
-// generateReviewCmd returns a command that runs the LLM generation.
-// On success, it writes the review to disk via the store; the watcher
-// will then deliver it to the TUI.
-func generateReviewCmd(ctx context.Context, cfg *config.Config, workDir string, store *storage.Store, logger *slog.Logger) tea.Cmd {
+const retryPromptAddendum = `
+
+CRITICAL: The previous response was incomplete. These hunk IDs were missing:
+%s
+
+You MUST include ALL hunk IDs in your response, including the ones listed above.`
+
+// GenerateParams holds parameters for review generation
+type GenerateParams struct {
+	DiffCommand  []string
+	Context      string
+	IsRetry      bool
+	MissingIDs   []string
+	ParsedHunks  []diff.ParsedHunk // Set on retry to avoid re-parsing
+}
+
+// generateReviewCmd returns a command that runs the LLM generation with
+// deterministic diff parsing and classification validation.
+func generateReviewCmd(ctx context.Context, cfg *config.Config, workDir string, store *storage.Store, logger *slog.Logger, params GenerateParams) tea.Cmd {
 	return func() tea.Msg {
-		// Run diff command
-		diffOutput, err := runCommand(ctx, workDir, cfg.DiffCommand, nil)
+		var parsedHunks []diff.ParsedHunk
+
+		// Use cached hunks on retry, otherwise parse fresh
+		if params.IsRetry && len(params.ParsedHunks) > 0 {
+			parsedHunks = params.ParsedHunks
+			if logger != nil {
+				logger.Info("using cached hunks for retry", "count", len(parsedHunks))
+			}
+		} else {
+			// Step 1: Run diff command
+			if logger != nil {
+				logger.Info("running diff command", "command", params.DiffCommand)
+			}
+			diffOutput, err := runCommand(ctx, workDir, params.DiffCommand, nil)
+			if err != nil {
+				return GenerateErrorMsg{Err: fmt.Errorf("diff command failed: %w", err)}
+			}
+
+			if strings.TrimSpace(diffOutput) == "" {
+				return GenerateErrorMsg{Err: fmt.Errorf("no changes found")}
+			}
+
+			// Step 2: Parse diff into hunks
+			parsedHunks, err = diff.Parse(diffOutput)
+			if err != nil {
+				return GenerateErrorMsg{Err: fmt.Errorf("failed to parse diff: %w", err)}
+			}
+			if len(parsedHunks) == 0 {
+				return GenerateErrorMsg{Err: fmt.Errorf("no hunks found in diff")}
+			}
+			if logger != nil {
+				logger.Info("parsed diff into hunks", "count", len(parsedHunks))
+			}
+		}
+
+		// Step 3: Write hunks to file in working directory for LLM to read
+		hunksJSON, err := buildHunksJSON(parsedHunks)
 		if err != nil {
-			return GenerateErrorMsg{Err: fmt.Errorf("diff command failed: %w", err)}
+			return GenerateErrorMsg{Err: fmt.Errorf("failed to build hunks JSON: %w", err)}
+		}
+		inputPath := filepath.Join(workDir, ".diffguide-input.json")
+		if err := os.WriteFile(inputPath, []byte(hunksJSON), 0600); err != nil {
+			return GenerateErrorMsg{Err: fmt.Errorf("failed to write input file: %w", err)}
+		}
+		defer os.Remove(inputPath)
+		if logger != nil {
+			logger.Info("wrote hunks to input file", "path", inputPath, "bytes", len(hunksJSON))
 		}
 
-		if strings.TrimSpace(diffOutput) == "" {
-			return GenerateErrorMsg{Err: fmt.Errorf("no changes to review")}
+		// Step 4: Build LLM prompt
+		contextAddendum := ""
+		if params.Context != "" {
+			contextAddendum = fmt.Sprintf("\nUser context: %s", params.Context)
 		}
 
-		// Build prompt with diff
-		prompt := promptTemplate + diffOutput
+		prompt := fmt.Sprintf(classificationPromptTemplate, inputPath, contextAddendum)
 
-		// Run LLM command with prompt as final argument
+		// Add retry addendum if this is a retry
+		if params.IsRetry && len(params.MissingIDs) > 0 {
+			prompt += fmt.Sprintf(retryPromptAddendum, strings.Join(params.MissingIDs, ", "))
+		}
+
+		// Step 5: Call LLM
+		if ctx.Err() != nil {
+			return GenerateCancelledMsg{}
+		}
+
 		llmArgs := append([]string{}, cfg.LLMCommand[1:]...)
 		llmArgs = append(llmArgs, prompt)
-
-		output, err := runCommand(ctx, workDir, append([]string{cfg.LLMCommand[0]}, llmArgs...), nil)
+		llmCmd := append([]string{cfg.LLMCommand[0]}, llmArgs...)
+		if logger != nil {
+			logger.Info("calling LLM", "fullCommand", llmCmd, "prompt", prompt)
+		}
+		output, err := runCommand(ctx, workDir, llmCmd, nil)
 		if err != nil {
-			if ctx.Err() == context.Canceled {
+			if ctx.Err() != nil {
 				return GenerateCancelledMsg{}
 			}
-			return GenerateErrorMsg{Err: fmt.Errorf("LLM command failed: %w", err)}
+			return GenerateErrorMsg{Err: fmt.Errorf("LLM failed: %w", err)}
+		}
+		if logger != nil {
+			logger.Info("LLM returned", "outputLength", len(output))
 		}
 
-		// Extract and parse JSON
-		review, err := extractReviewJSON(output)
+		// Step 6: Parse LLM response
+		response, err := extractLLMResponse(output)
 		if err != nil {
 			if logger != nil {
-				logger.Error("failed to extract JSON from LLM response",
-					"error", err,
-					"llm_output", output,
-				)
+				logger.Error("LLM response parse failed", "output", output, "error", err)
 			}
-			return GenerateErrorMsg{Err: err}
+			return GenerateErrorMsg{Err: fmt.Errorf("failed to parse LLM response: %w", err)}
 		}
 
-		// Set working directory
-		review.WorkingDirectory = workDir
+		// Step 7: Validate classification
+		validation := validateClassification(parsedHunks, *response)
+		if !validation.Valid {
+			if params.IsRetry {
+				// Second failure - return for user decision
+				return GenerateValidationFailedMsg{
+					Hunks:      parsedHunks,
+					Missing:    validation.MissingIDs,
+					Duplicates: validation.DuplicateIDs,
+					Invalid:    validation.InvalidImportance,
+					Response:   response,
+				}
+			}
+			// First failure - auto retry
+			return GenerateNeedsRetryMsg{
+				Hunks:      parsedHunks,
+				MissingIDs: validation.MissingIDs,
+				Context:    params.Context,
+			}
+		}
 
-		// Write to disk - watcher will pick up the change and deliver to TUI
-		if err := store.Write(*review); err != nil {
+		// Step 8: Assemble final review
+		review := assembleReview(workDir, response, parsedHunks)
+
+		// Step 9: Write to storage
+		if err := store.Write(review); err != nil {
 			return GenerateErrorMsg{Err: fmt.Errorf("failed to save review: %w", err)}
 		}
 
 		return GenerateSuccessMsg{}
 	}
+}
+
+// buildHunksJSON creates a JSON representation of hunks for the LLM prompt
+func buildHunksJSON(hunks []diff.ParsedHunk) (string, error) {
+	var sb strings.Builder
+	sb.WriteString("[\n")
+	for i, h := range hunks {
+		if i > 0 {
+			sb.WriteString(",\n")
+		}
+		// Use JSON encoding for the diff content to handle special characters
+		diffBytes, err := json.Marshal(h.Diff)
+		if err != nil {
+			return "", fmt.Errorf("failed to marshal diff for %s: %w", h.ID, err)
+		}
+		sb.WriteString(fmt.Sprintf(`  {"id": %q, "file": %q, "startLine": %d, "diff": %s}`,
+			h.ID, h.File, h.StartLine, string(diffBytes)))
+	}
+	sb.WriteString("\n]")
+	return sb.String(), nil
+}
+
+// extractLLMResponse parses the LLM output to find JSON response
+func extractLLMResponse(output string) (*LLMResponse, error) {
+	// Find the first '{' character (LLM may include preamble)
+	start := strings.Index(output, "{")
+	if start == -1 {
+		return nil, fmt.Errorf("no JSON object found in response")
+	}
+
+	// Use json.Decoder to parse exactly one JSON object
+	decoder := json.NewDecoder(strings.NewReader(output[start:]))
+	var response LLMResponse
+	if err := decoder.Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode JSON: %w", err)
+	}
+
+	return &response, nil
+}
+
+// assembleReview combines LLM classification with parsed hunk data
+func assembleReview(workDir string, response *LLMResponse, hunks []diff.ParsedHunk) model.Review {
+	hunkMap := make(map[string]diff.ParsedHunk)
+	for _, h := range hunks {
+		hunkMap[h.ID] = h
+	}
+
+	review := model.Review{
+		WorkingDirectory: workDir,
+		Title:            response.Title,
+	}
+
+	for _, s := range response.Sections {
+		section := model.Section{
+			ID:        s.ID,
+			Narrative: s.Narrative,
+		}
+		for _, href := range s.Hunks {
+			if h, ok := hunkMap[href.ID]; ok {
+				section.Hunks = append(section.Hunks, model.Hunk{
+					File:       h.File,
+					StartLine:  h.StartLine,
+					Diff:       h.Diff,
+					Importance: model.NormalizeImportance(href.Importance),
+				})
+			}
+		}
+		review.Sections = append(review.Sections, section)
+	}
+
+	return review
+}
+
+// assemblePartialReview creates a review with unclassified hunks in a separate section
+func assemblePartialReview(workDir string, response *LLMResponse, hunks []diff.ParsedHunk, missingIDs []string) model.Review {
+	review := assembleReview(workDir, response, hunks)
+
+	// Create "Unclassified" section for missing hunks
+	hunkMap := make(map[string]diff.ParsedHunk)
+	for _, h := range hunks {
+		hunkMap[h.ID] = h
+	}
+
+	var unclassifiedHunks []model.Hunk
+	for _, id := range missingIDs {
+		if h, ok := hunkMap[id]; ok {
+			unclassifiedHunks = append(unclassifiedHunks, model.Hunk{
+				File:       h.File,
+				StartLine:  h.StartLine,
+				Diff:       h.Diff,
+				Importance: model.ImportanceMedium, // Default to medium
+			})
+		}
+	}
+
+	if len(unclassifiedHunks) > 0 {
+		review.Sections = append(review.Sections, model.Section{
+			ID:        "unclassified",
+			Narrative: "The following changes could not be automatically classified.",
+			Hunks:     unclassifiedHunks,
+		})
+	}
+
+	return review
 }
 
 func runCommand(ctx context.Context, workDir string, args []string, stdin []byte) (string, error) {
@@ -117,20 +318,3 @@ func runCommand(ctx context.Context, workDir string, args []string, stdin []byte
 	return stdout.String(), nil
 }
 
-func extractReviewJSON(output string) (*model.Review, error) {
-	// Find first { - json.Decoder will handle parsing from there
-	start := strings.Index(output, "{")
-	if start == -1 {
-		return nil, fmt.Errorf("no JSON object found in response")
-	}
-
-	// Use json.Decoder to parse exactly one complete JSON object
-	// This correctly handles braces inside string values
-	decoder := json.NewDecoder(strings.NewReader(output[start:]))
-	var review model.Review
-	if err := decoder.Decode(&review); err != nil {
-		return nil, fmt.Errorf("invalid JSON: %w", err)
-	}
-
-	return &review, nil
-}
