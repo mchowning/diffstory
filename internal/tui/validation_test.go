@@ -1,0 +1,171 @@
+package tui
+
+import (
+	"testing"
+
+	"github.com/mchowning/diffguide/internal/diff"
+)
+
+func TestValidateClassification_AllHunksPresent(t *testing.T) {
+	inputHunks := []diff.ParsedHunk{
+		{ID: "file.go::10", File: "file.go", StartLine: 10},
+		{ID: "file.go::50", File: "file.go", StartLine: 50},
+	}
+
+	response := LLMResponse{
+		Title: "Test Review",
+		Sections: []LLMSection{
+			{
+				ID:        "section1",
+				Narrative: "Test narrative",
+				Hunks: []LLMHunkRef{
+					{ID: "file.go::10", Importance: "high"},
+					{ID: "file.go::50", Importance: "medium"},
+				},
+			},
+		},
+	}
+
+	result := validateClassification(inputHunks, response)
+
+	if !result.Valid {
+		t.Errorf("expected Valid to be true, got false")
+	}
+	if len(result.MissingIDs) != 0 {
+		t.Errorf("expected no missing IDs, got %v", result.MissingIDs)
+	}
+	if len(result.DuplicateIDs) != 0 {
+		t.Errorf("expected no duplicate IDs, got %v", result.DuplicateIDs)
+	}
+	if len(result.InvalidImportance) != 0 {
+		t.Errorf("expected no invalid importance, got %v", result.InvalidImportance)
+	}
+}
+
+func TestValidateClassification_MissingHunks(t *testing.T) {
+	inputHunks := []diff.ParsedHunk{
+		{ID: "file.go::10", File: "file.go", StartLine: 10},
+		{ID: "file.go::50", File: "file.go", StartLine: 50},
+		{ID: "file.go::100", File: "file.go", StartLine: 100},
+	}
+
+	response := LLMResponse{
+		Title: "Test Review",
+		Sections: []LLMSection{
+			{
+				ID:        "section1",
+				Narrative: "Test narrative",
+				Hunks: []LLMHunkRef{
+					{ID: "file.go::10", Importance: "high"},
+					// file.go::50 and file.go::100 are missing
+				},
+			},
+		},
+	}
+
+	result := validateClassification(inputHunks, response)
+
+	if result.Valid {
+		t.Errorf("expected Valid to be false")
+	}
+	if len(result.MissingIDs) != 2 {
+		t.Errorf("expected 2 missing IDs, got %d: %v", len(result.MissingIDs), result.MissingIDs)
+	}
+}
+
+func TestValidateClassification_DuplicateHunks(t *testing.T) {
+	inputHunks := []diff.ParsedHunk{
+		{ID: "file.go::10", File: "file.go", StartLine: 10},
+	}
+
+	response := LLMResponse{
+		Title: "Test Review",
+		Sections: []LLMSection{
+			{
+				ID:        "section1",
+				Narrative: "First section",
+				Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "high"}},
+			},
+			{
+				ID:        "section2",
+				Narrative: "Second section",
+				Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "medium"}}, // duplicate
+			},
+		},
+	}
+
+	result := validateClassification(inputHunks, response)
+
+	if result.Valid {
+		t.Errorf("expected Valid to be false due to duplicate")
+	}
+	if len(result.DuplicateIDs) != 1 {
+		t.Errorf("expected 1 duplicate ID, got %d: %v", len(result.DuplicateIDs), result.DuplicateIDs)
+	}
+}
+
+func TestValidateClassification_InvalidImportance(t *testing.T) {
+	inputHunks := []diff.ParsedHunk{
+		{ID: "file.go::10", File: "file.go", StartLine: 10},
+		{ID: "file.go::50", File: "file.go", StartLine: 50},
+	}
+
+	response := LLMResponse{
+		Title: "Test Review",
+		Sections: []LLMSection{
+			{
+				ID:        "section1",
+				Narrative: "Test narrative",
+				Hunks: []LLMHunkRef{
+					{ID: "file.go::10", Importance: "high"},
+					{ID: "file.go::50", Importance: "invalid"}, // invalid importance
+				},
+			},
+		},
+	}
+
+	result := validateClassification(inputHunks, response)
+
+	if result.Valid {
+		t.Errorf("expected Valid to be false due to invalid importance")
+	}
+	if len(result.InvalidImportance) != 1 {
+		t.Errorf("expected 1 invalid importance, got %d: %v", len(result.InvalidImportance), result.InvalidImportance)
+	}
+}
+
+func TestValidateClassification_NormalizesImportance(t *testing.T) {
+	inputHunks := []diff.ParsedHunk{
+		{ID: "file.go::10", File: "file.go", StartLine: 10},
+	}
+
+	response := LLMResponse{
+		Title: "Test Review",
+		Sections: []LLMSection{
+			{
+				ID:        "section1",
+				Narrative: "Test narrative",
+				Hunks: []LLMHunkRef{
+					{ID: "file.go::10", Importance: "Critical"}, // should normalize to "high"
+				},
+			},
+		},
+	}
+
+	result := validateClassification(inputHunks, response)
+
+	if !result.Valid {
+		t.Errorf("expected Valid to be true (Critical normalizes to high)")
+	}
+}
+
+func TestValidateClassification_EmptyInput(t *testing.T) {
+	inputHunks := []diff.ParsedHunk{}
+	response := LLMResponse{Title: "Empty"}
+
+	result := validateClassification(inputHunks, response)
+
+	if !result.Valid {
+		t.Errorf("expected Valid to be true for empty input")
+	}
+}
