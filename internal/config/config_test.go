@@ -180,3 +180,236 @@ func TestLoad_ParsesDebugLoggingEnabled(t *testing.T) {
 		t.Error("expected DebugLoggingEnabled to be true")
 	}
 }
+
+func TestLoad_SupportsJSONCWithSingleLineComments(t *testing.T) {
+	tmpDir := t.TempDir()
+	configDir := filepath.Join(tmpDir, "diffguide")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	configPath := filepath.Join(configDir, "config.json")
+	configContent := `{
+	// This is a comment explaining the LLM command
+	"llmCommand": ["claude", "-p"],
+	// Enable debug logging for troubleshooting
+	"debugLoggingEnabled": true
+}`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected config, got nil")
+	}
+	if len(cfg.LLMCommand) != 2 || cfg.LLMCommand[0] != "claude" {
+		t.Errorf("unexpected LLMCommand: %v", cfg.LLMCommand)
+	}
+	if !cfg.DebugLoggingEnabled {
+		t.Error("expected DebugLoggingEnabled to be true")
+	}
+}
+
+func TestLoad_SupportsJSONCWithInlineComments(t *testing.T) {
+	tmpDir := t.TempDir()
+	configDir := filepath.Join(tmpDir, "diffguide")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	configPath := filepath.Join(configDir, "config.json")
+	configContent := `{
+	"llmCommand": ["claude", "-p"], // The command to invoke LLM
+	"debugLoggingEnabled": true // Enable for troubleshooting
+}`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected config, got nil")
+	}
+	if len(cfg.LLMCommand) != 2 || cfg.LLMCommand[0] != "claude" {
+		t.Errorf("unexpected LLMCommand: %v", cfg.LLMCommand)
+	}
+	if !cfg.DebugLoggingEnabled {
+		t.Error("expected DebugLoggingEnabled to be true")
+	}
+}
+
+func TestLoad_PreservesDoubleSlashInsideStrings(t *testing.T) {
+	tmpDir := t.TempDir()
+	configDir := filepath.Join(tmpDir, "diffguide")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	configPath := filepath.Join(configDir, "config.json")
+	// URL contains // which should NOT be treated as a comment
+	configContent := `{
+	"llmCommand": ["curl", "https://api.example.com/v1"]
+}`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected config, got nil")
+	}
+	if len(cfg.LLMCommand) != 2 {
+		t.Fatalf("expected 2 elements in LLMCommand, got: %v", cfg.LLMCommand)
+	}
+	if cfg.LLMCommand[1] != "https://api.example.com/v1" {
+		t.Errorf("URL was corrupted: got %q", cfg.LLMCommand[1])
+	}
+}
+
+func TestLoad_SupportsJSONCWithBlockComments(t *testing.T) {
+	tmpDir := t.TempDir()
+	configDir := filepath.Join(tmpDir, "diffguide")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	configPath := filepath.Join(configDir, "config.json")
+	configContent := `{
+	/* This is a block comment
+	   that spans multiple lines */
+	"llmCommand": ["claude", "-p"],
+	"debugLoggingEnabled": /* inline block comment */ true
+}`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected config, got nil")
+	}
+	if len(cfg.LLMCommand) != 2 || cfg.LLMCommand[0] != "claude" {
+		t.Errorf("unexpected LLMCommand: %v", cfg.LLMCommand)
+	}
+	if !cfg.DebugLoggingEnabled {
+		t.Error("expected DebugLoggingEnabled to be true")
+	}
+}
+
+func TestLoad_SupportsJSONCWithTrailingCommas(t *testing.T) {
+	tmpDir := t.TempDir()
+	configDir := filepath.Join(tmpDir, "diffguide")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	configPath := filepath.Join(configDir, "config.json")
+	configContent := `{
+	"llmCommand": ["claude", "-p",],
+	"debugLoggingEnabled": true,
+}`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected config, got nil")
+	}
+	if len(cfg.LLMCommand) != 2 || cfg.LLMCommand[0] != "claude" {
+		t.Errorf("unexpected LLMCommand: %v", cfg.LLMCommand)
+	}
+	if !cfg.DebugLoggingEnabled {
+		t.Error("expected DebugLoggingEnabled to be true")
+	}
+}
+
+func TestLoad_LoadsFromJSONCExtension(t *testing.T) {
+	tmpDir := t.TempDir()
+	configDir := filepath.Join(tmpDir, "diffguide")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Use .jsonc extension instead of .json
+	configPath := filepath.Join(configDir, "config.jsonc")
+	configContent := `{
+	// This file uses .jsonc extension
+	"llmCommand": ["claude", "-p"],
+	"debugLoggingEnabled": true
+}`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected config, got nil")
+	}
+	if len(cfg.LLMCommand) != 2 || cfg.LLMCommand[0] != "claude" {
+		t.Errorf("unexpected LLMCommand: %v", cfg.LLMCommand)
+	}
+	if !cfg.DebugLoggingEnabled {
+		t.Error("expected DebugLoggingEnabled to be true")
+	}
+}
+
+func TestLoad_ErrorsWhenBothJSONAndJSONCExist(t *testing.T) {
+	tmpDir := t.TempDir()
+	configDir := filepath.Join(tmpDir, "diffguide")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create both .json and .jsonc files
+	jsonPath := filepath.Join(configDir, "config.json")
+	if err := os.WriteFile(jsonPath, []byte(`{"llmCommand": ["from-json"]}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	jsoncPath := filepath.Join(configDir, "config.jsonc")
+	if err := os.WriteFile(jsoncPath, []byte(`{"llmCommand": ["from-jsonc"]}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	cfg, err := Load()
+	if err == nil {
+		t.Fatal("expected error when both config.json and config.jsonc exist")
+	}
+	if cfg != nil {
+		t.Errorf("expected nil config on error, got: %+v", cfg)
+	}
+}
