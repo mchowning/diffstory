@@ -113,22 +113,21 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 		Title:            "Full Review",
 		Sections: []model.Section{
 			{
-				ID:         "section-1",
-				Narrative:  "This is the first section",
-				Importance: "high",
+				ID:        "section-1",
+				Narrative: "This is the first section",
 				Hunks: []model.Hunk{
 					{
-						File:      "main.go",
-						StartLine: 10,
-						Diff:      "@@ -10,3 +10,5 @@\n func main() {\n+    fmt.Println(\"hello\")\n }",
+						File:       "main.go",
+						StartLine:  10,
+						Diff:       "@@ -10,3 +10,5 @@\n func main() {\n+    fmt.Println(\"hello\")\n }",
+						Importance: "high",
 					},
 				},
 			},
 			{
-				ID:         "section-2",
-				Narrative:  "Second section",
-				Importance: "medium",
-				Hunks:      []model.Hunk{},
+				ID:        "section-2",
+				Narrative: "Second section",
+				Hunks:     []model.Hunk{},
 			},
 		},
 	}
@@ -159,9 +158,6 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 	if s1.Narrative != "This is the first section" {
 		t.Errorf("Section[0].Narrative = %q, want %q", s1.Narrative, "This is the first section")
 	}
-	if s1.Importance != "high" {
-		t.Errorf("Section[0].Importance = %q, want %q", s1.Importance, "high")
-	}
 	if len(s1.Hunks) != 1 {
 		t.Fatalf("Section[0].Hunks count = %d, want 1", len(s1.Hunks))
 	}
@@ -176,10 +172,104 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 	if h.Diff != input.Sections[0].Hunks[0].Diff {
 		t.Errorf("Hunk.Diff mismatch")
 	}
+	if h.Importance != "high" {
+		t.Errorf("Hunk.Importance = %q, want %q", h.Importance, "high")
+	}
 
 	// Check second section
 	s2 := stored.Sections[1]
 	if s2.ID != "section-2" {
 		t.Errorf("Section[1].ID = %q, want %q", s2.ID, "section-2")
+	}
+}
+
+func TestService_SubmitRejectsInvalidImportance(t *testing.T) {
+	svc, _ := setupTestService(t)
+	ctx := context.Background()
+
+	input := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "section-1",
+				Narrative: "Test",
+				Hunks: []model.Hunk{
+					{
+						File:       "main.go",
+						StartLine:  10,
+						Diff:       "+test",
+						Importance: "invalid", // invalid importance
+					},
+				},
+			},
+		},
+	}
+
+	_, err := svc.Submit(ctx, input)
+	if !errors.Is(err, review.ErrInvalidHunkImportance) {
+		t.Errorf("expected ErrInvalidHunkImportance, got %v", err)
+	}
+}
+
+func TestService_SubmitRejectsMissingImportance(t *testing.T) {
+	svc, _ := setupTestService(t)
+	ctx := context.Background()
+
+	input := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "section-1",
+				Narrative: "Test",
+				Hunks: []model.Hunk{
+					{
+						File:       "main.go",
+						StartLine:  10,
+						Diff:       "+test",
+						Importance: "", // missing importance
+					},
+				},
+			},
+		},
+	}
+
+	_, err := svc.Submit(ctx, input)
+	if !errors.Is(err, review.ErrInvalidHunkImportance) {
+		t.Errorf("expected ErrInvalidHunkImportance, got %v", err)
+	}
+}
+
+func TestService_SubmitAcceptsValidImportance(t *testing.T) {
+	svc, _ := setupTestService(t)
+	ctx := context.Background()
+
+	validImportances := []string{"high", "medium", "low"}
+
+	for _, imp := range validImportances {
+		input := model.Review{
+			WorkingDirectory: "/test/project",
+			Title:            "Test Review",
+			Sections: []model.Section{
+				{
+					ID:        "section-1",
+					Narrative: "Test",
+					Hunks: []model.Hunk{
+						{
+							File:       "main.go",
+							StartLine:  10,
+							Diff:       "+test",
+							Importance: imp,
+						},
+					},
+				},
+			},
+		}
+
+		_, err := svc.Submit(ctx, input)
+		if err != nil {
+			t.Errorf("Submit with importance=%q failed: %v", imp, err)
+		}
 	}
 }

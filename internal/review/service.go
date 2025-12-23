@@ -12,6 +12,7 @@ import (
 var (
 	ErrMissingWorkingDirectory = errors.New("workingDirectory is required")
 	ErrInvalidWorkingDirectory = errors.New("invalid workingDirectory")
+	ErrInvalidHunkImportance   = errors.New("invalid hunk importance")
 )
 
 type SubmitResult struct {
@@ -36,6 +37,16 @@ func (s *Service) Submit(ctx context.Context, review model.Review) (SubmitResult
 		return SubmitResult{}, fmt.Errorf("%w: %v", ErrInvalidWorkingDirectory, err)
 	}
 	review.WorkingDirectory = normalized
+
+	// Validate all hunks have valid importance
+	for i, section := range review.Sections {
+		for j, hunk := range section.Hunks {
+			if !model.ValidImportance(hunk.Importance) {
+				return SubmitResult{}, fmt.Errorf("%w: section[%d].hunks[%d] has importance %q",
+					ErrInvalidHunkImportance, i, j, hunk.Importance)
+			}
+		}
+	}
 
 	if err := s.store.Write(review); err != nil {
 		return SubmitResult{}, err
