@@ -159,6 +159,113 @@ func modelWithReview(numSections int) tui.Model {
 	return updated.(tui.Model)
 }
 
+func TestUpdate_SectionChangeResetsFilesScrollOffset(t *testing.T) {
+	m := modelWithReviewAndSmallWindow(10)
+
+	// Navigate files to create a files scroll offset
+	m = m.SetFilesScrollOffset(5)
+
+	// Change section
+	jMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")}
+	updated, _ := m.Update(jMsg)
+	m = updated.(tui.Model)
+
+	// Files scroll offset should be reset because section changed (new file tree)
+	if m.FilesScrollOffset() != 0 {
+		t.Errorf("FilesScrollOffset should be reset to 0 on section change, got %d", m.FilesScrollOffset())
+	}
+}
+
+func TestUpdate_ReviewReceivedResetsScrollOffsets(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	// Set up initial review and navigate to create scroll offset
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 20}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// First review
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "Section 1"},
+			{ID: "2", Narrative: "Section 2"},
+			{ID: "3", Narrative: "Section 3"},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Simulate having a scroll offset
+	m = m.SetSectionScrollOffset(2)
+	m = m.SetFilesScrollOffset(5)
+
+	// Receive a new review
+	newReview := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "New Test",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "New Section"},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: newReview})
+	m = updated.(tui.Model)
+
+	// Scroll offsets should be reset
+	if m.SectionScrollOffset() != 0 {
+		t.Errorf("SectionScrollOffset should be reset to 0, got %d", m.SectionScrollOffset())
+	}
+	if m.FilesScrollOffset() != 0 {
+		t.Errorf("FilesScrollOffset should be reset to 0, got %d", m.FilesScrollOffset())
+	}
+}
+
+func modelWithReviewAndSmallWindow(numSections int) tui.Model {
+	sections := make([]model.Section, numSections)
+	for i := range numSections {
+		sections[i] = model.Section{ID: string(rune('1' + i)), Narrative: "Section"}
+	}
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections:         sections,
+	}
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Set small window size so only ~3 sections fit
+	// Section panel height = (height - 4) / 2 = (20 - 4) / 2 = 8
+	// With ~3-4 lines per section, about 2 sections fit
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 20}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+	reviewMsg := tui.ReviewReceivedMsg{Review: review}
+	updated, _ = m.Update(reviewMsg)
+	return updated.(tui.Model)
+}
+
+func TestUpdate_JKeyUpdatesSectionScrollOffset(t *testing.T) {
+	// Create model with 10 sections and small window
+	m := modelWithReviewAndSmallWindow(10)
+
+	// Initial scroll offset should be 0
+	if m.SectionScrollOffset() != 0 {
+		t.Errorf("initial SectionScrollOffset() = %d, want 0", m.SectionScrollOffset())
+	}
+
+	// Navigate down 5 times to go beyond visible area
+	jMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")}
+	for i := 0; i < 5; i++ {
+		updated, _ := m.Update(jMsg)
+		m = updated.(tui.Model)
+	}
+
+	// After navigating to item 5, scroll offset should be non-zero
+	// (since only ~2 items fit in the small window)
+	if m.SectionScrollOffset() == 0 {
+		t.Errorf("SectionScrollOffset() = 0 after navigating to item 5, expected non-zero")
+	}
+}
+
 func TestUpdate_JKeyIncrementsSelectedWhenNotAtEnd(t *testing.T) {
 	m := modelWithReview(3)
 

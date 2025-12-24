@@ -14,9 +14,20 @@ const (
 	borderBottomRight = "╯"
 	borderHorizontal  = "─"
 	borderVertical    = "│"
+	scrollbarChar     = "▐"
 )
 
+// ScrollbarInfo contains the position and size of a scrollbar
+type ScrollbarInfo struct {
+	Start  int // Line position where scrollbar starts (0-indexed from content top)
+	Height int // Number of lines the scrollbar occupies
+}
+
 func renderBorderedPanel(title, content string, width, height int, isActive bool) string {
+	return renderBorderedPanelWithScrollbar(title, content, width, height, isActive, nil)
+}
+
+func renderBorderedPanelWithScrollbar(title, content string, width, height int, isActive bool, scrollbar *ScrollbarInfo) string {
 	color := inactiveBorderColor
 	if isActive {
 		color = activeBorderColor
@@ -44,7 +55,8 @@ func renderBorderedPanel(title, content string, width, height int, isActive bool
 		if i < len(contentLines) {
 			lineContent = contentLines[i]
 		}
-		lines = append(lines, buildContentLine(lineContent, innerWidth, colorStyle))
+		showScrollbar := scrollbar != nil && i >= scrollbar.Start && i < scrollbar.Start+scrollbar.Height
+		lines = append(lines, buildContentLineWithScrollbar(lineContent, innerWidth, colorStyle, showScrollbar))
 	}
 
 	lines = append(lines, bottomBorder)
@@ -65,7 +77,7 @@ func buildTopBorder(title string, innerWidth int, colorStyle lipgloss.Style) str
 	return colorStyle.Render(borderTopLeft + borderHorizontal + title + strings.Repeat(borderHorizontal, remainingWidth) + borderTopRight)
 }
 
-func buildContentLine(content string, innerWidth int, colorStyle lipgloss.Style) string {
+func buildContentLineWithScrollbar(content string, innerWidth int, colorStyle lipgloss.Style, showScrollbar bool) string {
 	// Use lipgloss.Width which properly handles ANSI escape sequences
 	contentWidth := lipgloss.Width(content)
 
@@ -81,7 +93,12 @@ func buildContentLine(content string, innerWidth int, colorStyle lipgloss.Style)
 	}
 
 	leftBorder := colorStyle.Render(borderVertical)
-	rightBorder := colorStyle.Render(borderVertical)
+	var rightBorder string
+	if showScrollbar {
+		rightBorder = colorStyle.Render(scrollbarChar)
+	} else {
+		rightBorder = colorStyle.Render(borderVertical)
+	}
 
 	return leftBorder + content + strings.Repeat(" ", padding) + rightBorder
 }

@@ -115,7 +115,17 @@ func (m Model) renderReviewState() string {
 func (m Model) renderSectionPane(width, height int) string {
 	var items []string
 	contentWidth := width - 4
-	for i, section := range m.review.Sections {
+
+	// Use generous estimate for rendering (fill available space)
+	renderCount := EstimateSectionRenderCount(height)
+	startIdx := m.sectionScrollOffset
+	endIdx := startIdx + renderCount
+	if endIdx > len(m.review.Sections) {
+		endIdx = len(m.review.Sections)
+	}
+
+	for i := startIdx; i < endIdx; i++ {
+		section := m.review.Sections[i]
 		style := normalStyle
 		prefix := normalPrefix
 		if i == m.selected {
@@ -133,7 +143,16 @@ func (m Model) renderSectionPane(width, height int) string {
 		title = fmt.Sprintf("[1] Sections [%d/%d]", m.selected+1, len(m.review.Sections))
 	}
 
-	return renderBorderedPanel(title, content, width, height, m.focusedPanel == PanelSection)
+	// Use conservative estimate for scrollbar (matches scroll triggering)
+	visibleCount := EstimateSectionVisibleCount(height)
+	var scrollbar *ScrollbarInfo
+	contentHeight := height - 2 // account for borders
+	if len(m.review.Sections) > visibleCount {
+		start, sbHeight := CalcScrollbar(len(m.review.Sections), visibleCount, m.sectionScrollOffset, contentHeight)
+		scrollbar = &ScrollbarInfo{Start: start, Height: sbHeight}
+	}
+
+	return renderBorderedPanelWithScrollbar(title, content, width, height, m.focusedPanel == PanelSection, scrollbar)
 }
 
 func (m Model) renderFilesPane(width, height int) string {
@@ -147,7 +166,16 @@ func (m Model) renderFilesPane(width, height int) string {
 		content += "\n" + positionStr
 	}
 
-	return renderBorderedPanel("[2] Files", content, width, height, m.focusedPanel == PanelFiles)
+	// Calculate scrollbar
+	var scrollbar *ScrollbarInfo
+	visibleCount := EstimateFilesVisibleCount(height)
+	contentHeight := height - 2 // account for borders
+	if m.flattenedFiles != nil && len(m.flattenedFiles) > visibleCount {
+		start, sbHeight := CalcScrollbar(len(m.flattenedFiles), visibleCount, m.filesScrollOffset, contentHeight)
+		scrollbar = &ScrollbarInfo{Start: start, Height: sbHeight}
+	}
+
+	return renderBorderedPanelWithScrollbar("[2] Files", content, width, height, m.focusedPanel == PanelFiles, scrollbar)
 }
 
 func countFiles(nodes []*FileNode) int {
@@ -165,8 +193,17 @@ func (m Model) renderFilesContent(width int) string {
 		return "(no files)"
 	}
 
+	// Calculate visible range based on scroll offset
+	visibleCount := EstimateFilesVisibleCount(m.filesPanelHeight())
+	startIdx := m.filesScrollOffset
+	endIdx := startIdx + visibleCount
+	if endIdx > len(m.flattenedFiles) {
+		endIdx = len(m.flattenedFiles)
+	}
+
 	var lines []string
-	for i, node := range m.flattenedFiles {
+	for i := startIdx; i < endIdx; i++ {
+		node := m.flattenedFiles[i]
 		indent := strings.Count(node.FullPath, "/")
 		indentStr := strings.Repeat("  ", indent)
 

@@ -99,3 +99,53 @@ func TestRenderBorderedPanel_EmptyContent(t *testing.T) {
 		t.Errorf("empty panel should still have top border")
 	}
 }
+
+func TestRenderBorderedPanel_WithScrollbar(t *testing.T) {
+	// Panel height 10, content height 8 (10 - 2 borders)
+	// Scrollbar starts at line 2, height 3
+	scrollbar := &ScrollbarInfo{Start: 2, Height: 3}
+	result := renderBorderedPanelWithScrollbar("Test", "line1\nline2\nline3\nline4\nline5\nline6\nline7\nline8", 30, 10, false, scrollbar)
+	lines := strings.Split(result, "\n")
+
+	// Lines 0 is top border, 1-8 are content, 9 is bottom border
+	// Scrollbar should appear at content lines 2, 3, 4 (indices 3, 4, 5 in the full array)
+	// Those lines should end with ▐ instead of │
+
+	// Line 3 (content line 2) should have scrollbar
+	if !strings.HasSuffix(lines[3], "▐") {
+		t.Errorf("line 3 should have scrollbar ▐, got: %s", lines[3])
+	}
+
+	// Line 4 (content line 3) should have scrollbar
+	if !strings.HasSuffix(lines[4], "▐") {
+		t.Errorf("line 4 should have scrollbar ▐, got: %s", lines[4])
+	}
+
+	// Line 5 (content line 4) should have scrollbar
+	if !strings.HasSuffix(lines[5], "▐") {
+		t.Errorf("line 5 should have scrollbar ▐, got: %s", lines[5])
+	}
+
+	// Line 2 (content line 1) should NOT have scrollbar
+	if strings.HasSuffix(lines[2], "▐") {
+		t.Errorf("line 2 should NOT have scrollbar ▐, got: %s", lines[2])
+	}
+
+	// Line 6 (content line 5) should NOT have scrollbar
+	if strings.HasSuffix(lines[6], "▐") {
+		t.Errorf("line 6 should NOT have scrollbar ▐, got: %s", lines[6])
+	}
+}
+
+func TestRenderBorderedPanel_NoScrollbar(t *testing.T) {
+	// When scrollbar is nil, should work like before
+	result := renderBorderedPanelWithScrollbar("Test", "content", 20, 5, false, nil)
+	lines := strings.Split(result, "\n")
+
+	// All content lines should end with regular border
+	for i := 1; i < len(lines)-1; i++ {
+		if !strings.HasSuffix(lines[i], "│") {
+			t.Errorf("line %d should end with │ when no scrollbar, got: %s", i, lines[i])
+		}
+	}
+}

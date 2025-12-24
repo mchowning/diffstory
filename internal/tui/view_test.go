@@ -657,6 +657,99 @@ func TestView_SectionPanelShowsPositionIndicator(t *testing.T) {
 	}
 }
 
+func TestView_SectionPaneScrollsWithOffset(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review with sections that have unique narratives
+	sections := make([]model.Section, 10)
+	for i := range 10 {
+		sections[i] = model.Section{
+			ID:        string(rune('0' + i)),
+			Narrative: "UniqueSection" + string(rune('A'+i)),
+			Hunks:     []model.Hunk{{File: "file.go", Diff: "+added"}},
+		}
+	}
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections:         sections,
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Set scroll offset to 5 (skip first 5 sections)
+	m = m.SetSectionScrollOffset(5)
+
+	view := m.View()
+
+	// Section F (index 5) should be visible since scroll offset is 5
+	if !strings.Contains(view, "UniqueSectionF") {
+		t.Error("section at scroll offset (F) should be visible")
+	}
+
+	// Section A (index 0) should NOT be visible since it's before the scroll offset
+	if strings.Contains(view, "UniqueSectionA") {
+		t.Error("section before scroll offset (A) should NOT be visible")
+	}
+}
+
+func TestView_FilesPaneScrollsWithOffset(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	// Use small height so not all files fit
+	// Files panel height = (16 - 4) / 2 = 6, so only ~4 files visible
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 16}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review with many files
+	hunks := make([]model.Hunk, 10)
+	for i := range 10 {
+		hunks[i] = model.Hunk{
+			File: "scrollfile" + string(rune('a'+i)) + ".go",
+			Diff: "+added",
+		}
+	}
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "Test section", Hunks: hunks},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Switch to files panel and set scroll offset
+	switchMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")}
+	updated, _ = m.Update(switchMsg)
+	m = updated.(tui.Model)
+
+	m = m.SetFilesScrollOffset(5)
+
+	view := m.View()
+
+	// File at scroll offset (f) should be visible in the files panel
+	// The file name appears with its .go extension in the files list
+	if !strings.Contains(view, "scrollfilef.go") {
+		t.Error("file at scroll offset (f) should be visible")
+	}
+
+	// File before scroll offset (a) appears in diff pane:
+	// 1. In header "Viewing: scrollfilea.go"
+	// 2. In diff content as file heading
+	// But it should NOT appear in the files panel with the list prefix
+	// The files panel uses "› " prefix for selected and "  " for others
+	// If we see the file with the files panel prefix, scrolling is broken
+	if strings.Contains(view, "  scrollfilea.go") || strings.Contains(view, "› scrollfilea.go") {
+		t.Error("file before scroll offset (a) should NOT be visible in files panel")
+	}
+}
+
 func TestView_FilesPanelShowsPositionIndicator(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 

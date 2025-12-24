@@ -50,6 +50,10 @@ type Model struct {
 	statusMsg    string
 	focusedPanel Panel
 
+	// Scroll state for panels
+	sectionScrollOffset int
+	filesScrollOffset   int
+
 	// Files panel state
 	fileTree       *FileNode
 	collapsedPaths CollapsedPaths
@@ -173,6 +177,27 @@ func (m Model) SelectedFile() int {
 	return m.selectedFile
 }
 
+func (m Model) SectionScrollOffset() int {
+	return m.sectionScrollOffset
+}
+
+func (m Model) FilesScrollOffset() int {
+	return m.filesScrollOffset
+}
+
+// sectionPanelHeight calculates the height of the section panel.
+func (m Model) sectionPanelHeight() int {
+	contentHeight := m.height - 4 // header + footer
+	return contentHeight / 2
+}
+
+// filesPanelHeight calculates the height of the files panel.
+func (m Model) filesPanelHeight() int {
+	contentHeight := m.height - 4
+	sectionHeight := contentHeight / 2
+	return contentHeight - sectionHeight
+}
+
 func (m Model) FlattenedFilesCount() int {
 	if m.flattenedFiles == nil {
 		return 0
@@ -186,6 +211,18 @@ func (m Model) IsGenerating() bool {
 
 func (m Model) GenerateUIState() GenerateUIState {
 	return m.generateUIState
+}
+
+// SetSectionScrollOffset is a test helper to set the section scroll offset
+func (m Model) SetSectionScrollOffset(offset int) Model {
+	m.sectionScrollOffset = offset
+	return m
+}
+
+// SetFilesScrollOffset is a test helper to set the files scroll offset
+func (m Model) SetFilesScrollOffset(offset int) Model {
+	m.filesScrollOffset = offset
+	return m
 }
 
 // SetGenerating is a test helper to set the generating state
@@ -251,6 +288,7 @@ func (m *Model) updateFileTree() {
 	m.collapsedPaths = make(CollapsedPaths)
 	m.flattenedFiles = Flatten(m.fileTree, m.collapsedPaths)
 	m.selectedFile = 0
+	m.filesScrollOffset = 0
 }
 
 func extractFilePaths(section model.Section) []string {

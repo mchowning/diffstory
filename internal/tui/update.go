@@ -51,6 +51,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case PanelSection:
 				if m.review != nil && m.selected < len(m.review.Sections)-1 {
 					m.selected++
+					m.sectionScrollOffset = CalculateScrollOffset(
+						m.sectionScrollOffset,
+						m.selected,
+						len(m.review.Sections),
+						EstimateSectionVisibleCount(m.sectionPanelHeight()),
+					)
 					m.viewport.GotoTop()
 					m.updateFileTree()
 					m.updateViewportContent()
@@ -58,6 +64,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case PanelFiles:
 				if m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles)-1 {
 					m.selectedFile++
+					m.filesScrollOffset = CalculateScrollOffset(
+						m.filesScrollOffset,
+						m.selectedFile,
+						len(m.flattenedFiles),
+						EstimateFilesVisibleCount(m.filesPanelHeight()),
+					)
 					m.updateViewportContent()
 					m.viewport.GotoTop()
 				}
@@ -69,6 +81,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case PanelSection:
 				if m.review != nil && m.selected > 0 {
 					m.selected--
+					m.sectionScrollOffset = CalculateScrollOffset(
+						m.sectionScrollOffset,
+						m.selected,
+						len(m.review.Sections),
+						EstimateSectionVisibleCount(m.sectionPanelHeight()),
+					)
 					m.viewport.GotoTop()
 					m.updateFileTree()
 					m.updateViewportContent()
@@ -76,6 +94,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case PanelFiles:
 				if m.selectedFile > 0 {
 					m.selectedFile--
+					m.filesScrollOffset = CalculateScrollOffset(
+						m.filesScrollOffset,
+						m.selectedFile,
+						len(m.flattenedFiles),
+						EstimateFilesVisibleCount(m.filesPanelHeight()),
+					)
 					m.updateViewportContent()
 					m.viewport.GotoTop()
 				}
@@ -89,12 +113,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+j":
 			if m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles)-1 {
 				m.selectedFile++
+				m.filesScrollOffset = CalculateScrollOffset(
+					m.filesScrollOffset,
+					m.selectedFile,
+					len(m.flattenedFiles),
+					EstimateFilesVisibleCount(m.filesPanelHeight()),
+				)
 				m.updateViewportContent()
 				m.viewport.GotoTop()
 			}
 		case "ctrl+k":
 			if m.selectedFile > 0 {
 				m.selectedFile--
+				m.filesScrollOffset = CalculateScrollOffset(
+					m.filesScrollOffset,
+					m.selectedFile,
+					len(m.flattenedFiles),
+					EstimateFilesVisibleCount(m.filesPanelHeight()),
+				)
 				m.updateViewportContent()
 				m.viewport.GotoTop()
 			}
@@ -175,11 +211,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.focusedPanel {
 			case PanelSection:
 				m.selected = 0
+				m.sectionScrollOffset = 0
 				m.updateFileTree()
 				m.viewport.GotoTop()
 				m.updateViewportContent()
 			case PanelFiles:
 				m.selectedFile = 0
+				m.filesScrollOffset = 0
 				m.updateViewportContent()
 				m.viewport.GotoTop()
 			case PanelDiff:
@@ -190,6 +228,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case PanelSection:
 				if m.review != nil {
 					m.selected = len(m.review.Sections) - 1
+					m.sectionScrollOffset = CalculateScrollOffset(
+						m.sectionScrollOffset,
+						m.selected,
+						len(m.review.Sections),
+						EstimateSectionVisibleCount(m.sectionPanelHeight()),
+					)
 					m.updateFileTree()
 					m.viewport.GotoTop()
 					m.updateViewportContent()
@@ -197,6 +241,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case PanelFiles:
 				if m.flattenedFiles != nil {
 					m.selectedFile = len(m.flattenedFiles) - 1
+					m.filesScrollOffset = CalculateScrollOffset(
+						m.filesScrollOffset,
+						m.selectedFile,
+						len(m.flattenedFiles),
+						EstimateFilesVisibleCount(m.filesPanelHeight()),
+					)
 					m.updateViewportContent()
 					m.viewport.GotoTop()
 				}
@@ -208,11 +258,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.focusedPanel {
 			case PanelSection:
 				m.selected = max(0, m.selected-pageSize)
+				m.sectionScrollOffset = CalculateScrollOffset(
+					m.sectionScrollOffset,
+					m.selected,
+					len(m.review.Sections),
+					EstimateSectionVisibleCount(m.sectionPanelHeight()),
+				)
 				m.updateFileTree()
 				m.viewport.GotoTop()
 				m.updateViewportContent()
 			case PanelFiles:
 				m.selectedFile = max(0, m.selectedFile-pageSize)
+				m.filesScrollOffset = CalculateScrollOffset(
+					m.filesScrollOffset,
+					m.selectedFile,
+					len(m.flattenedFiles),
+					EstimateFilesVisibleCount(m.filesPanelHeight()),
+				)
 				m.updateViewportContent()
 				m.viewport.GotoTop()
 			case PanelDiff:
@@ -224,6 +286,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case PanelSection:
 				if m.review != nil {
 					m.selected = min(len(m.review.Sections)-1, m.selected+pageSize)
+					m.sectionScrollOffset = CalculateScrollOffset(
+						m.sectionScrollOffset,
+						m.selected,
+						len(m.review.Sections),
+						EstimateSectionVisibleCount(m.sectionPanelHeight()),
+					)
 					m.updateFileTree()
 					m.viewport.GotoTop()
 					m.updateViewportContent()
@@ -231,6 +299,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case PanelFiles:
 				if m.flattenedFiles != nil {
 					m.selectedFile = min(len(m.flattenedFiles)-1, m.selectedFile+pageSize)
+					m.filesScrollOffset = CalculateScrollOffset(
+						m.filesScrollOffset,
+						m.selectedFile,
+						len(m.flattenedFiles),
+						EstimateFilesVisibleCount(m.filesPanelHeight()),
+					)
 					m.updateViewportContent()
 					m.viewport.GotoTop()
 				}
@@ -257,6 +331,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ReviewReceivedMsg:
 		m.review = &msg.Review
 		m.selected = 0
+		m.sectionScrollOffset = 0
+		m.filesScrollOffset = 0
 		m.viewport.GotoTop()
 		m.updateFileTree()
 		m.updateViewportContent()
