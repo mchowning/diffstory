@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mchowning/diffguide/internal/highlight"
 	"github.com/mchowning/diffguide/internal/model"
+	"github.com/mchowning/diffguide/internal/timeutil"
 )
 
 func (m Model) View() string {
@@ -89,6 +90,10 @@ func (m Model) renderReviewState() string {
 	rightWidth := m.width - leftWidth - 2 // account for borders
 
 	contentHeight := m.height - 4 // header + footer
+	timestampLine := m.renderTimestamp()
+	if timestampLine != "" {
+		contentHeight-- // account for timestamp line
+	}
 	sectionHeight := contentHeight / 2
 	filesHeight := contentHeight - sectionHeight
 
@@ -109,7 +114,18 @@ func (m Model) renderReviewState() string {
 	// Join left column with diff horizontally
 	content := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, diffPane)
 
+	if timestampLine != "" {
+		return lipgloss.JoinVertical(lipgloss.Left, header, timestampLine, content, footer)
+	}
 	return lipgloss.JoinVertical(lipgloss.Left, header, content, footer)
+}
+
+func (m Model) renderTimestamp() string {
+	if m.review == nil || m.review.CreatedAt.IsZero() {
+		return ""
+	}
+	relative := timeutil.FormatRelative(m.review.CreatedAt, time.Now())
+	return timestampStyle.Render("Review generated " + relative)
 }
 
 func (m Model) renderSectionPane(width, height int) string {

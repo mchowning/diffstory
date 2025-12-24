@@ -1,6 +1,9 @@
 package model
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 const (
 	ImportanceHigh   = "high"
@@ -34,6 +37,7 @@ type Review struct {
 	WorkingDirectory string    `json:"workingDirectory"`
 	Title            string    `json:"title"`
 	Sections         []Section `json:"sections"`
+	CreatedAt        time.Time `json:"createdAt,omitempty"`
 }
 
 type Section struct {

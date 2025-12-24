@@ -1,6 +1,10 @@
 package model
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+	"time"
+)
 
 func TestValidImportance(t *testing.T) {
 	tests := []struct {
@@ -65,5 +69,46 @@ func TestNormalizeImportance(t *testing.T) {
 				t.Errorf("NormalizeImportance(%q) = %q, want %q", tt.input, result, tt.expected)
 			}
 		})
+	}
+}
+
+func TestReview_CreatedAt_Serialization(t *testing.T) {
+	createdAt := time.Date(2024, 12, 24, 10, 30, 0, 0, time.UTC)
+	review := Review{
+		WorkingDirectory: "/test",
+		Title:            "Test Review",
+		Sections:         []Section{},
+		CreatedAt:        createdAt,
+	}
+
+	data, err := json.Marshal(review)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	var unmarshaled Review
+	if err := json.Unmarshal(data, &unmarshaled); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if !unmarshaled.CreatedAt.Equal(createdAt) {
+		t.Errorf("CreatedAt = %v, want %v", unmarshaled.CreatedAt, createdAt)
+	}
+}
+
+func TestReview_LegacyJSON_WithoutCreatedAt(t *testing.T) {
+	legacyJSON := `{
+		"workingDirectory": "/test",
+		"title": "Legacy Review",
+		"sections": []
+	}`
+
+	var review Review
+	if err := json.Unmarshal([]byte(legacyJSON), &review); err != nil {
+		t.Fatalf("failed to unmarshal legacy JSON: %v", err)
+	}
+
+	if !review.CreatedAt.IsZero() {
+		t.Errorf("CreatedAt should be zero time for legacy reviews, got %v", review.CreatedAt)
 	}
 }

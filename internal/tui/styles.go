@@ -32,4 +32,9 @@ var (
 	// Status bar
 	statusStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("203"))
+
+	// Timestamp line
+	timestampStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("244")).
+			Italic(true)
 )

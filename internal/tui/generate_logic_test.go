@@ -3,6 +3,7 @@ package tui
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mchowning/diffguide/internal/diff"
 )
@@ -250,6 +251,34 @@ func TestAssemblePartialReview_AddsUnclassifiedSection(t *testing.T) {
 	// Unclassified hunks should default to medium importance
 	if unclassifiedSection.Hunks[0].Importance != "medium" {
 		t.Errorf("expected default importance 'medium', got %q", unclassifiedSection.Hunks[0].Importance)
+	}
+}
+
+func TestAssembleReview_SetsCreatedAt(t *testing.T) {
+	hunks := []diff.ParsedHunk{
+		{ID: "file.go::10", File: "file.go", StartLine: 10, Diff: "+test"},
+	}
+
+	response := &LLMResponse{
+		Title: "Test Review",
+		Sections: []LLMSection{
+			{
+				ID:        "section1",
+				Narrative: "Test",
+				Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "high"}},
+			},
+		},
+	}
+
+	before := time.Now()
+	review := assembleReview("/test/dir", response, hunks)
+	after := time.Now()
+
+	if review.CreatedAt.IsZero() {
+		t.Error("expected CreatedAt to be set")
+	}
+	if review.CreatedAt.Before(before) || review.CreatedAt.After(after) {
+		t.Errorf("CreatedAt %v not within expected range [%v, %v]", review.CreatedAt, before, after)
 	}
 }
 

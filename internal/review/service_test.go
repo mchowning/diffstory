@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/mchowning/diffguide/internal/model"
 	"github.com/mchowning/diffguide/internal/review"
@@ -271,5 +272,61 @@ func TestService_SubmitAcceptsValidImportance(t *testing.T) {
 		if err != nil {
 			t.Errorf("Submit with importance=%q failed: %v", imp, err)
 		}
+	}
+}
+
+func TestService_SubmitSetsCreatedAtWhenNotProvided(t *testing.T) {
+	svc, store := setupTestService(t)
+	ctx := context.Background()
+
+	before := time.Now()
+	input := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		// CreatedAt intentionally not set
+	}
+
+	_, err := svc.Submit(ctx, input)
+	if err != nil {
+		t.Fatalf("Submit failed: %v", err)
+	}
+	after := time.Now()
+
+	stored, err := store.Read("/test/project")
+	if err != nil {
+		t.Fatalf("Read failed: %v", err)
+	}
+
+	if stored.CreatedAt.IsZero() {
+		t.Error("expected CreatedAt to be set")
+	}
+	if stored.CreatedAt.Before(before) || stored.CreatedAt.After(after) {
+		t.Errorf("CreatedAt %v not within expected range [%v, %v]", stored.CreatedAt, before, after)
+	}
+}
+
+func TestService_SubmitPreservesProvidedCreatedAt(t *testing.T) {
+	svc, store := setupTestService(t)
+	ctx := context.Background()
+
+	providedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+	input := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		CreatedAt:        providedTime,
+	}
+
+	_, err := svc.Submit(ctx, input)
+	if err != nil {
+		t.Fatalf("Submit failed: %v", err)
+	}
+
+	stored, err := store.Read("/test/project")
+	if err != nil {
+		t.Fatalf("Read failed: %v", err)
+	}
+
+	if !stored.CreatedAt.Equal(providedTime) {
+		t.Errorf("CreatedAt = %v, want %v", stored.CreatedAt, providedTime)
 	}
 }

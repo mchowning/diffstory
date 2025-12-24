@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/mchowning/diffguide/internal/model"
 	"github.com/mchowning/diffguide/internal/storage"
@@ -37,6 +38,10 @@ func (s *Service) Submit(ctx context.Context, review model.Review) (SubmitResult
 		return SubmitResult{}, fmt.Errorf("%w: %v", ErrInvalidWorkingDirectory, err)
 	}
 	review.WorkingDirectory = normalized
+
+	if review.CreatedAt.IsZero() {
+		review.CreatedAt = time.Now()
+	}
 
 	// Validate all hunks have valid importance
 	for i, section := range review.Sections {

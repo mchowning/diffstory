@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mchowning/diffguide/internal/model"
@@ -861,5 +862,58 @@ func TestTruncatePath_LongPathTruncatesMiddle(t *testing.T) {
 	}
 	if !strings.Contains(result, "token.go") {
 		t.Errorf("TruncatePathMiddle(%q, 25) = %q, expected to contain 'token.go'", longPath, result)
+	}
+}
+
+// Timestamp Display Tests
+
+func TestView_ReviewStateShowsTimestamp(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review with CreatedAt set to 2 hours ago
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+		CreatedAt:        time.Now().Add(-2 * time.Hour),
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	if !strings.Contains(view, "Review generated") {
+		t.Error("review view should contain 'Review generated' timestamp line")
+	}
+	if !strings.Contains(view, "hours ago") {
+		t.Error("review view should show relative time like 'X hours ago'")
+	}
+}
+
+func TestView_ReviewWithoutTimestampShowsNoCreatedLine(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review WITHOUT CreatedAt (zero time)
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+		// CreatedAt is zero
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	if strings.Contains(view, "Review generated") {
+		t.Error("review view should NOT show 'Review generated' line when timestamp is zero")
 	}
 }

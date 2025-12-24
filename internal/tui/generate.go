@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mchowning/diffguide/internal/config"
@@ -244,6 +245,7 @@ func assembleReview(workDir string, response *LLMResponse, hunks []diff.ParsedHu
 	review := model.Review{
 		WorkingDirectory: workDir,
 		Title:            response.Title,
+		CreatedAt:        time.Now(),
 	}
 
 	for _, s := range response.Sections {
