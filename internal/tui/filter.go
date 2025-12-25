@@ -49,3 +49,50 @@ func (f FilterLevel) PassesFilter(importance string) bool {
 		return true
 	}
 }
+
+type TestFilter int
+
+const (
+	TestFilterAll       TestFilter = iota // Show all hunks
+	TestFilterExcluding                   // Exclude test hunks
+	TestFilterOnly                        // Show only test hunks
+)
+
+func (f TestFilter) String() string {
+	switch f {
+	case TestFilterAll:
+		return ""
+	case TestFilterExcluding:
+		return "Excluding Tests"
+	case TestFilterOnly:
+		return "Only Tests"
+	default:
+		return ""
+	}
+}
+
+func (f TestFilter) Next() TestFilter {
+	switch f {
+	case TestFilterAll:
+		return TestFilterExcluding
+	case TestFilterExcluding:
+		return TestFilterOnly
+	default:
+		return TestFilterAll
+	}
+}
+
+func (f TestFilter) PassesFilter(isTest *bool) bool {
+	// nil always passes (backward compatibility)
+	if isTest == nil {
+		return true
+	}
+	switch f {
+	case TestFilterExcluding:
+		return !*isTest
+	case TestFilterOnly:
+		return *isTest
+	default: // TestFilterAll
+		return true
+	}
+}

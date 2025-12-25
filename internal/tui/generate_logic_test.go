@@ -282,3 +282,121 @@ func TestAssembleReview_SetsCreatedAt(t *testing.T) {
 	}
 }
 
+// Phase 4: IsTest field tests
+
+func boolPtrLLM(b bool) *bool {
+	return &b
+}
+
+func TestAssembleReview_CopiesIsTestField(t *testing.T) {
+	hunks := []diff.ParsedHunk{
+		{ID: "main.go::10", File: "main.go", StartLine: 10, Diff: "+production"},
+		{ID: "main_test.go::20", File: "main_test.go", StartLine: 20, Diff: "+test"},
+	}
+
+	response := &LLMResponse{
+		Title: "Test Review",
+		Sections: []LLMSection{
+			{
+				ID:        "section1",
+				Narrative: "Mixed section",
+				Hunks: []LLMHunkRef{
+					{ID: "main.go::10", Importance: "high", IsTest: boolPtrLLM(false)},
+					{ID: "main_test.go::20", Importance: "medium", IsTest: boolPtrLLM(true)},
+				},
+			},
+		},
+	}
+
+	review := assembleReview("/test/dir", response, hunks)
+
+	if len(review.Sections) != 1 {
+		t.Fatalf("expected 1 section, got %d", len(review.Sections))
+	}
+	if len(review.Sections[0].Hunks) != 2 {
+		t.Fatalf("expected 2 hunks, got %d", len(review.Sections[0].Hunks))
+	}
+
+	// First hunk should have IsTest = false
+	if review.Sections[0].Hunks[0].IsTest == nil {
+		t.Error("expected IsTest to be set for production hunk")
+	} else if *review.Sections[0].Hunks[0].IsTest {
+		t.Error("expected IsTest=false for production code hunk")
+	}
+
+	// Second hunk should have IsTest = true
+	if review.Sections[0].Hunks[1].IsTest == nil {
+		t.Error("expected IsTest to be set for test hunk")
+	} else if !*review.Sections[0].Hunks[1].IsTest {
+		t.Error("expected IsTest=true for test code hunk")
+	}
+}
+
+func TestAssembleReview_NilIsTestWhenOmitted(t *testing.T) {
+	hunks := []diff.ParsedHunk{
+		{ID: "file.go::10", File: "file.go", StartLine: 10, Diff: "+legacy"},
+	}
+
+	// LLM response without IsTest field (backward compatibility)
+	response := &LLMResponse{
+		Title: "Legacy Review",
+		Sections: []LLMSection{
+			{
+				ID:        "section1",
+				Narrative: "Legacy section",
+				Hunks: []LLMHunkRef{
+					{ID: "file.go::10", Importance: "high"},
+					// Note: IsTest is not set (nil)
+				},
+			},
+		},
+	}
+
+	review := assembleReview("/test/dir", response, hunks)
+
+	if len(review.Sections[0].Hunks) != 1 {
+		t.Fatalf("expected 1 hunk, got %d", len(review.Sections[0].Hunks))
+	}
+
+	// IsTest should be nil for backward compatibility
+	if review.Sections[0].Hunks[0].IsTest != nil {
+		t.Error("expected IsTest to be nil when LLM omits the field")
+	}
+}
+
+func TestAssemblePartialReview_PreservesIsTestField(t *testing.T) {
+	hunks := []diff.ParsedHunk{
+		{ID: "main.go::10", File: "main.go", StartLine: 10, Diff: "+classified"},
+		{ID: "missing.go::20", File: "missing.go", StartLine: 20, Diff: "+unclassified"},
+	}
+
+	response := &LLMResponse{
+		Title: "Partial Review",
+		Sections: []LLMSection{
+			{
+				ID:        "section1",
+				Narrative: "Some changes",
+				Hunks: []LLMHunkRef{
+					{ID: "main.go::10", Importance: "high", IsTest: boolPtrLLM(false)},
+				},
+			},
+		},
+	}
+
+	missingIDs := []string{"missing.go::20"}
+	review := assemblePartialReview("/test/dir", response, hunks, missingIDs)
+
+	// Classified hunk should have IsTest preserved
+	if review.Sections[0].Hunks[0].IsTest == nil {
+		t.Error("expected IsTest to be preserved for classified hunk")
+	} else if *review.Sections[0].Hunks[0].IsTest {
+		t.Error("expected IsTest=false for classified production hunk")
+	}
+
+	// Unclassified hunk should have IsTest nil (not classified by LLM)
+	unclassifiedHunk := review.Sections[1].Hunks[0]
+	if unclassifiedHunk.IsTest != nil {
+		t.Error("expected IsTest to be nil for unclassified hunk")
+	}
+}
+

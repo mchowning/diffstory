@@ -107,7 +107,7 @@ func (m Model) renderReviewState() string {
 
 	header := headerStyle.Render("diffguide - " + m.review.Title)
 	filterLine := m.renderFilterIndicator()
-	footer := "j/k: navigate | J/K: scroll | h/l: panels | f: filter | q: quit | ?: help"
+	footer := "j/k: navigate | J/K: scroll | h/l: panels | f: importance filter | t: test filter | q: quit | ?: help"
 	if m.statusMsg != "" {
 		footer = statusStyle.Render(m.statusMsg) + "  " + footer
 	}
@@ -122,7 +122,22 @@ func (m Model) renderReviewState() string {
 }
 
 func (m Model) renderFilterIndicator() string {
-	return "Diff filter: " + m.filterLevel.String()
+	parts := []string{"Diff filter: " + m.filterLevel.String()}
+	if m.testFilter != TestFilterAll {
+		parts = append(parts, m.renderTestFilterIndicator())
+	}
+	return strings.Join(parts, " | ")
+}
+
+func (m Model) renderTestFilterIndicator() string {
+	switch m.testFilter {
+	case TestFilterExcluding:
+		return "Excluding tests"
+	case TestFilterOnly:
+		return "Tests only"
+	default:
+		return ""
+	}
 }
 
 func (m Model) renderTimestamp() string {
@@ -135,11 +150,48 @@ func (m Model) renderTimestamp() string {
 
 func (m Model) sectionHasVisibleHunks(section model.Section) bool {
 	for _, hunk := range section.Hunks {
-		if m.filterLevel.PassesFilter(hunk.Importance) {
+		if m.hunkPassesFilters(hunk) {
 			return true
 		}
 	}
 	return false
+}
+
+// currentViewHasFilteredContent returns true if any hunks in the current view
+// are being filtered out by the active filters
+func (m Model) currentViewHasFilteredContent() bool {
+	if m.review == nil || m.selected >= len(m.review.Sections) {
+		return false
+	}
+
+	section := m.review.Sections[m.selected]
+
+	// Determine which hunks are in current view based on file selection
+	for _, hunk := range section.Hunks {
+		if m.hunkInCurrentView(hunk) {
+			if !m.hunkPassesFilters(hunk) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// hunkInCurrentView returns true if the hunk belongs to the current view
+// (all files, selected file, or selected directory)
+func (m Model) hunkInCurrentView(hunk model.Hunk) bool {
+	// If no file tree or invalid selection, show all hunks
+	if m.flattenedFiles == nil || m.selectedFile >= len(m.flattenedFiles) {
+		return true
+	}
+
+	selectedNode := m.flattenedFiles[m.selectedFile]
+	if selectedNode.IsDir {
+		// Directory view - check if hunk is in this directory
+		return strings.HasPrefix(hunk.File, selectedNode.FullPath+"/") || hunk.File == selectedNode.FullPath
+	}
+	// File view - check if hunk matches this file
+	return hunk.File == selectedNode.FullPath
 }
 
 func (m Model) renderSectionPane(width, height int) string {
@@ -164,9 +216,6 @@ func (m Model) renderSectionPane(width, height int) string {
 		}
 		wrappedStyle := style.Width(contentWidth)
 		text := prefix + section.Narrative
-		if !m.sectionHasVisibleHunks(section) {
-			text += " (filtered)"
-		}
 		items = append(items, wrappedStyle.Render(text))
 	}
 	content := strings.Join(items, "\n\n")
@@ -284,7 +333,13 @@ func (m Model) renderDiffPaneWithTitle(width, height int) string {
 
 	content := contextHeader + "\n" + strings.Repeat("─", width-6) + "\n" + m.viewport.View()
 
-	return renderBorderedPanel("[0] Diff", content, width, height, m.focusedPanel == PanelDiff)
+	// Add "(filtered)" indicator when current view has hidden content
+	title := "[0] Diff"
+	if m.currentViewHasFilteredContent() {
+		title = "[0] Diff (filtered)"
+	}
+
+	return renderBorderedPanel(title, content, width, height, m.focusedPanel == PanelDiff)
 }
 
 func (m Model) renderDiffContent(section model.Section) string {
@@ -292,7 +347,7 @@ func (m Model) renderDiffContent(section model.Section) string {
 	var lastFile string
 
 	for _, hunk := range section.Hunks {
-		if !m.filterLevel.PassesFilter(hunk.Importance) {
+		if !m.hunkPassesFilters(hunk) {
 			continue
 		}
 		if hunk.File != lastFile {
@@ -321,7 +376,7 @@ func (m Model) renderDiffForFile(section model.Section, filePath string) string 
 	first := true
 
 	for _, hunk := range section.Hunks {
-		if hunk.File == filePath && m.filterLevel.PassesFilter(hunk.Importance) {
+		if hunk.File == filePath && m.hunkPassesFilters(hunk) {
 			if first {
 				content.WriteString(hunk.File + "\n")
 				content.WriteString(strings.Repeat("─", 40) + "\n")
@@ -347,7 +402,7 @@ func (m Model) renderDiffForDirectory(section model.Section, dirPath string) str
 
 	for _, hunk := range section.Hunks {
 		inDir := strings.HasPrefix(hunk.File, dirPath+"/") || hunk.File == dirPath
-		if inDir && m.filterLevel.PassesFilter(hunk.Importance) {
+		if inDir && m.hunkPassesFilters(hunk) {
 			if hunk.File != lastFile {
 				if lastFile != "" {
 					content.WriteString("\n\n\n")

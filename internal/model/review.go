@@ -51,4 +51,5 @@ type Hunk struct {
 	StartLine  int    `json:"startLine" jsonschema_description:"Starting line number of the hunk"`
 	Diff       string `json:"diff" jsonschema_description:"Complete unified diff content - include ALL lines, do not truncate or summarize"`
 	Importance string `json:"importance" jsonschema:"enum=high,enum=medium,enum=low" jsonschema_description:"Importance level: high (critical changes), medium (significant changes), or low (minor changes)"`
+	IsTest     *bool  `json:"isTest,omitempty" jsonschema_description:"True if this hunk contains test code changes, false for production code"`
 }

@@ -985,8 +985,8 @@ func TestView_FooterShowsFilterShortcut(t *testing.T) {
 	view := m.View()
 
 	// Footer should show filter shortcut
-	if !strings.Contains(view, "f: filter") {
-		t.Error("footer should show 'f: filter' shortcut")
+	if !strings.Contains(view, "f: importance filter") {
+		t.Error("footer should show 'f: importance filter' shortcut")
 	}
 }
 
@@ -1066,7 +1066,7 @@ func TestView_HighFilterShowsOnlyHigh(t *testing.T) {
 	}
 }
 
-func TestView_SectionShowsFilteredWhenAllHunksHidden(t *testing.T) {
+func TestView_ShowsFilteredIndicatorWhenAllHunksHidden(t *testing.T) {
 	cfg := &config.Config{DefaultFilterLevel: "high"}
 	m := tui.NewModel("/test/project", cfg, nil, nil)
 
@@ -1093,9 +1093,10 @@ func TestView_SectionShowsFilteredWhenAllHunksHidden(t *testing.T) {
 
 	view := m.View()
 
-	// Section should show (filtered) indicator
-	if !strings.Contains(view, "(filtered)") {
-		t.Error("section with all hunks filtered should show '(filtered)' indicator")
+	// Diff header should show (filtered) indicator when content is hidden
+	// (Previously this was shown in section list, now shown in diff header)
+	if !strings.Contains(view, "Diff (filtered)") {
+		t.Error("diff header should show 'Diff (filtered)' when content is hidden by filter")
 	}
 }
 
@@ -1135,5 +1136,399 @@ func TestView_FilesPanelHidesFilesWithNoVisibleHunks(t *testing.T) {
 	// high.go should still be visible
 	if !strings.Contains(view, "high.go") {
 		t.Error("files panel should show high.go when high filter is active")
+	}
+}
+
+// Phase 2: Filter Indicator Refactor Tests
+
+func TestView_SectionListDoesNotShowFilteredIndicator(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Section with only low importance hunks - all will be filtered
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "All low importance section",
+				Hunks: []model.Hunk{
+					{File: "low.go", Diff: "+low", Importance: "low"},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Section narrative should be visible but WITHOUT "(filtered)" suffix
+	// The "(filtered)" indicator was removed from sections for cleaner UI
+	if !strings.Contains(view, "All low importance section") {
+		t.Error("section narrative should still be visible")
+	}
+	// Check that "(filtered)" does NOT appear directly after the section narrative
+	// in the section list (it might appear elsewhere, e.g., diff header)
+	if strings.Contains(view, "section (filtered)") {
+		t.Error("section list should NOT show '(filtered)' suffix on section narratives")
+	}
+}
+
+func TestView_DiffHeaderShowsFilteredWhenContentHidden(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review with mixed importance - some will be hidden
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "Mixed section",
+				Hunks: []model.Hunk{
+					{File: "main.go", Diff: "+low change", Importance: "low"},
+					{File: "main.go", Diff: "+high change", Importance: "high"},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Diff header should show "(filtered)" because low importance hunk is hidden
+	if !strings.Contains(view, "Diff (filtered)") {
+		t.Error("diff header should show 'Diff (filtered)' when content is hidden by filter")
+	}
+}
+
+func TestView_DiffHeaderNoFilteredWhenNoContentHidden(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "low"} // Show all
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "Test section",
+				Hunks: []model.Hunk{
+					{File: "main.go", Diff: "+change", Importance: "low"},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Should show "[0] Diff" but NOT "Diff (filtered)"
+	if strings.Contains(view, "Diff (filtered)") {
+		t.Error("diff header should NOT show '(filtered)' when no content is hidden")
+	}
+	if !strings.Contains(view, "[0] Diff") {
+		t.Error("diff header should show '[0] Diff'")
+	}
+}
+
+func TestView_DiffHeaderNoFilteredWhenFilterActiveButAllPassFilter(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// All hunks are high importance - none will be hidden
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "High importance section",
+				Hunks: []model.Hunk{
+					{File: "main.go", Diff: "+high1", Importance: "high"},
+					{File: "main.go", Diff: "+high2", Importance: "high"},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Filter is active but no content is hidden, so no "(filtered)" indicator
+	if strings.Contains(view, "Diff (filtered)") {
+		t.Error("diff header should NOT show '(filtered)' when filter active but no content hidden")
+	}
+}
+
+func TestView_DiffHeaderFilteredUpdatesWithFileNavigation(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// File with mixed importance vs file with only high
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "Test section",
+				Hunks: []model.Hunk{
+					{File: "all_high.go", Diff: "+high", Importance: "high"},
+					{File: "mixed.go", Diff: "+low", Importance: "low"},
+					{File: "mixed.go", Diff: "+high", Importance: "high"},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Focus files panel and navigate to all_high.go
+	focusMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
+	updated, _ = m.Update(focusMsg)
+	m = updated.(tui.Model)
+
+	// First file should be all_high.go (sorted alphabetically)
+	view := m.View()
+
+	// When viewing all_high.go, no content is hidden
+	if strings.Contains(view, "Viewing: all_high.go") && strings.Contains(view, "Diff (filtered)") {
+		t.Error("diff header should NOT show '(filtered)' when viewing file with no hidden content")
+	}
+
+	// Navigate to mixed.go
+	jMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")}
+	updated, _ = m.Update(jMsg)
+	m = updated.(tui.Model)
+
+	view = m.View()
+
+	// When viewing mixed.go, low importance content is hidden
+	if strings.Contains(view, "Viewing: mixed.go") && !strings.Contains(view, "Diff (filtered)") {
+		t.Error("diff header should show '(filtered)' when viewing file with hidden content")
+	}
+}
+
+// Phase 3: Test Filter View Tests
+
+// boolPtr returns a pointer to the given bool value
+func boolPtr(b bool) *bool {
+	return &b
+}
+
+func TestView_TestFilterHidesTestHunks(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Use same file for both hunks so they show in the same view
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "Section with tests",
+				Hunks: []model.Hunk{
+					{File: "main.go", Diff: "+production code change", IsTest: boolPtr(false)},
+					{File: "main.go", Diff: "+test code change", IsTest: boolPtr(true)},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// By default, TestFilter is All - both should be visible
+	view := m.View()
+	if !strings.Contains(view, "production code change") {
+		t.Error("with TestFilterAll, production code should be visible")
+	}
+	if !strings.Contains(view, "test code change") {
+		t.Error("with TestFilterAll, test code should be visible")
+	}
+
+	// Press t to switch to Excluding (hide tests)
+	tMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("t")}
+	updated, _ = m.Update(tMsg)
+	m = updated.(tui.Model)
+
+	view = m.View()
+	if !strings.Contains(view, "production code change") {
+		t.Error("with TestFilterExcluding, production code should still be visible")
+	}
+	if strings.Contains(view, "test code change") {
+		t.Error("with TestFilterExcluding, test code should be hidden")
+	}
+
+	// Press t again to switch to Only (show only tests)
+	updated, _ = m.Update(tMsg)
+	m = updated.(tui.Model)
+
+	view = m.View()
+	if strings.Contains(view, "production code change") {
+		t.Error("with TestFilterOnly, production code should be hidden")
+	}
+	if !strings.Contains(view, "test code change") {
+		t.Error("with TestFilterOnly, test code should be visible")
+	}
+}
+
+func TestView_FooterShowsTestFilterShortcut(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Footer should show test filter shortcut
+	if !strings.Contains(view, "t: test filter") {
+		t.Error("footer should show 't: test filter' shortcut")
+	}
+}
+
+func TestView_FilterIndicatorShowsTestFilterWhenExcluding(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Set test filter to Excluding
+	tMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("t")}
+	updated, _ = m.Update(tMsg)
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Filter indicator should show test filter status
+	if !strings.Contains(view, "Excluding tests") {
+		t.Error("filter indicator should show 'Excluding tests' when test filter is active")
+	}
+}
+
+func TestView_FilterIndicatorShowsTestFilterWhenOnly(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Set test filter to Only (press t twice: All -> Excluding -> Only)
+	tMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("t")}
+	updated, _ = m.Update(tMsg)
+	m = updated.(tui.Model)
+	updated, _ = m.Update(tMsg)
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Filter indicator should show test filter status
+	if !strings.Contains(view, "Tests only") {
+		t.Error("filter indicator should show 'Tests only' when test filter is set to Only")
+	}
+}
+
+func TestView_CompoundFilteringAppliesBothFilters(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "Section",
+				Hunks: []model.Hunk{
+					{File: "main.go", Diff: "+high prod", Importance: "high", IsTest: boolPtr(false)},
+					{File: "main.go", Diff: "+low prod", Importance: "low", IsTest: boolPtr(false)},
+					{File: "main_test.go", Diff: "+high test", Importance: "high", IsTest: boolPtr(true)},
+					{File: "main_test.go", Diff: "+low test", Importance: "low", IsTest: boolPtr(true)},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// With high importance filter + test filter excluding:
+	// Only high importance, non-test hunks should show
+	tMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("t")}
+	updated, _ = m.Update(tMsg)
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	if !strings.Contains(view, "high prod") {
+		t.Error("compound filter should show high importance production code")
+	}
+	if strings.Contains(view, "low prod") {
+		t.Error("compound filter should hide low importance production code")
+	}
+	if strings.Contains(view, "high test") {
+		t.Error("compound filter should hide test code (even high importance)")
+	}
+	if strings.Contains(view, "low test") {
+		t.Error("compound filter should hide low importance test code")
 	}
 }

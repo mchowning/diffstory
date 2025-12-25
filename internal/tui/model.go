@@ -50,6 +50,7 @@ type Model struct {
 	statusMsg    string
 	focusedPanel Panel
 	filterLevel  FilterLevel
+	testFilter   TestFilter
 
 	// Scroll state for panels
 	sectionScrollOffset int
@@ -232,6 +233,10 @@ func (m Model) FilterLevel() FilterLevel {
 	return m.filterLevel
 }
 
+func (m Model) TestFilter() TestFilter {
+	return m.testFilter
+}
+
 // SetSectionScrollOffset is a test helper to set the section scroll offset
 func (m Model) SetSectionScrollOffset(offset int) Model {
 	m.sectionScrollOffset = offset
@@ -326,10 +331,15 @@ func (m Model) extractFilteredFilePaths(section model.Section) []string {
 	seen := make(map[string]bool)
 	var paths []string
 	for _, hunk := range section.Hunks {
-		if m.filterLevel.PassesFilter(hunk.Importance) && !seen[hunk.File] {
+		if m.hunkPassesFilters(hunk) && !seen[hunk.File] {
 			seen[hunk.File] = true
 			paths = append(paths, hunk.File)
 		}
 	}
 	return paths
+}
+
+// hunkPassesFilters returns true if the hunk passes both importance and test filters
+func (m Model) hunkPassesFilters(hunk model.Hunk) bool {
+	return m.filterLevel.PassesFilter(hunk.Importance) && m.testFilter.PassesFilter(hunk.IsTest)
 }

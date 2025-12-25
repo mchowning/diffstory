@@ -12,6 +12,7 @@ func initKeybindings() *KeybindingRegistry {
 	r.Register(Keybinding{Key: "2", Description: "Focus Files panel", Context: "global"})
 	r.Register(Keybinding{Key: "h/l", Description: "Cycle panel focus", Context: "global"})
 	r.Register(Keybinding{Key: "f", Description: "Cycle importance filter", Context: "global"})
+	r.Register(Keybinding{Key: "t", Description: "Cycle test filter", Context: "global"})
 	r.Register(Keybinding{Key: "G", Description: "Generate review (LLM)", Context: "global"})
 
 	// Navigation

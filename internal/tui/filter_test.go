@@ -91,3 +91,82 @@ func TestFilterLevel_PassesFilter_EmptyImportanceAlwaysPasses(t *testing.T) {
 		t.Error("High filter should pass empty importance")
 	}
 }
+
+func TestTestFilter_String_ReturnsDisplayLabel(t *testing.T) {
+	tests := []struct {
+		filter   TestFilter
+		expected string
+	}{
+		{TestFilterAll, ""},
+		{TestFilterExcluding, "Excluding Tests"},
+		{TestFilterOnly, "Only Tests"},
+	}
+
+	for _, tt := range tests {
+		result := tt.filter.String()
+		if result != tt.expected {
+			t.Errorf("TestFilter(%d).String() = %q, want %q", tt.filter, result, tt.expected)
+		}
+	}
+}
+
+func TestTestFilter_Next_CyclesThroughStates(t *testing.T) {
+	// All -> Excluding -> Only -> All
+	if TestFilterAll.Next() != TestFilterExcluding {
+		t.Error("All.Next() should return Excluding")
+	}
+	if TestFilterExcluding.Next() != TestFilterOnly {
+		t.Error("Excluding.Next() should return Only")
+	}
+	if TestFilterOnly.Next() != TestFilterAll {
+		t.Error("Only.Next() should return All")
+	}
+}
+
+func TestTestFilter_PassesFilter_AllPassesEverything(t *testing.T) {
+	filter := TestFilterAll
+	trueVal := true
+	falseVal := false
+
+	if !filter.PassesFilter(nil) {
+		t.Error("All filter should pass nil")
+	}
+	if !filter.PassesFilter(&trueVal) {
+		t.Error("All filter should pass true (test code)")
+	}
+	if !filter.PassesFilter(&falseVal) {
+		t.Error("All filter should pass false (production code)")
+	}
+}
+
+func TestTestFilter_PassesFilter_ExcludingBlocksTests(t *testing.T) {
+	filter := TestFilterExcluding
+	trueVal := true
+	falseVal := false
+
+	if !filter.PassesFilter(nil) {
+		t.Error("Excluding filter should pass nil (backward compat)")
+	}
+	if filter.PassesFilter(&trueVal) {
+		t.Error("Excluding filter should NOT pass true (test code)")
+	}
+	if !filter.PassesFilter(&falseVal) {
+		t.Error("Excluding filter should pass false (production code)")
+	}
+}
+
+func TestTestFilter_PassesFilter_OnlyPassesTests(t *testing.T) {
+	filter := TestFilterOnly
+	trueVal := true
+	falseVal := false
+
+	if !filter.PassesFilter(nil) {
+		t.Error("Only filter should pass nil (backward compat)")
+	}
+	if !filter.PassesFilter(&trueVal) {
+		t.Error("Only filter should pass true (test code)")
+	}
+	if filter.PassesFilter(&falseVal) {
+		t.Error("Only filter should NOT pass false (production code)")
+	}
+}

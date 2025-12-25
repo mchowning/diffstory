@@ -87,12 +87,26 @@ diffguide
 
 | Key | Action |
 |-----|--------|
-| `j` / `↓` | Next section |
-| `k` / `↑` | Previous section |
-| `J` | Scroll content down |
-| `K` | Scroll content up |
-| `?` | Toggle help |
+| `j` / `k` | Navigate sections up/down |
+| `J` / `K` | Scroll diff content |
+| `h` / `l` | Cycle panel focus |
+| `0` / `1` / `2` | Focus Diff/Section/Files panel |
+| `f` | Cycle importance filter |
+| `t` | Cycle test filter |
+| `G` | Generate review (LLM) |
+| `?` / `Esc` | Toggle/close help |
 | `q` / `Ctrl+C` | Quit |
+
+**Filtering:**
+
+The TUI supports two filter dimensions that work together:
+
+- **Importance filter** (`f`): Cycles through Low (all) → Medium → High only
+- **Test filter** (`t`): Cycles through All → Excluding Tests → Only Tests
+
+Filters combine - a hunk must pass both filters to be displayed. For example, with importance "High only" and test filter "Excluding Tests", only high-importance production code hunks are shown.
+
+The filter indicator at the bottom shows current state: `Diff filter: High only | Excluding tests`
 
 ### HTTP Server
 

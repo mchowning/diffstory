@@ -35,8 +35,8 @@ Respond with JSON in this exact format (no markdown fences, no explanation text)
       "id": "section-identifier",
       "narrative": "2-3 sentence explanation of what this section covers and why these changes matter",
       "hunks": [
-        {"id": "file/path.go::45", "importance": "high"},
-        {"id": "file/path.go::120", "importance": "medium"}
+        {"id": "file/path.go::45", "importance": "high", "isTest": false},
+        {"id": "file/path_test.go::120", "importance": "medium", "isTest": true}
       ]
     }
   ]
@@ -48,6 +48,8 @@ Guidelines:
 - high: Critical changes (security, core logic, breaking changes)
 - medium: Important changes (new features, significant refactors)
 - low: Minor changes (formatting, comments, trivial fixes)
+- Each hunk must have isTest: true if the hunk is test code, false if production code
+- Test code includes: unit tests, integration tests, test fixtures, test utilities, mocks
 - Write narratives that explain the "why" not just the "what"
 %s`
 
@@ -260,6 +262,7 @@ func assembleReview(workDir string, response *LLMResponse, hunks []diff.ParsedHu
 					StartLine:  h.StartLine,
 					Diff:       h.Diff,
 					Importance: model.NormalizeImportance(href.Importance),
+					IsTest:     href.IsTest,
 				})
 			}
 		}

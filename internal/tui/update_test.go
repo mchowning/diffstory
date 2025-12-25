@@ -2071,3 +2071,66 @@ func TestUpdate_FKeyDoesNothingWithoutReview(t *testing.T) {
 		t.Errorf("FilterLevel() = %v, want %v (should not change without review)", result.FilterLevel(), tui.FilterLevelLow)
 	}
 }
+
+// Test Filter Tests
+
+func TestUpdate_TKeyCyclesTestFilter(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "Section 1"},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Start at All (default)
+	if m.TestFilter() != tui.TestFilterAll {
+		t.Fatalf("initial TestFilter() = %v, want %v", m.TestFilter(), tui.TestFilterAll)
+	}
+
+	// Press t: All -> Excluding
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("t")}
+	updated, _ = m.Update(msg)
+	m = updated.(tui.Model)
+
+	if m.TestFilter() != tui.TestFilterExcluding {
+		t.Errorf("TestFilter() after first t = %v, want %v", m.TestFilter(), tui.TestFilterExcluding)
+	}
+
+	// Press t: Excluding -> Only
+	updated, _ = m.Update(msg)
+	m = updated.(tui.Model)
+
+	if m.TestFilter() != tui.TestFilterOnly {
+		t.Errorf("TestFilter() after second t = %v, want %v", m.TestFilter(), tui.TestFilterOnly)
+	}
+
+	// Press t: Only -> All
+	updated, _ = m.Update(msg)
+	m = updated.(tui.Model)
+
+	if m.TestFilter() != tui.TestFilterAll {
+		t.Errorf("TestFilter() after third t = %v, want %v", m.TestFilter(), tui.TestFilterAll)
+	}
+}
+
+func TestUpdate_TKeyDoesNothingWithoutReview(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("t")}
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Test filter should not change without a review
+	if result.TestFilter() != tui.TestFilterAll {
+		t.Errorf("TestFilter() = %v, want %v (should not change without review)", result.TestFilter(), tui.TestFilterAll)
+	}
+}

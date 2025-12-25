@@ -150,6 +150,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.updateFileTree()
 				m.updateViewportContent()
 			}
+		case "t":
+			if m.review != nil {
+				m.testFilter = m.testFilter.Next()
+				m.updateFileTree()
+				m.updateViewportContent()
+			}
 		case "esc":
 			if m.showCancelPrompt {
 				m.showCancelPrompt = false

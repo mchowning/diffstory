@@ -22,6 +22,7 @@ type LLMSection struct {
 type LLMHunkRef struct {
 	ID         string `json:"id"`
 	Importance string `json:"importance"`
+	IsTest     *bool  `json:"isTest,omitempty"`
 }
 
 // ValidationResult holds the results of classification validation
