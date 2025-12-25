@@ -7,6 +7,7 @@
       "Bash(nix develop:*)",
       "Read(~/go/**)",
       "Read(~/code/lazygit/**)",
+      "Read(~/.local/state/diffguide/**)",
       "Bash(timeout 2 /tmp/diffguide mcp:*)",
       "mcp__diffguide__submit_review",
       "Bash(git remote get-url:*)",
@@ -14,7 +15,13 @@
       "Bash(~/.claude/plugins/cache/mchowning-marketplace/workflow-tools/1.0.0/skills/frontmatter/workflow-tools-frontmatter.sh)",
       "WebFetch(domain:docs.claude.com)",
       "WebFetch(domain:llm.datasette.io)",
-      "WebFetch(domain:opencode.ai)"
+      "WebFetch(domain:opencode.ai)",
+      "WebFetch(domain:arxiv.org)",
+      "Bash(if [ -z \"$CLAUDE_EXTERNAL_REVIEW_COMMAND:-\" ])",
+      "Bash(then)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(wc:*)"
     ]
   }
 }
