@@ -89,7 +89,7 @@ func (m Model) renderReviewState() string {
 	leftWidth := m.width / 3
 	rightWidth := m.width - leftWidth - 2 // account for borders
 
-	contentHeight := m.height - 4 // header + footer
+	contentHeight := m.height - 5 // header + footer + filter line
 	timestampLine := m.renderTimestamp()
 	if timestampLine != "" {
 		contentHeight-- // account for timestamp line
@@ -106,7 +106,8 @@ func (m Model) renderReviewState() string {
 	diffPane := m.renderDiffPaneWithTitle(rightWidth, contentHeight)
 
 	header := headerStyle.Render("diffguide - " + m.review.Title)
-	footer := "j/k: navigate | J/K: scroll | h/l: panels | q: quit | ?: help"
+	filterLine := m.renderFilterIndicator()
+	footer := "j/k: navigate | J/K: scroll | h/l: panels | f: filter | q: quit | ?: help"
 	if m.statusMsg != "" {
 		footer = statusStyle.Render(m.statusMsg) + "  " + footer
 	}
@@ -115,9 +116,13 @@ func (m Model) renderReviewState() string {
 	content := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, diffPane)
 
 	if timestampLine != "" {
-		return lipgloss.JoinVertical(lipgloss.Left, header, timestampLine, content, footer)
+		return lipgloss.JoinVertical(lipgloss.Left, header, timestampLine, content, filterLine, footer)
 	}
-	return lipgloss.JoinVertical(lipgloss.Left, header, content, footer)
+	return lipgloss.JoinVertical(lipgloss.Left, header, content, filterLine, footer)
+}
+
+func (m Model) renderFilterIndicator() string {
+	return "Diff filter: " + m.filterLevel.String()
 }
 
 func (m Model) renderTimestamp() string {
@@ -126,6 +131,15 @@ func (m Model) renderTimestamp() string {
 	}
 	relative := timeutil.FormatRelative(m.review.CreatedAt, time.Now())
 	return timestampStyle.Render("Review generated " + relative)
+}
+
+func (m Model) sectionHasVisibleHunks(section model.Section) bool {
+	for _, hunk := range section.Hunks {
+		if m.filterLevel.PassesFilter(hunk.Importance) {
+			return true
+		}
+	}
+	return false
 }
 
 func (m Model) renderSectionPane(width, height int) string {
@@ -150,6 +164,9 @@ func (m Model) renderSectionPane(width, height int) string {
 		}
 		wrappedStyle := style.Width(contentWidth)
 		text := prefix + section.Narrative
+		if !m.sectionHasVisibleHunks(section) {
+			text += " (filtered)"
+		}
 		items = append(items, wrappedStyle.Render(text))
 	}
 	content := strings.Join(items, "\n\n")
@@ -275,6 +292,9 @@ func (m Model) renderDiffContent(section model.Section) string {
 	var lastFile string
 
 	for _, hunk := range section.Hunks {
+		if !m.filterLevel.PassesFilter(hunk.Importance) {
+			continue
+		}
 		if hunk.File != lastFile {
 			if lastFile != "" {
 				content.WriteString("\n\n\n")
@@ -289,6 +309,10 @@ func (m Model) renderDiffContent(section model.Section) string {
 		content.WriteString(coloredDiff + "\n")
 	}
 
+	if content.Len() == 0 {
+		return "(all hunks filtered)"
+	}
+
 	return content.String()
 }
 
@@ -297,7 +321,7 @@ func (m Model) renderDiffForFile(section model.Section, filePath string) string 
 	first := true
 
 	for _, hunk := range section.Hunks {
-		if hunk.File == filePath {
+		if hunk.File == filePath && m.filterLevel.PassesFilter(hunk.Importance) {
 			if first {
 				content.WriteString(hunk.File + "\n")
 				content.WriteString(strings.Repeat("─", 40) + "\n")
@@ -310,6 +334,10 @@ func (m Model) renderDiffForFile(section model.Section, filePath string) string 
 		}
 	}
 
+	if content.Len() == 0 {
+		return "(all hunks filtered)"
+	}
+
 	return content.String()
 }
 
@@ -318,7 +346,8 @@ func (m Model) renderDiffForDirectory(section model.Section, dirPath string) str
 	var lastFile string
 
 	for _, hunk := range section.Hunks {
-		if strings.HasPrefix(hunk.File, dirPath+"/") || hunk.File == dirPath {
+		inDir := strings.HasPrefix(hunk.File, dirPath+"/") || hunk.File == dirPath
+		if inDir && m.filterLevel.PassesFilter(hunk.Importance) {
 			if hunk.File != lastFile {
 				if lastFile != "" {
 					content.WriteString("\n\n\n")
@@ -332,6 +361,10 @@ func (m Model) renderDiffForDirectory(section model.Section, dirPath string) str
 			coloredDiff := highlight.ColorizeDiff(hunk.Diff)
 			content.WriteString(coloredDiff + "\n")
 		}
+	}
+
+	if content.Len() == 0 {
+		return "(all hunks filtered)"
 	}
 
 	return content.String()

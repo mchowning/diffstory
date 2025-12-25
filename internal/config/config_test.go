@@ -413,3 +413,67 @@ func TestLoad_ErrorsWhenBothJSONAndJSONCExist(t *testing.T) {
 		t.Errorf("expected nil config on error, got: %+v", cfg)
 	}
 }
+
+func TestLoad_DefaultFilterLevelDefaultsToMedium(t *testing.T) {
+	tmpDir := t.TempDir()
+	configDir := filepath.Join(tmpDir, "diffguide")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	configPath := filepath.Join(configDir, "config.json")
+	// Config without defaultFilterLevel
+	configContent := `{"llmCommand": ["claude"]}`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.DefaultFilterLevel != "medium" {
+		t.Errorf("expected defaultFilterLevel to be 'medium', got %q", cfg.DefaultFilterLevel)
+	}
+}
+
+func TestLoad_ParsesDefaultFilterLevel(t *testing.T) {
+	tests := []struct {
+		configValue string
+		expected    string
+	}{
+		{"low", "low"},
+		{"medium", "medium"},
+		{"high", "high"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.configValue, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			configDir := filepath.Join(tmpDir, "diffguide")
+			if err := os.MkdirAll(configDir, 0755); err != nil {
+				t.Fatal(err)
+			}
+
+			configPath := filepath.Join(configDir, "config.json")
+			configContent := `{"defaultFilterLevel": "` + tt.configValue + `"}`
+			if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+			cfg, err := Load()
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if cfg.DefaultFilterLevel != tt.expected {
+				t.Errorf("expected defaultFilterLevel %q, got %q", tt.expected, cfg.DefaultFilterLevel)
+			}
+		})
+	}
+}

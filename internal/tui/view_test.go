@@ -7,6 +7,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mchowning/diffguide/internal/config"
 	"github.com/mchowning/diffguide/internal/model"
 	"github.com/mchowning/diffguide/internal/tui"
 )
@@ -915,5 +916,224 @@ func TestView_ReviewWithoutTimestampShowsNoCreatedLine(t *testing.T) {
 
 	if strings.Contains(view, "Review generated") {
 		t.Error("review view should NOT show 'Review generated' line when timestamp is zero")
+	}
+}
+
+// Filter Indicator Tests
+
+func TestView_ReviewStateShowsFilterIndicator(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	if !strings.Contains(view, "Diff filter:") {
+		t.Error("review view should contain 'Diff filter:' indicator")
+	}
+}
+
+func TestView_FilterIndicatorShowsCurrentLevel(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Filter indicator should show only current level
+	if !strings.Contains(view, "Diff filter: High only") {
+		t.Error("filter indicator should show 'Diff filter: High only'")
+	}
+}
+
+func TestView_FooterShowsFilterShortcut(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Footer should show filter shortcut
+	if !strings.Contains(view, "f: filter") {
+		t.Error("footer should show 'f: filter' shortcut")
+	}
+}
+
+// Helper to create a model with specific filter level
+// Uses a single file with multiple hunks of different importance levels
+func modelWithFilterLevel(filterLevel string) tui.Model {
+	cfg := &config.Config{DefaultFilterLevel: filterLevel}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Use a single file with multiple hunks of different importance
+	// This ensures the view shows all hunks for that file
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "Section with mixed importance",
+				Hunks: []model.Hunk{
+					{File: "main.go", Diff: "+low importance change", Importance: "low"},
+					{File: "main.go", Diff: "+medium importance change", Importance: "medium"},
+					{File: "main.go", Diff: "+high importance change", Importance: "high"},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	return updated.(tui.Model)
+}
+
+func TestView_LowFilterShowsAllHunks(t *testing.T) {
+	m := modelWithFilterLevel("low")
+	view := m.View()
+
+	if !strings.Contains(view, "low importance change") {
+		t.Error("low filter should show low importance hunks")
+	}
+	if !strings.Contains(view, "medium importance change") {
+		t.Error("low filter should show medium importance hunks")
+	}
+	if !strings.Contains(view, "high importance change") {
+		t.Error("low filter should show high importance hunks")
+	}
+}
+
+func TestView_MediumFilterHidesLowImportance(t *testing.T) {
+	m := modelWithFilterLevel("medium")
+	view := m.View()
+
+	if strings.Contains(view, "low importance change") {
+		t.Error("medium filter should NOT show low importance hunks")
+	}
+	if !strings.Contains(view, "medium importance change") {
+		t.Error("medium filter should show medium importance hunks")
+	}
+	if !strings.Contains(view, "high importance change") {
+		t.Error("medium filter should show high importance hunks")
+	}
+}
+
+func TestView_HighFilterShowsOnlyHigh(t *testing.T) {
+	m := modelWithFilterLevel("high")
+	view := m.View()
+
+	if strings.Contains(view, "low importance change") {
+		t.Error("high filter should NOT show low importance hunks")
+	}
+	if strings.Contains(view, "medium importance change") {
+		t.Error("high filter should NOT show medium importance hunks")
+	}
+	if !strings.Contains(view, "high importance change") {
+		t.Error("high filter should show high importance hunks")
+	}
+}
+
+func TestView_SectionShowsFilteredWhenAllHunksHidden(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Section with only low importance hunks
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "All low importance section",
+				Hunks: []model.Hunk{
+					{File: "low.go", Diff: "+low", Importance: "low"},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Section should show (filtered) indicator
+	if !strings.Contains(view, "(filtered)") {
+		t.Error("section with all hunks filtered should show '(filtered)' indicator")
+	}
+}
+
+func TestView_FilesPanelHidesFilesWithNoVisibleHunks(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{
+				ID:        "1",
+				Narrative: "Mixed section",
+				Hunks: []model.Hunk{
+					{File: "low.go", Diff: "+low", Importance: "low"},
+					{File: "high.go", Diff: "+high", Importance: "high"},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// With high filter, low.go should NOT appear in files panel
+	// (But it might appear in diff pane context header)
+	// We check the files panel specifically by looking for the file indicator pattern
+	if strings.Contains(view, "› low.go") || strings.Contains(view, "  low.go") {
+		t.Error("files panel should not show low.go when high filter is active")
+	}
+	// high.go should still be visible
+	if !strings.Contains(view, "high.go") {
+		t.Error("files panel should show high.go when high filter is active")
 	}
 }

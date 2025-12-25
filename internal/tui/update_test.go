@@ -1976,3 +1976,98 @@ func TestUpdate_EscapeInSourcePickerCancelsGenerate(t *testing.T) {
 		t.Errorf("GenerateUIState() = %v, want GenerateUIStateNone after escape", result.GenerateUIState())
 	}
 }
+
+// Filter Level Tests
+
+func TestModel_FilterLevelDefaultsToMediumWithNilConfig(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	if m.FilterLevel() != tui.FilterLevelMedium {
+		t.Errorf("FilterLevel() = %v, want FilterLevelMedium with nil config", m.FilterLevel())
+	}
+}
+
+func TestModel_FilterLevelInitializesFromConfig(t *testing.T) {
+	tests := []struct {
+		configValue string
+		expected    tui.FilterLevel
+	}{
+		{"low", tui.FilterLevelLow},
+		{"medium", tui.FilterLevelMedium},
+		{"high", tui.FilterLevelHigh},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.configValue, func(t *testing.T) {
+			cfg := &config.Config{DefaultFilterLevel: tt.configValue}
+			m := tui.NewModel("/test/project", cfg, nil, nil)
+
+			if m.FilterLevel() != tt.expected {
+				t.Errorf("FilterLevel() = %v, want %v", m.FilterLevel(), tt.expected)
+			}
+		})
+	}
+}
+
+func TestUpdate_FKeyCyclesFilterLevel(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "low"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Sections: []model.Section{
+			{ID: "1", Narrative: "Section 1"},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Start at low
+	if m.FilterLevel() != tui.FilterLevelLow {
+		t.Fatalf("initial FilterLevel() = %v, want %v", m.FilterLevel(), tui.FilterLevelLow)
+	}
+
+	// Press f: low -> medium
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("f")}
+	updated, _ = m.Update(msg)
+	m = updated.(tui.Model)
+
+	if m.FilterLevel() != tui.FilterLevelMedium {
+		t.Errorf("FilterLevel() after first f = %v, want %v", m.FilterLevel(), tui.FilterLevelMedium)
+	}
+
+	// Press f: medium -> high
+	updated, _ = m.Update(msg)
+	m = updated.(tui.Model)
+
+	if m.FilterLevel() != tui.FilterLevelHigh {
+		t.Errorf("FilterLevel() after second f = %v, want %v", m.FilterLevel(), tui.FilterLevelHigh)
+	}
+
+	// Press f: high -> low
+	updated, _ = m.Update(msg)
+	m = updated.(tui.Model)
+
+	if m.FilterLevel() != tui.FilterLevelLow {
+		t.Errorf("FilterLevel() after third f = %v, want %v", m.FilterLevel(), tui.FilterLevelLow)
+	}
+}
+
+func TestUpdate_FKeyDoesNothingWithoutReview(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "low"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("f")}
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Filter level should not change without a review
+	if result.FilterLevel() != tui.FilterLevelLow {
+		t.Errorf("FilterLevel() = %v, want %v (should not change without review)", result.FilterLevel(), tui.FilterLevelLow)
+	}
+}

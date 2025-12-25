@@ -12,6 +12,7 @@ type Config struct {
 	LLMCommand          []string `json:"llmCommand"`
 	DiffCommand         []string `json:"diffCommand"`
 	DebugLoggingEnabled bool     `json:"debugLoggingEnabled"`
+	DefaultFilterLevel  string   `json:"defaultFilterLevel"`
 }
 
 // Load reads config from XDG_CONFIG_HOME or ~/.config
@@ -50,6 +51,9 @@ func Load() (*Config, error) {
 		// Apply defaults
 		if len(cfg.DiffCommand) == 0 {
 			cfg.DiffCommand = []string{"git", "diff", "HEAD"}
+		}
+		if cfg.DefaultFilterLevel == "" {
+			cfg.DefaultFilterLevel = "medium"
 		}
 
 		return &cfg, nil

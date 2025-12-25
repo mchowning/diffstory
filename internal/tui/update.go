@@ -144,6 +144,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "?":
 			m.showHelp = !m.showHelp
+		case "f":
+			if m.review != nil {
+				m.filterLevel = m.filterLevel.Next()
+				m.updateFileTree()
+				m.updateViewportContent()
+			}
 		case "esc":
 			if m.showCancelPrompt {
 				m.showCancelPrompt = false

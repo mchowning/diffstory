@@ -49,6 +49,7 @@ type Model struct {
 	showHelp     bool
 	statusMsg    string
 	focusedPanel Panel
+	filterLevel  FilterLevel
 
 	// Scroll state for panels
 	sectionScrollOffset int
@@ -115,9 +116,23 @@ func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *
 	ctx.SetWidth(60)
 	ctx.SetHeight(5)
 
+	// Initialize filter level from config
+	filterLevel := FilterLevelMedium // default
+	if cfg != nil {
+		switch cfg.DefaultFilterLevel {
+		case "low":
+			filterLevel = FilterLevelLow
+		case "high":
+			filterLevel = FilterLevelHigh
+		default:
+			filterLevel = FilterLevelMedium
+		}
+	}
+
 	return Model{
 		workDir:      workDir,
 		focusedPanel: PanelSection,
+		filterLevel:  filterLevel,
 		keybindings:  initKeybindings(),
 		config:       cfg,
 		store:        store,
@@ -187,13 +202,13 @@ func (m Model) FilesScrollOffset() int {
 
 // sectionPanelHeight calculates the height of the section panel.
 func (m Model) sectionPanelHeight() int {
-	contentHeight := m.height - 4 // header + footer
+	contentHeight := m.height - 5 // header + footer + filter line
 	return contentHeight / 2
 }
 
 // filesPanelHeight calculates the height of the files panel.
 func (m Model) filesPanelHeight() int {
-	contentHeight := m.height - 4
+	contentHeight := m.height - 5 // header + footer + filter line
 	sectionHeight := contentHeight / 2
 	return contentHeight - sectionHeight
 }
@@ -211,6 +226,10 @@ func (m Model) IsGenerating() bool {
 
 func (m Model) GenerateUIState() GenerateUIState {
 	return m.generateUIState
+}
+
+func (m Model) FilterLevel() FilterLevel {
+	return m.filterLevel
 }
 
 // SetSectionScrollOffset is a test helper to set the section scroll offset
@@ -283,7 +302,7 @@ func (m *Model) updateFileTree() {
 	}
 
 	section := m.review.Sections[m.selected]
-	paths := extractFilePaths(section)
+	paths := m.extractFilteredFilePaths(section)
 	m.fileTree = BuildFileTree(paths)
 	m.collapsedPaths = make(CollapsedPaths)
 	m.flattenedFiles = Flatten(m.fileTree, m.collapsedPaths)
@@ -296,6 +315,18 @@ func extractFilePaths(section model.Section) []string {
 	var paths []string
 	for _, hunk := range section.Hunks {
 		if !seen[hunk.File] {
+			seen[hunk.File] = true
+			paths = append(paths, hunk.File)
+		}
+	}
+	return paths
+}
+
+func (m Model) extractFilteredFilePaths(section model.Section) []string {
+	seen := make(map[string]bool)
+	var paths []string
+	for _, hunk := range section.Hunks {
+		if m.filterLevel.PassesFilter(hunk.Importance) && !seen[hunk.File] {
 			seen[hunk.File] = true
 			paths = append(paths, hunk.File)
 		}
