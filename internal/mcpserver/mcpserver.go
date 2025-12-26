@@ -12,7 +12,7 @@ import (
 type SubmitReviewInput struct {
 	WorkingDirectory string          `json:"workingDirectory" jsonschema_description:"The absolute path to the project directory"`
 	Title            string          `json:"title" jsonschema_description:"Title of the review"`
-	Sections         []model.Section `json:"sections" jsonschema_description:"Review sections with hunks"`
+	Chapters         []model.Chapter `json:"chapters" jsonschema_description:"Review chapters containing sections with hunks"`
 }
 
 type SubmitReviewOutput struct {
@@ -35,7 +35,7 @@ func (s *Server) SubmitReview(ctx context.Context, input SubmitReviewInput) (Sub
 	reviewData := model.Review{
 		WorkingDirectory: input.WorkingDirectory,
 		Title:            input.Title,
-		Sections:         input.Sections,
+		Chapters:         input.Chapters,
 	}
 
 	result, err := s.reviewService.Submit(ctx, reviewData)

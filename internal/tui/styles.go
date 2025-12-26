@@ -11,6 +11,15 @@ var (
 	selectedPrefix = "› "
 	normalPrefix   = "  "
 
+	// Chapter headers in section pane
+	chapterPrefix = "▼ "
+	chapterStyle  = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("81")) // Cyan for visual distinction
+
+	// Narrative indentation for selected section
+	narrativePrefix = "  │ "
+
 	selectedStyle = lipgloss.NewStyle().
 			Background(lipgloss.Color("62")).
 			Foreground(lipgloss.Color("230"))

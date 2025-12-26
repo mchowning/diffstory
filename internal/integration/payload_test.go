@@ -105,12 +105,14 @@ func TestPayloadRoundTrip_SimpleReview(t *testing.T) {
 		t.Errorf("Title mismatch: got %q, want %q", stored.Title, original.Title)
 	}
 
-	if len(stored.Sections) != len(original.Sections) {
-		t.Fatalf("Sections count mismatch: got %d, want %d", len(stored.Sections), len(original.Sections))
+	storedSections := stored.AllSections()
+	originalSections := original.AllSections()
+	if len(storedSections) != len(originalSections) {
+		t.Fatalf("Sections count mismatch: got %d, want %d", len(storedSections), len(originalSections))
 	}
 
-	for i, section := range stored.Sections {
-		origSection := original.Sections[i]
+	for i, section := range storedSections {
+		origSection := originalSections[i]
 		if section.ID != origSection.ID {
 			t.Errorf("Section[%d].ID mismatch: got %q, want %q", i, section.ID, origSection.ID)
 		}
@@ -156,19 +158,21 @@ func TestPayloadRoundTrip_MultiSectionReview(t *testing.T) {
 
 	stored := readStoredReview(t, store, original.WorkingDirectory)
 
+	storedSections := stored.AllSections()
+	originalSections := original.AllSections()
 	// Verify we have all 5 sections
-	if len(stored.Sections) != 5 {
-		t.Fatalf("expected 5 sections, got %d", len(stored.Sections))
+	if len(storedSections) != 5 {
+		t.Fatalf("expected 5 sections, got %d", len(storedSections))
 	}
 
 	// Count total hunks
 	totalHunks := 0
-	for _, section := range stored.Sections {
+	for _, section := range storedSections {
 		totalHunks += len(section.Hunks)
 	}
 
 	originalHunks := 0
-	for _, section := range original.Sections {
+	for _, section := range originalSections {
 		originalHunks += len(section.Hunks)
 	}
 
@@ -177,9 +181,9 @@ func TestPayloadRoundTrip_MultiSectionReview(t *testing.T) {
 	}
 
 	// Verify all section IDs preserved
-	for i, section := range stored.Sections {
-		if section.ID != original.Sections[i].ID {
-			t.Errorf("Section[%d].ID mismatch: got %q, want %q", i, section.ID, original.Sections[i].ID)
+	for i, section := range storedSections {
+		if section.ID != originalSections[i].ID {
+			t.Errorf("Section[%d].ID mismatch: got %q, want %q", i, section.ID, originalSections[i].ID)
 		}
 	}
 }
@@ -209,10 +213,12 @@ func TestPayloadRoundTrip_RealisticClaudeReview(t *testing.T) {
 		t.Errorf("Title mismatch: got %q, want %q", stored.Title, original.Title)
 	}
 
+	storedSections := stored.AllSections()
+	originalSections := original.AllSections()
 	// Verify all diff content preserved exactly
-	for i, section := range stored.Sections {
+	for i, section := range storedSections {
 		for j, hunk := range section.Hunks {
-			origHunk := original.Sections[i].Hunks[j]
+			origHunk := originalSections[i].Hunks[j]
 			if hunk.Diff != origHunk.Diff {
 				t.Errorf("Section[%d].Hunk[%d].Diff not preserved exactly", i, j)
 			}
@@ -245,18 +251,20 @@ func TestPayloadRoundTrip_UnicodeContent(t *testing.T) {
 		t.Errorf("Title with emoji not preserved: got %q, want %q", stored.Title, original.Title)
 	}
 
+	storedSections := stored.AllSections()
+	originalSections := original.AllSections()
 	// Verify narrative with unicode preserved
-	for i, section := range stored.Sections {
-		if section.Narrative != original.Sections[i].Narrative {
+	for i, section := range storedSections {
+		if section.Narrative != originalSections[i].Narrative {
 			t.Errorf("Section[%d].Narrative unicode not preserved:\ngot:  %q\nwant: %q",
-				i, section.Narrative, original.Sections[i].Narrative)
+				i, section.Narrative, originalSections[i].Narrative)
 		}
 	}
 
 	// Verify diff content with unicode preserved
-	for i, section := range stored.Sections {
+	for i, section := range storedSections {
 		for j, hunk := range section.Hunks {
-			origHunk := original.Sections[i].Hunks[j]
+			origHunk := originalSections[i].Hunks[j]
 			if hunk.Diff != origHunk.Diff {
 				t.Errorf("Section[%d].Hunk[%d].Diff unicode not preserved", i, j)
 			}
@@ -284,10 +292,12 @@ func TestPayloadRoundTrip_SpecialCharacters(t *testing.T) {
 
 	stored := readStoredReview(t, store, original.WorkingDirectory)
 
+	storedSections := stored.AllSections()
+	originalSections := original.AllSections()
 	// Verify all diff content with special characters preserved exactly
-	for i, section := range stored.Sections {
+	for i, section := range storedSections {
 		for j, hunk := range section.Hunks {
-			origHunk := original.Sections[i].Hunks[j]
+			origHunk := originalSections[i].Hunks[j]
 			if hunk.Diff != origHunk.Diff {
 				t.Errorf("Section[%d].Hunk[%d].Diff special chars not preserved:\ngot:  %q\nwant: %q",
 					i, j, hunk.Diff, origHunk.Diff)
@@ -317,8 +327,8 @@ func TestPayloadRoundTrip_EmptyArrays(t *testing.T) {
 	stored := readStoredReview(t, store, original.WorkingDirectory)
 
 	// Verify empty sections array is preserved
-	if len(stored.Sections) != 0 {
-		t.Errorf("expected 0 sections, got %d", len(stored.Sections))
+	if stored.SectionCount() != 0 {
+		t.Errorf("expected 0 sections, got %d", stored.SectionCount())
 	}
 
 	if stored.Title != original.Title {
@@ -354,14 +364,15 @@ func TestPayloadRoundTrip_LargeReview(t *testing.T) {
 
 	stored := readStoredReview(t, store, original.WorkingDirectory)
 
+	storedSections := stored.AllSections()
 	// Verify we have all 100 sections
-	if len(stored.Sections) != 100 {
-		t.Errorf("expected 100 sections, got %d", len(stored.Sections))
+	if len(storedSections) != 100 {
+		t.Errorf("expected 100 sections, got %d", len(storedSections))
 	}
 
 	// Count total hunks
 	totalHunks := 0
-	for _, section := range stored.Sections {
+	for _, section := range storedSections {
 		totalHunks += len(section.Hunks)
 	}
 
@@ -379,16 +390,22 @@ func TestDiffContentIntegrity_HunkHeaders(t *testing.T) {
 	review := model.Review{
 		WorkingDirectory: "/test/hunk-headers",
 		Title:            "Test hunk headers",
-		Sections: []model.Section{
+		Chapters: []model.Chapter{
 			{
-				ID:        "sec-1",
-				Narrative: "Test",
-				Hunks: []model.Hunk{
+				ID:    "ch-1",
+				Title: "Test",
+				Sections: []model.Section{
 					{
-						File:       "test.go",
-						StartLine:  10,
-						Diff:       "@@ -10,7 +10,9 @@ func TestFunc() {\n context line\n-removed\n+added\n context\n }",
-						Importance: "medium",
+						ID:        "sec-1",
+						Narrative: "Test",
+						Hunks: []model.Hunk{
+							{
+								File:       "test.go",
+								StartLine:  10,
+								Diff:       "@@ -10,7 +10,9 @@ func TestFunc() {\n context line\n-removed\n+added\n context\n }",
+								Importance: "medium",
+							},
+						},
 					},
 				},
 			},
@@ -407,9 +424,10 @@ func TestDiffContentIntegrity_HunkHeaders(t *testing.T) {
 
 	// Verify hunk header preserved exactly
 	expectedDiff := "@@ -10,7 +10,9 @@ func TestFunc() {\n context line\n-removed\n+added\n context\n }"
-	if stored.Sections[0].Hunks[0].Diff != expectedDiff {
+	storedSections := stored.AllSections()
+	if storedSections[0].Hunks[0].Diff != expectedDiff {
 		t.Errorf("Hunk header not preserved:\ngot:  %q\nwant: %q",
-			stored.Sections[0].Hunks[0].Diff, expectedDiff)
+			storedSections[0].Hunks[0].Diff, expectedDiff)
 	}
 }
 
@@ -421,16 +439,22 @@ func TestDiffContentIntegrity_ContextLines(t *testing.T) {
 	review := model.Review{
 		WorkingDirectory: "/test/context-lines",
 		Title:            "Test context lines",
-		Sections: []model.Section{
+		Chapters: []model.Chapter{
 			{
-				ID:        "sec-1",
-				Narrative: "Test",
-				Hunks: []model.Hunk{
+				ID:    "ch-1",
+				Title: "Test",
+				Sections: []model.Section{
 					{
-						File:       "test.go",
-						StartLine:  1,
-						Diff:       " func foo() {\n     indented context\n-    old line\n+    new line\n     more indented context\n }",
-						Importance: "medium",
+						ID:        "sec-1",
+						Narrative: "Test",
+						Hunks: []model.Hunk{
+							{
+								File:       "test.go",
+								StartLine:  1,
+								Diff:       " func foo() {\n     indented context\n-    old line\n+    new line\n     more indented context\n }",
+								Importance: "medium",
+							},
+						},
 					},
 				},
 			},
@@ -447,10 +471,12 @@ func TestDiffContentIntegrity_ContextLines(t *testing.T) {
 
 	stored := readStoredReview(t, store, review.WorkingDirectory)
 
+	storedSections := stored.AllSections()
+	reviewSections := review.AllSections()
 	// Verify context lines with leading spaces preserved exactly
-	if stored.Sections[0].Hunks[0].Diff != review.Sections[0].Hunks[0].Diff {
+	if storedSections[0].Hunks[0].Diff != reviewSections[0].Hunks[0].Diff {
 		t.Errorf("Context lines not preserved:\ngot:  %q\nwant: %q",
-			stored.Sections[0].Hunks[0].Diff, review.Sections[0].Hunks[0].Diff)
+			storedSections[0].Hunks[0].Diff, reviewSections[0].Hunks[0].Diff)
 	}
 }
 
@@ -470,16 +496,22 @@ Final paragraph.`
 	review := model.Review{
 		WorkingDirectory: "/test/multiline-narrative",
 		Title:            "Test multiline narrative",
-		Sections: []model.Section{
+		Chapters: []model.Chapter{
 			{
-				ID:        "sec-1",
-				Narrative: multilineNarrative,
-				Hunks: []model.Hunk{
+				ID:    "ch-1",
+				Title: "Test",
+				Sections: []model.Section{
 					{
-						File:       "test.go",
-						StartLine:  1,
-						Diff:       "+new line",
-						Importance: "low",
+						ID:        "sec-1",
+						Narrative: multilineNarrative,
+						Hunks: []model.Hunk{
+							{
+								File:       "test.go",
+								StartLine:  1,
+								Diff:       "+new line",
+								Importance: "low",
+							},
+						},
 					},
 				},
 			},
@@ -496,9 +528,10 @@ Final paragraph.`
 
 	stored := readStoredReview(t, store, review.WorkingDirectory)
 
+	storedSections := stored.AllSections()
 	// Verify multi-line narrative preserved exactly
-	if stored.Sections[0].Narrative != multilineNarrative {
+	if storedSections[0].Narrative != multilineNarrative {
 		t.Errorf("Multiline narrative not preserved:\ngot:  %q\nwant: %q",
-			stored.Sections[0].Narrative, multilineNarrative)
+			storedSections[0].Narrative, multilineNarrative)
 	}
 }

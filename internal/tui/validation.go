@@ -8,12 +8,20 @@ import (
 // LLMResponse is the classification returned by the LLM
 type LLMResponse struct {
 	Title    string       `json:"title"`
+	Chapters []LLMChapter `json:"chapters"`
+}
+
+// LLMChapter represents a logical grouping of related sections
+type LLMChapter struct {
+	ID       string       `json:"id"`
+	Title    string       `json:"title"`
 	Sections []LLMSection `json:"sections"`
 }
 
 // LLMSection represents a classified section from the LLM
 type LLMSection struct {
 	ID        string       `json:"id"`
+	Title     string       `json:"title"`
 	Narrative string       `json:"narrative"`
 	Hunks     []LLMHunkRef `json:"hunks"`
 }
@@ -46,15 +54,17 @@ func validateClassification(inputHunks []diff.ParsedHunk, response LLMResponse) 
 
 	// Track output IDs and their counts
 	outputIDs := make(map[string]int)
-	for _, section := range response.Sections {
-		for _, hunk := range section.Hunks {
-			outputIDs[hunk.ID]++
+	for _, chapter := range response.Chapters {
+		for _, section := range chapter.Sections {
+			for _, hunk := range section.Hunks {
+				outputIDs[hunk.ID]++
 
-			// Check importance validity (using normalization)
-			normalized := model.NormalizeImportance(hunk.Importance)
-			if normalized == "" {
-				result.InvalidImportance = append(result.InvalidImportance, hunk.ID)
-				result.Valid = false
+				// Check importance validity (using normalization)
+				normalized := model.NormalizeImportance(hunk.Importance)
+				if normalized == "" {
+					result.InvalidImportance = append(result.InvalidImportance, hunk.ID)
+					result.Valid = false
+				}
 			}
 		}
 	}

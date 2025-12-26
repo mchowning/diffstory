@@ -44,11 +44,13 @@ func (s *Service) Submit(ctx context.Context, review model.Review) (SubmitResult
 	}
 
 	// Validate all hunks have valid importance
-	for i, section := range review.Sections {
-		for j, hunk := range section.Hunks {
-			if !model.ValidImportance(hunk.Importance) {
-				return SubmitResult{}, fmt.Errorf("%w: section[%d].hunks[%d] has importance %q",
-					ErrInvalidHunkImportance, i, j, hunk.Importance)
+	for ci, chapter := range review.Chapters {
+		for si, section := range chapter.Sections {
+			for hi, hunk := range section.Hunks {
+				if !model.ValidImportance(hunk.Importance) {
+					return SubmitResult{}, fmt.Errorf("%w: chapter[%d].section[%d].hunks[%d] has importance %q",
+						ErrInvalidHunkImportance, ci, si, hi, hunk.Importance)
+				}
 			}
 		}
 	}

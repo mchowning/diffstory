@@ -1,82 +1,94 @@
 {
   "workingDirectory": "/Users/dev/projects/webapp",
   "title": "Implement user authentication flow",
-  "sections": [
+  "chapters": [
     {
-      "id": "sec-1",
-      "narrative": "Added the core authentication middleware that validates JWT tokens on protected routes.",
-      "hunks": [
+      "id": "ch-1",
+      "title": "Core Authentication",
+      "sections": [
         {
-          "file": "internal/middleware/auth.go",
-          "startLine": 1,
-          "diff": "@@ -0,0 +1,25 @@\n+package middleware\n+\n+import (\n+\t\"net/http\"\n+\t\"strings\"\n+)\n+\n+func AuthMiddleware(next http.Handler) http.Handler {\n+\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n+\t\ttoken := r.Header.Get(\"Authorization\")\n+\t\tif !strings.HasPrefix(token, \"Bearer \") {\n+\t\t\thttp.Error(w, \"Unauthorized\", http.StatusUnauthorized)\n+\t\t\treturn\n+\t\t}\n+\t\tnext.ServeHTTP(w, r)\n+\t})\n+}",
-          "importance": "high"
-        }
-      ]
-    },
-    {
-      "id": "sec-2",
-      "narrative": "Created the login handler that validates credentials and issues JWT tokens.",
-      "hunks": [
-        {
-          "file": "internal/handlers/login.go",
-          "startLine": 15,
-          "diff": "@@ -15,6 +15,20 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {\n     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {\n         http.Error(w, \"Invalid request\", http.StatusBadRequest)\n         return\n     }\n+\n+    user, err := h.userService.Authenticate(req.Email, req.Password)\n+    if err != nil {\n+        http.Error(w, \"Invalid credentials\", http.StatusUnauthorized)\n+        return\n+    }\n+\n+    token, err := h.tokenService.Generate(user.ID)\n+    if err != nil {\n+        http.Error(w, \"Internal error\", http.StatusInternalServerError)\n+        return\n+    }\n+\n+    json.NewEncoder(w).Encode(map[string]string{\"token\": token})\n }",
-          "importance": "high"
+          "id": "sec-1",
+          "narrative": "Added the core authentication middleware that validates JWT tokens on protected routes.",
+          "hunks": [
+            {
+              "file": "internal/middleware/auth.go",
+              "startLine": 1,
+              "diff": "@@ -0,0 +1,25 @@\n+package middleware\n+\n+import (\n+\t\"net/http\"\n+\t\"strings\"\n+)\n+\n+func AuthMiddleware(next http.Handler) http.Handler {\n+\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n+\t\ttoken := r.Header.Get(\"Authorization\")\n+\t\tif !strings.HasPrefix(token, \"Bearer \") {\n+\t\t\thttp.Error(w, \"Unauthorized\", http.StatusUnauthorized)\n+\t\t\treturn\n+\t\t}\n+\t\tnext.ServeHTTP(w, r)\n+\t})\n+}",
+              "importance": "high"
+            }
+          ]
         },
         {
-          "file": "internal/handlers/login_test.go",
-          "startLine": 1,
-          "diff": "@@ -0,0 +1,15 @@\n+package handlers_test\n+\n+import \"testing\"\n+\n+func TestLogin_ValidCredentials(t *testing.T) {\n+\t// Test implementation\n+}\n+\n+func TestLogin_InvalidCredentials(t *testing.T) {\n+\t// Test implementation\n+}",
-          "importance": "high"
+          "id": "sec-2",
+          "narrative": "Created the login handler that validates credentials and issues JWT tokens.",
+          "hunks": [
+            {
+              "file": "internal/handlers/login.go",
+              "startLine": 15,
+              "diff": "@@ -15,6 +15,20 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {\n     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {\n         http.Error(w, \"Invalid request\", http.StatusBadRequest)\n         return\n     }\n+\n+    user, err := h.userService.Authenticate(req.Email, req.Password)\n+    if err != nil {\n+        http.Error(w, \"Invalid credentials\", http.StatusUnauthorized)\n+        return\n+    }\n+\n+    token, err := h.tokenService.Generate(user.ID)\n+    if err != nil {\n+        http.Error(w, \"Internal error\", http.StatusInternalServerError)\n+        return\n+    }\n+\n+    json.NewEncoder(w).Encode(map[string]string{\"token\": token})\n }",
+              "importance": "high"
+            },
+            {
+              "file": "internal/handlers/login_test.go",
+              "startLine": 1,
+              "diff": "@@ -0,0 +1,15 @@\n+package handlers_test\n+\n+import \"testing\"\n+\n+func TestLogin_ValidCredentials(t *testing.T) {\n+\t// Test implementation\n+}\n+\n+func TestLogin_InvalidCredentials(t *testing.T) {\n+\t// Test implementation\n+}",
+              "importance": "high"
+            }
+          ]
         }
       ]
     },
     {
-      "id": "sec-3",
-      "narrative": "Updated the router configuration to apply auth middleware to protected endpoints.",
-      "hunks": [
+      "id": "ch-2",
+      "title": "Integration & Config",
+      "sections": [
         {
-          "file": "cmd/server/main.go",
-          "startLine": 30,
-          "diff": "@@ -30,7 +30,12 @@ func main() {\n     router := http.NewServeMux()\n \n     // Public routes\n     router.HandleFunc(\"/login\", handlers.Login)\n     router.HandleFunc(\"/health\", handlers.Health)\n+\n+    // Protected routes\n+    protected := http.NewServeMux()\n+    protected.HandleFunc(\"/api/users\", handlers.ListUsers)\n+    router.Handle(\"/api/\", middleware.AuthMiddleware(protected))\n \n     log.Fatal(http.ListenAndServe(\":8080\", router))\n }",
-          "importance": "medium"
+          "id": "sec-3",
+          "narrative": "Updated the router configuration to apply auth middleware to protected endpoints.",
+          "hunks": [
+            {
+              "file": "cmd/server/main.go",
+              "startLine": 30,
+              "diff": "@@ -30,7 +30,12 @@ func main() {\n     router := http.NewServeMux()\n \n     // Public routes\n     router.HandleFunc(\"/login\", handlers.Login)\n     router.HandleFunc(\"/health\", handlers.Health)\n+\n+    // Protected routes\n+    protected := http.NewServeMux()\n+    protected.HandleFunc(\"/api/users\", handlers.ListUsers)\n+    router.Handle(\"/api/\", middleware.AuthMiddleware(protected))\n \n     log.Fatal(http.ListenAndServe(\":8080\", router))\n }",
+              "importance": "medium"
+            },
+            {
+              "file": "internal/handlers/handlers.go",
+              "startLine": 10,
+              "diff": "@@ -10,3 +10,8 @@ func Health(w http.ResponseWriter, r *http.Request) {\n     w.WriteHeader(http.StatusOK)\n     w.Write([]byte(\"OK\"))\n }\n+\n+func ListUsers(w http.ResponseWriter, r *http.Request) {\n+    // Implementation\n+}",
+              "importance": "medium"
+            },
+            {
+              "file": "go.mod",
+              "startLine": 5,
+              "diff": "@@ -5,4 +5,5 @@ go 1.21\n require (\n     github.com/golang-jwt/jwt/v5 v5.0.0\n+    golang.org/x/crypto v0.14.0\n )",
+              "importance": "medium"
+            }
+          ]
         },
         {
-          "file": "internal/handlers/handlers.go",
-          "startLine": 10,
-          "diff": "@@ -10,3 +10,8 @@ func Health(w http.ResponseWriter, r *http.Request) {\n     w.WriteHeader(http.StatusOK)\n     w.Write([]byte(\"OK\"))\n }\n+\n+func ListUsers(w http.ResponseWriter, r *http.Request) {\n+    // Implementation\n+}",
-          "importance": "medium"
+          "id": "sec-4",
+          "narrative": "Added password hashing utilities using bcrypt for secure credential storage.",
+          "hunks": [
+            {
+              "file": "internal/auth/password.go",
+              "startLine": 1,
+              "diff": "@@ -0,0 +1,20 @@\n+package auth\n+\n+import \"golang.org/x/crypto/bcrypt\"\n+\n+func HashPassword(password string) (string, error) {\n+\tbytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)\n+\treturn string(bytes), err\n+}\n+\n+func CheckPassword(password, hash string) bool {\n+\terr := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))\n+\treturn err == nil\n+}",
+              "importance": "high"
+            }
+          ]
         },
         {
-          "file": "go.mod",
-          "startLine": 5,
-          "diff": "@@ -5,4 +5,5 @@ go 1.21\n require (\n     github.com/golang-jwt/jwt/v5 v5.0.0\n+    golang.org/x/crypto v0.14.0\n )",
-          "importance": "medium"
-        }
-      ]
-    },
-    {
-      "id": "sec-4",
-      "narrative": "Added password hashing utilities using bcrypt for secure credential storage.",
-      "hunks": [
-        {
-          "file": "internal/auth/password.go",
-          "startLine": 1,
-          "diff": "@@ -0,0 +1,20 @@\n+package auth\n+\n+import \"golang.org/x/crypto/bcrypt\"\n+\n+func HashPassword(password string) (string, error) {\n+\tbytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)\n+\treturn string(bytes), err\n+}\n+\n+func CheckPassword(password, hash string) bool {\n+\terr := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))\n+\treturn err == nil\n+}",
-          "importance": "high"
-        }
-      ]
-    },
-    {
-      "id": "sec-5",
-      "narrative": "Documentation updates explaining the authentication flow and API usage.",
-      "hunks": [
-        {
-          "file": "README.md",
-          "startLine": 50,
-          "diff": "@@ -50,3 +50,20 @@ go run cmd/server/main.go\n ## API Endpoints\n \n - `GET /health` - Health check endpoint\n+- `POST /login` - Authenticate and receive JWT token\n+- `GET /api/users` - List users (requires authentication)\n+\n+### Authentication\n+\n+To access protected endpoints, include the JWT token in the Authorization header:\n+\n+```\n+Authorization: Bearer <token>\n+```",
-          "importance": "low"
+          "id": "sec-5",
+          "narrative": "Documentation updates explaining the authentication flow and API usage.",
+          "hunks": [
+            {
+              "file": "README.md",
+              "startLine": 50,
+              "diff": "@@ -50,3 +50,20 @@ go run cmd/server/main.go\n ## API Endpoints\n \n - `GET /health` - Health check endpoint\n+- `POST /login` - Authenticate and receive JWT token\n+- `GET /api/users` - List users (requires authentication)\n+\n+### Authentication\n+\n+To access protected endpoints, include the JWT token in the Authorization header:\n+\n+```\n+Authorization: Bearer <token>\n+```",
+              "importance": "low"
+            }
+          ]
         }
       ]
     }

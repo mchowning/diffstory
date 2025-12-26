@@ -27,7 +27,7 @@ func TestServer_SubmitReviewSuccess(t *testing.T) {
 	input := mcpserver.SubmitReviewInput{
 		WorkingDirectory: "/test/project",
 		Title:            "Test Review",
-		Sections:         []model.Section{},
+		Chapters:         []model.Chapter{},
 	}
 
 	result, err := srv.SubmitReview(ctx, input)
@@ -97,16 +97,22 @@ func TestServer_SubmitReviewStoresCorrectly(t *testing.T) {
 	input := mcpserver.SubmitReviewInput{
 		WorkingDirectory: "/test/project",
 		Title:            "Full Review",
-		Sections: []model.Section{
+		Chapters: []model.Chapter{
 			{
-				ID:        "section-1",
-				Narrative: "First section narrative",
-				Hunks: []model.Hunk{
+				ID:    "chapter-1",
+				Title: "Changes",
+				Sections: []model.Section{
 					{
-						File:       "main.go",
-						StartLine:  10,
-						Diff:       "@@ -10,3 +10,5 @@",
-						Importance: "high",
+						ID:        "section-1",
+						Narrative: "First section narrative",
+						Hunks: []model.Hunk{
+							{
+								File:       "main.go",
+								StartLine:  10,
+								Diff:       "@@ -10,3 +10,5 @@",
+								Importance: "high",
+							},
+						},
 					},
 				},
 			},
@@ -132,11 +138,12 @@ func TestServer_SubmitReviewStoresCorrectly(t *testing.T) {
 		t.Errorf("Title = %q, want %q", stored.Title, input.Title)
 	}
 
-	if len(stored.Sections) != 1 {
-		t.Fatalf("Sections count = %d, want 1", len(stored.Sections))
+	sections := stored.AllSections()
+	if len(sections) != 1 {
+		t.Fatalf("Sections count = %d, want 1", len(sections))
 	}
 
-	s := stored.Sections[0]
+	s := sections[0]
 	if s.ID != "section-1" {
 		t.Errorf("Section.ID = %q, want %q", s.ID, "section-1")
 	}

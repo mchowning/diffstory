@@ -77,7 +77,7 @@ func TestReview_CreatedAt_Serialization(t *testing.T) {
 	review := Review{
 		WorkingDirectory: "/test",
 		Title:            "Test Review",
-		Sections:         []Section{},
+		Chapters:         []Chapter{},
 		CreatedAt:        createdAt,
 	}
 
@@ -100,7 +100,7 @@ func TestReview_LegacyJSON_WithoutCreatedAt(t *testing.T) {
 	legacyJSON := `{
 		"workingDirectory": "/test",
 		"title": "Legacy Review",
-		"sections": []
+		"chapters": []
 	}`
 
 	var review Review
@@ -110,5 +110,138 @@ func TestReview_LegacyJSON_WithoutCreatedAt(t *testing.T) {
 
 	if !review.CreatedAt.IsZero() {
 		t.Errorf("CreatedAt should be zero time for legacy reviews, got %v", review.CreatedAt)
+	}
+}
+
+func TestSection_Title_Serialization(t *testing.T) {
+	section := Section{
+		ID:        "section-1",
+		Title:     "Add login handler",
+		Narrative: "Implements the login endpoint with bcrypt hashing.",
+		Hunks:     []Hunk{},
+	}
+
+	data, err := json.Marshal(section)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	var unmarshaled Section
+	if err := json.Unmarshal(data, &unmarshaled); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if unmarshaled.Title != "Add login handler" {
+		t.Errorf("Title = %q, want %q", unmarshaled.Title, "Add login handler")
+	}
+}
+
+func TestChapter_Serialization(t *testing.T) {
+	chapter := Chapter{
+		ID:    "auth-chapter",
+		Title: "Authentication",
+		Sections: []Section{
+			{
+				ID:        "section-1",
+				Title:     "Add login types",
+				Narrative: "Defines types for login.",
+				Hunks:     []Hunk{},
+			},
+		},
+	}
+
+	data, err := json.Marshal(chapter)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	var unmarshaled Chapter
+	if err := json.Unmarshal(data, &unmarshaled); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if unmarshaled.ID != "auth-chapter" {
+		t.Errorf("ID = %q, want %q", unmarshaled.ID, "auth-chapter")
+	}
+	if unmarshaled.Title != "Authentication" {
+		t.Errorf("Title = %q, want %q", unmarshaled.Title, "Authentication")
+	}
+	if len(unmarshaled.Sections) != 1 {
+		t.Fatalf("len(Sections) = %d, want 1", len(unmarshaled.Sections))
+	}
+}
+
+func TestReview_WithChapters(t *testing.T) {
+	review := Review{
+		WorkingDirectory: "/test",
+		Title:            "Test Review",
+		Chapters: []Chapter{
+			{
+				ID:    "auth",
+				Title: "Authentication",
+				Sections: []Section{
+					{ID: "s1", Title: "Login types", Narrative: "Adds types", Hunks: []Hunk{}},
+					{ID: "s2", Title: "Login handler", Narrative: "Adds handler", Hunks: []Hunk{}},
+				},
+			},
+			{
+				ID:    "db",
+				Title: "Database",
+				Sections: []Section{
+					{ID: "s3", Title: "User migration", Narrative: "Adds migration", Hunks: []Hunk{}},
+				},
+			},
+		},
+	}
+
+	data, err := json.Marshal(review)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	var unmarshaled Review
+	if err := json.Unmarshal(data, &unmarshaled); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if len(unmarshaled.Chapters) != 2 {
+		t.Fatalf("len(Chapters) = %d, want 2", len(unmarshaled.Chapters))
+	}
+	if unmarshaled.Chapters[0].Title != "Authentication" {
+		t.Errorf("Chapters[0].Title = %q, want %q", unmarshaled.Chapters[0].Title, "Authentication")
+	}
+}
+
+func TestReview_AllSections(t *testing.T) {
+	review := Review{
+		Chapters: []Chapter{
+			{
+				ID:    "ch1",
+				Title: "Chapter 1",
+				Sections: []Section{
+					{ID: "s1", Title: "Section 1"},
+					{ID: "s2", Title: "Section 2"},
+				},
+			},
+			{
+				ID:    "ch2",
+				Title: "Chapter 2",
+				Sections: []Section{
+					{ID: "s3", Title: "Section 3"},
+				},
+			},
+		},
+	}
+
+	sections := review.AllSections()
+
+	if len(sections) != 3 {
+		t.Fatalf("len(AllSections()) = %d, want 3", len(sections))
+	}
+	if sections[0].ID != "s1" {
+		t.Errorf("sections[0].ID = %q, want %q", sections[0].ID, "s1")
+	}
+	if sections[2].ID != "s3" {
+		t.Errorf("sections[2].ID = %q, want %q", sections[2].ID, "s3")
 	}
 }

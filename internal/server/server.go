@@ -107,7 +107,7 @@ func (s *Server) handleReview(w http.ResponseWriter, r *http.Request) {
 
 	if s.verbose {
 		log.Printf("Stored review for %s: %s (%d sections)",
-			reviewData.WorkingDirectory, reviewData.Title, len(reviewData.Sections))
+			reviewData.WorkingDirectory, reviewData.Title, reviewData.SectionCount())
 	}
 
 	w.WriteHeader(http.StatusOK)

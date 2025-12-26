@@ -116,8 +116,14 @@ func TestWatcher_SendsReviewWhenFileCreated(t *testing.T) {
 	review := model.Review{
 		WorkingDirectory: workDir,
 		Title:            "Test Review",
-		Sections: []model.Section{
-			{ID: "1", Narrative: "Test narrative"},
+		Chapters: []model.Chapter{
+			{
+				ID:    "ch-1",
+				Title: "Changes",
+				Sections: []model.Section{
+					{ID: "1", Narrative: "Test narrative"},
+				},
+			},
 		},
 	}
 	if err := store.Write(review); err != nil {
@@ -344,8 +350,14 @@ func TestWatcher_LoadsExistingReviewFileOnStart(t *testing.T) {
 	review := model.Review{
 		WorkingDirectory: workDir,
 		Title:            "Pre-existing Review",
-		Sections: []model.Section{
-			{ID: "1", Narrative: "Pre-existing section"},
+		Chapters: []model.Chapter{
+			{
+				ID:    "ch-1",
+				Title: "Existing",
+				Sections: []model.Section{
+					{ID: "1", Narrative: "Pre-existing section"},
+				},
+			},
 		},
 	}
 	if err := store.Write(review); err != nil {
@@ -366,8 +378,8 @@ func TestWatcher_LoadsExistingReviewFileOnStart(t *testing.T) {
 		if received.Title != review.Title {
 			t.Errorf("Title = %q, want %q", received.Title, review.Title)
 		}
-		if len(received.Sections) != 1 {
-			t.Errorf("len(Sections) = %d, want 1", len(received.Sections))
+		if received.SectionCount() != 1 {
+			t.Errorf("SectionCount() = %d, want 1", received.SectionCount())
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("timed out waiting for existing review")

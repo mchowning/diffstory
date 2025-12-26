@@ -1,10 +1,45 @@
 package tui
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/mchowning/diffguide/internal/diff"
 )
+
+func TestLLMChapter_UnmarshalJSON(t *testing.T) {
+	jsonData := `{
+		"id": "auth-chapter",
+		"title": "Authentication",
+		"sections": [
+			{
+				"id": "section-1",
+				"title": "Add login types",
+				"narrative": "Defines the types needed for login.",
+				"hunks": [{"id": "auth.go::10", "importance": "high"}]
+			}
+		]
+	}`
+
+	var chapter LLMChapter
+	err := json.Unmarshal([]byte(jsonData), &chapter)
+	if err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if chapter.ID != "auth-chapter" {
+		t.Errorf("ID = %q, want %q", chapter.ID, "auth-chapter")
+	}
+	if chapter.Title != "Authentication" {
+		t.Errorf("Title = %q, want %q", chapter.Title, "Authentication")
+	}
+	if len(chapter.Sections) != 1 {
+		t.Fatalf("len(Sections) = %d, want 1", len(chapter.Sections))
+	}
+	if chapter.Sections[0].Title != "Add login types" {
+		t.Errorf("Section.Title = %q, want %q", chapter.Sections[0].Title, "Add login types")
+	}
+}
 
 func TestValidateClassification_AllHunksPresent(t *testing.T) {
 	inputHunks := []diff.ParsedHunk{
@@ -14,13 +49,20 @@ func TestValidateClassification_AllHunksPresent(t *testing.T) {
 
 	response := LLMResponse{
 		Title: "Test Review",
-		Sections: []LLMSection{
+		Chapters: []LLMChapter{
 			{
-				ID:        "section1",
-				Narrative: "Test narrative",
-				Hunks: []LLMHunkRef{
-					{ID: "file.go::10", Importance: "high"},
-					{ID: "file.go::50", Importance: "medium"},
+				ID:    "ch1",
+				Title: "Test Chapter",
+				Sections: []LLMSection{
+					{
+						ID:        "section1",
+						Title:     "Test section",
+						Narrative: "Test narrative",
+						Hunks: []LLMHunkRef{
+							{ID: "file.go::10", Importance: "high"},
+							{ID: "file.go::50", Importance: "medium"},
+						},
+					},
 				},
 			},
 		},
@@ -51,13 +93,20 @@ func TestValidateClassification_MissingHunks(t *testing.T) {
 
 	response := LLMResponse{
 		Title: "Test Review",
-		Sections: []LLMSection{
+		Chapters: []LLMChapter{
 			{
-				ID:        "section1",
-				Narrative: "Test narrative",
-				Hunks: []LLMHunkRef{
-					{ID: "file.go::10", Importance: "high"},
-					// file.go::50 and file.go::100 are missing
+				ID:    "ch1",
+				Title: "Test Chapter",
+				Sections: []LLMSection{
+					{
+						ID:        "section1",
+						Title:     "Test section",
+						Narrative: "Test narrative",
+						Hunks: []LLMHunkRef{
+							{ID: "file.go::10", Importance: "high"},
+							// file.go::50 and file.go::100 are missing
+						},
+					},
 				},
 			},
 		},
@@ -80,16 +129,24 @@ func TestValidateClassification_DuplicateHunks(t *testing.T) {
 
 	response := LLMResponse{
 		Title: "Test Review",
-		Sections: []LLMSection{
+		Chapters: []LLMChapter{
 			{
-				ID:        "section1",
-				Narrative: "First section",
-				Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "high"}},
-			},
-			{
-				ID:        "section2",
-				Narrative: "Second section",
-				Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "medium"}}, // duplicate
+				ID:    "ch1",
+				Title: "Test Chapter",
+				Sections: []LLMSection{
+					{
+						ID:        "section1",
+						Title:     "First section",
+						Narrative: "First section",
+						Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "high"}},
+					},
+					{
+						ID:        "section2",
+						Title:     "Second section",
+						Narrative: "Second section",
+						Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "medium"}}, // duplicate
+					},
+				},
 			},
 		},
 	}
@@ -112,13 +169,20 @@ func TestValidateClassification_InvalidImportance(t *testing.T) {
 
 	response := LLMResponse{
 		Title: "Test Review",
-		Sections: []LLMSection{
+		Chapters: []LLMChapter{
 			{
-				ID:        "section1",
-				Narrative: "Test narrative",
-				Hunks: []LLMHunkRef{
-					{ID: "file.go::10", Importance: "high"},
-					{ID: "file.go::50", Importance: "invalid"}, // invalid importance
+				ID:    "ch1",
+				Title: "Test Chapter",
+				Sections: []LLMSection{
+					{
+						ID:        "section1",
+						Title:     "Test section",
+						Narrative: "Test narrative",
+						Hunks: []LLMHunkRef{
+							{ID: "file.go::10", Importance: "high"},
+							{ID: "file.go::50", Importance: "invalid"}, // invalid importance
+						},
+					},
 				},
 			},
 		},
@@ -141,12 +205,19 @@ func TestValidateClassification_NormalizesImportance(t *testing.T) {
 
 	response := LLMResponse{
 		Title: "Test Review",
-		Sections: []LLMSection{
+		Chapters: []LLMChapter{
 			{
-				ID:        "section1",
-				Narrative: "Test narrative",
-				Hunks: []LLMHunkRef{
-					{ID: "file.go::10", Importance: "Critical"}, // should normalize to "high"
+				ID:    "ch1",
+				Title: "Test Chapter",
+				Sections: []LLMSection{
+					{
+						ID:        "section1",
+						Title:     "Test section",
+						Narrative: "Test narrative",
+						Hunks: []LLMHunkRef{
+							{ID: "file.go::10", Importance: "Critical"}, // should normalize to "high"
+						},
+					},
 				},
 			},
 		},

@@ -160,11 +160,15 @@ func (m Model) sectionHasVisibleHunks(section model.Section) bool {
 // currentViewHasFilteredContent returns true if any hunks in the current view
 // are being filtered out by the active filters
 func (m Model) currentViewHasFilteredContent() bool {
-	if m.review == nil || m.selected >= len(m.review.Sections) {
+	if m.review == nil {
+		return false
+	}
+	sections := m.review.AllSections()
+	if m.selected >= len(sections) {
 		return false
 	}
 
-	section := m.review.Sections[m.selected]
+	section := sections[m.selected]
 
 	// Determine which hunks are in current view based on file selection
 	for _, hunk := range section.Hunks {
@@ -197,44 +201,121 @@ func (m Model) hunkInCurrentView(hunk model.Hunk) bool {
 func (m Model) renderSectionPane(width, height int) string {
 	var items []string
 	contentWidth := width - 4
+	sectionCount := m.review.SectionCount()
 
-	// Use generous estimate for rendering (fill available space)
-	renderCount := EstimateSectionRenderCount(height)
+	// Track flat section index as we iterate through chapters
+	flatIdx := 0
 	startIdx := m.sectionScrollOffset
-	endIdx := startIdx + renderCount
-	if endIdx > len(m.review.Sections) {
-		endIdx = len(m.review.Sections)
+	renderCount := EstimateSectionRenderCount(height)
+	rendered := 0
+
+	for _, chapter := range m.review.Chapters {
+		chapterStartIdx := flatIdx
+
+		// Check if any section in this chapter is in the visible range
+		chapterEndIdx := chapterStartIdx + len(chapter.Sections)
+		if chapterEndIdx <= startIdx {
+			// Skip chapters entirely before scroll offset
+			flatIdx = chapterEndIdx
+			continue
+		}
+
+		// Render chapter header if we're at or past its first section
+		if flatIdx >= startIdx || (flatIdx < startIdx && startIdx < chapterEndIdx) {
+			chapterHeader := chapterStyle.Width(contentWidth).Render(chapterPrefix + chapter.Title)
+			items = append(items, chapterHeader)
+		}
+
+		// Render sections in this chapter
+		for _, section := range chapter.Sections {
+			if flatIdx >= startIdx && rendered < renderCount {
+				items = append(items, m.renderSection(section, flatIdx, contentWidth))
+				rendered++
+			}
+			flatIdx++
+
+			if rendered >= renderCount {
+				break
+			}
+		}
+
+		if rendered >= renderCount {
+			break
+		}
 	}
 
-	for i := startIdx; i < endIdx; i++ {
-		section := m.review.Sections[i]
-		style := normalStyle
-		prefix := normalPrefix
-		if i == m.selected {
-			style = selectedStyle
-			prefix = selectedPrefix
-		}
-		wrappedStyle := style.Width(contentWidth)
-		text := prefix + section.Narrative
-		items = append(items, wrappedStyle.Render(text))
-	}
-	content := strings.Join(items, "\n\n")
+	content := strings.Join(items, "\n")
 
 	title := "[1] Sections"
-	if len(m.review.Sections) > 0 {
-		title = fmt.Sprintf("[1] Sections [%d/%d]", m.selected+1, len(m.review.Sections))
+	if sectionCount > 0 {
+		title = fmt.Sprintf("[1] Sections [%d/%d]", m.selected+1, sectionCount)
 	}
 
 	// Use conservative estimate for scrollbar (matches scroll triggering)
 	visibleCount := EstimateSectionVisibleCount(height)
 	var scrollbar *ScrollbarInfo
 	contentHeight := height - 2 // account for borders
-	if len(m.review.Sections) > visibleCount {
-		start, sbHeight := CalcScrollbar(len(m.review.Sections), visibleCount, m.sectionScrollOffset, contentHeight)
+	if sectionCount > visibleCount {
+		start, sbHeight := CalcScrollbar(sectionCount, visibleCount, m.sectionScrollOffset, contentHeight)
 		scrollbar = &ScrollbarInfo{Start: start, Height: sbHeight}
 	}
 
 	return renderBorderedPanelWithScrollbar(title, content, width, height, m.focusedPanel == PanelSection, scrollbar)
+}
+
+func (m Model) renderSection(section model.Section, flatIdx, contentWidth int) string {
+	isSelected := flatIdx == m.selected
+
+	// Determine title to show (use Narrative as fallback if Title is empty)
+	title := section.Title
+	if title == "" {
+		title = section.Narrative
+	}
+
+	if isSelected {
+		// Selected: show title with prefix, then narrative indented below
+		titleLine := selectedStyle.Width(contentWidth).Render(selectedPrefix + title)
+
+		// Only show narrative if it's different from title and non-empty
+		if section.Narrative != "" && section.Narrative != title {
+			narrativeLines := wrapText(section.Narrative, contentWidth-len(narrativePrefix))
+			var narrativeRendered []string
+			for _, line := range narrativeLines {
+				narrativeRendered = append(narrativeRendered, normalStyle.Render(narrativePrefix+line))
+			}
+			return titleLine + "\n" + strings.Join(narrativeRendered, "\n")
+		}
+		return titleLine
+	}
+
+	// Non-selected: show only title
+	return normalStyle.Width(contentWidth).Render(normalPrefix + title)
+}
+
+func wrapText(text string, width int) []string {
+	if width <= 0 {
+		return []string{text}
+	}
+
+	var lines []string
+	words := strings.Fields(text)
+	var currentLine string
+
+	for _, word := range words {
+		if currentLine == "" {
+			currentLine = word
+		} else if len(currentLine)+1+len(word) <= width {
+			currentLine += " " + word
+		} else {
+			lines = append(lines, currentLine)
+			currentLine = word
+		}
+	}
+	if currentLine != "" {
+		lines = append(lines, currentLine)
+	}
+
+	return lines
 }
 
 func (m Model) renderFilesPane(width, height int) string {

@@ -19,7 +19,7 @@ import (
 	"github.com/mchowning/diffguide/internal/storage"
 )
 
-const classificationPromptTemplate = `You are a code review assistant. Classify diff hunks into logical sections.
+const classificationPromptTemplate = `You are a code review assistant. Classify diff hunks into logical chapters and sections.
 
 IMPORTANT: You MUST classify ALL hunks. Every hunk ID must appear exactly once in your response.
 
@@ -30,29 +30,38 @@ The file contains a JSON array of hunk objects with fields: id, file, startLine,
 Respond with JSON in this exact format (no markdown fences, no explanation text):
 {
   "title": "Brief title for this review",
-  "sections": [
+  "chapters": [
     {
-      "id": "section-identifier",
-      "narrative": "Concise explanation of what and why. Mention key decisions or alternatives if relevant.",
-      "hunks": [
-        {"id": "file/path.go::45", "importance": "high", "isTest": false},
-        {"id": "file/path_test.go::120", "importance": "medium", "isTest": true}
+      "id": "chapter-identifier",
+      "title": "Short chapter title",
+      "sections": [
+        {
+          "id": "section-identifier",
+          "title": "Short section title",
+          "narrative": "Concise explanation of what and why. Mention key decisions if relevant.",
+          "hunks": [
+            {"id": "file/path.go::45", "importance": "high", "isTest": false},
+            {"id": "file/path_test.go::120", "importance": "medium", "isTest": true}
+          ]
+        }
       ]
     }
   ]
 }
 
 Guidelines:
-- Group hunks into small, focused logical sections. Prefer breaking changes into multiple granular sections that build on each other rather than combining them.
+- Organize hunks into chapters, each containing related sections.
+- Chapter title: ~20-30 characters, describes the theme (e.g., "Authentication", "Database Schema").
+- Each chapter contains one or more small, focused sections.
+- Section title: ~30-40 characters, describes the specific change (e.g., "Add login endpoint handler").
+- Section narrative: 1-2 sentences explaining "what" and "why". Mention key decisions or alternatives if relevant.
+- Prefer multiple granular sections over fewer large ones.
 - Each hunk must have importance: "high", "medium", or "low"
-- high: Critical changes (security, core logic, breaking changes)
-- medium: Important changes (new features, significant refactors)
-- low: Minor changes (formatting, comments, trivial fixes)
+  - high: Critical changes (security, core logic, breaking changes)
+  - medium: Important changes (new features, significant refactors)
+  - low: Minor changes (formatting, comments, trivial fixes)
 - Each hunk must have isTest: true if the hunk is test code, false if production code
-- Test code includes: unit tests, integration tests, test fixtures, test utilities, mocks
-- Narrative requirements:
-  - Explain the "what" and "why" in a concise manner (1-2 sentences).
-  - Explicitly mention any important technical decisions or alternatives that appear to have been considered.
+  - Test code includes: unit tests, integration tests, test fixtures, test utilities, mocks
 %s`
 
 const retryPromptAddendum = `
@@ -252,33 +261,42 @@ func assembleReview(workDir string, response *LLMResponse, hunks []diff.ParsedHu
 		CreatedAt:        time.Now(),
 	}
 
-	for _, s := range response.Sections {
-		section := model.Section{
-			ID:        s.ID,
-			Narrative: s.Narrative,
+	// Build chapters from the response
+	for _, ch := range response.Chapters {
+		chapter := model.Chapter{
+			ID:    ch.ID,
+			Title: ch.Title,
 		}
-		for _, href := range s.Hunks {
-			if h, ok := hunkMap[href.ID]; ok {
-				section.Hunks = append(section.Hunks, model.Hunk{
-					File:       h.File,
-					StartLine:  h.StartLine,
-					Diff:       h.Diff,
-					Importance: model.NormalizeImportance(href.Importance),
-					IsTest:     href.IsTest,
-				})
+		for _, s := range ch.Sections {
+			section := model.Section{
+				ID:        s.ID,
+				Title:     s.Title,
+				Narrative: s.Narrative,
 			}
+			for _, href := range s.Hunks {
+				if h, ok := hunkMap[href.ID]; ok {
+					section.Hunks = append(section.Hunks, model.Hunk{
+						File:       h.File,
+						StartLine:  h.StartLine,
+						Diff:       h.Diff,
+						Importance: model.NormalizeImportance(href.Importance),
+						IsTest:     href.IsTest,
+					})
+				}
+			}
+			chapter.Sections = append(chapter.Sections, section)
 		}
-		review.Sections = append(review.Sections, section)
+		review.Chapters = append(review.Chapters, chapter)
 	}
 
 	return review
 }
 
-// assemblePartialReview creates a review with unclassified hunks in a separate section
+// assemblePartialReview creates a review with unclassified hunks in a separate chapter
 func assemblePartialReview(workDir string, response *LLMResponse, hunks []diff.ParsedHunk, missingIDs []string) model.Review {
 	review := assembleReview(workDir, response, hunks)
 
-	// Create "Unclassified" section for missing hunks
+	// Create "Unclassified" chapter for missing hunks
 	hunkMap := make(map[string]diff.ParsedHunk)
 	for _, h := range hunks {
 		hunkMap[h.ID] = h
@@ -297,10 +315,17 @@ func assemblePartialReview(workDir string, response *LLMResponse, hunks []diff.P
 	}
 
 	if len(unclassifiedHunks) > 0 {
-		review.Sections = append(review.Sections, model.Section{
-			ID:        "unclassified",
-			Narrative: "The following changes could not be automatically classified.",
-			Hunks:     unclassifiedHunks,
+		review.Chapters = append(review.Chapters, model.Chapter{
+			ID:    "unclassified-chapter",
+			Title: "Unclassified",
+			Sections: []model.Section{
+				{
+					ID:        "unclassified",
+					Title:     "Unclassified changes",
+					Narrative: "The following changes could not be automatically classified.",
+					Hunks:     unclassifiedHunks,
+				},
+			},
 		})
 	}
 

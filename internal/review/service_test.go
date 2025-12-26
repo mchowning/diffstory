@@ -112,23 +112,29 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 	input := model.Review{
 		WorkingDirectory: "/test/project",
 		Title:            "Full Review",
-		Sections: []model.Section{
+		Chapters: []model.Chapter{
 			{
-				ID:        "section-1",
-				Narrative: "This is the first section",
-				Hunks: []model.Hunk{
+				ID:    "chapter-1",
+				Title: "Changes",
+				Sections: []model.Section{
 					{
-						File:       "main.go",
-						StartLine:  10,
-						Diff:       "@@ -10,3 +10,5 @@\n func main() {\n+    fmt.Println(\"hello\")\n }",
-						Importance: "high",
+						ID:        "section-1",
+						Narrative: "This is the first section",
+						Hunks: []model.Hunk{
+							{
+								File:       "main.go",
+								StartLine:  10,
+								Diff:       "@@ -10,3 +10,5 @@\n func main() {\n+    fmt.Println(\"hello\")\n }",
+								Importance: "high",
+							},
+						},
+					},
+					{
+						ID:        "section-2",
+						Narrative: "Second section",
+						Hunks:     []model.Hunk{},
 					},
 				},
-			},
-			{
-				ID:        "section-2",
-				Narrative: "Second section",
-				Hunks:     []model.Hunk{},
 			},
 		},
 	}
@@ -147,12 +153,13 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 		t.Errorf("Title = %q, want %q", stored.Title, input.Title)
 	}
 
-	if len(stored.Sections) != 2 {
-		t.Fatalf("Sections count = %d, want 2", len(stored.Sections))
+	sections := stored.AllSections()
+	if len(sections) != 2 {
+		t.Fatalf("Sections count = %d, want 2", len(sections))
 	}
 
 	// Check first section
-	s1 := stored.Sections[0]
+	s1 := sections[0]
 	if s1.ID != "section-1" {
 		t.Errorf("Section[0].ID = %q, want %q", s1.ID, "section-1")
 	}
@@ -170,7 +177,7 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 	if h.StartLine != 10 {
 		t.Errorf("Hunk.StartLine = %d, want %d", h.StartLine, 10)
 	}
-	if h.Diff != input.Sections[0].Hunks[0].Diff {
+	if h.Diff != input.Chapters[0].Sections[0].Hunks[0].Diff {
 		t.Errorf("Hunk.Diff mismatch")
 	}
 	if h.Importance != "high" {
@@ -178,7 +185,7 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 	}
 
 	// Check second section
-	s2 := stored.Sections[1]
+	s2 := sections[1]
 	if s2.ID != "section-2" {
 		t.Errorf("Section[1].ID = %q, want %q", s2.ID, "section-2")
 	}
@@ -191,16 +198,22 @@ func TestService_SubmitRejectsInvalidImportance(t *testing.T) {
 	input := model.Review{
 		WorkingDirectory: "/test/project",
 		Title:            "Test Review",
-		Sections: []model.Section{
+		Chapters: []model.Chapter{
 			{
-				ID:        "section-1",
-				Narrative: "Test",
-				Hunks: []model.Hunk{
+				ID:    "ch-1",
+				Title: "Test",
+				Sections: []model.Section{
 					{
-						File:       "main.go",
-						StartLine:  10,
-						Diff:       "+test",
-						Importance: "invalid", // invalid importance
+						ID:        "section-1",
+						Narrative: "Test",
+						Hunks: []model.Hunk{
+							{
+								File:       "main.go",
+								StartLine:  10,
+								Diff:       "+test",
+								Importance: "invalid", // invalid importance
+							},
+						},
 					},
 				},
 			},
@@ -220,16 +233,22 @@ func TestService_SubmitRejectsMissingImportance(t *testing.T) {
 	input := model.Review{
 		WorkingDirectory: "/test/project",
 		Title:            "Test Review",
-		Sections: []model.Section{
+		Chapters: []model.Chapter{
 			{
-				ID:        "section-1",
-				Narrative: "Test",
-				Hunks: []model.Hunk{
+				ID:    "ch-1",
+				Title: "Test",
+				Sections: []model.Section{
 					{
-						File:       "main.go",
-						StartLine:  10,
-						Diff:       "+test",
-						Importance: "", // missing importance
+						ID:        "section-1",
+						Narrative: "Test",
+						Hunks: []model.Hunk{
+							{
+								File:       "main.go",
+								StartLine:  10,
+								Diff:       "+test",
+								Importance: "", // missing importance
+							},
+						},
 					},
 				},
 			},
@@ -252,16 +271,22 @@ func TestService_SubmitAcceptsValidImportance(t *testing.T) {
 		input := model.Review{
 			WorkingDirectory: "/test/project",
 			Title:            "Test Review",
-			Sections: []model.Section{
+			Chapters: []model.Chapter{
 				{
-					ID:        "section-1",
-					Narrative: "Test",
-					Hunks: []model.Hunk{
+					ID:    "ch-1",
+					Title: "Test",
+					Sections: []model.Section{
 						{
-							File:       "main.go",
-							StartLine:  10,
-							Diff:       "+test",
-							Importance: imp,
+							ID:        "section-1",
+							Narrative: "Test",
+							Hunks: []model.Hunk{
+								{
+									File:       "main.go",
+									StartLine:  10,
+									Diff:       "+test",
+									Importance: imp,
+								},
+							},
 						},
 					},
 				},

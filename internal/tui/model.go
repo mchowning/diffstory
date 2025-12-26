@@ -277,12 +277,17 @@ func (m Model) Commits() []CommitInfo {
 }
 
 func (m *Model) updateViewportContent() {
-	if m.review == nil || m.selected >= len(m.review.Sections) {
+	if m.review == nil {
+		m.viewport.SetContent("")
+		return
+	}
+	sections := m.review.AllSections()
+	if m.selected >= len(sections) {
 		m.viewport.SetContent("")
 		return
 	}
 
-	section := m.review.Sections[m.selected]
+	section := sections[m.selected]
 	var content string
 
 	if m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles) {
@@ -300,13 +305,14 @@ func (m *Model) updateViewportContent() {
 }
 
 func (m *Model) updateFileTree() {
-	if m.review == nil || m.selected >= len(m.review.Sections) {
+	sections := m.review.AllSections()
+	if m.review == nil || m.selected >= len(sections) {
 		m.fileTree = nil
 		m.flattenedFiles = nil
 		return
 	}
 
-	section := m.review.Sections[m.selected]
+	section := sections[m.selected]
 	paths := m.extractFilteredFilePaths(section)
 	m.fileTree = BuildFileTree(paths)
 	m.collapsedPaths = make(CollapsedPaths)

@@ -152,12 +152,18 @@ func TestStore_RoundTrip(t *testing.T) {
 	review := model.Review{
 		WorkingDirectory: "/test/project",
 		Title:            "Test Review",
-		Sections: []model.Section{
+		Chapters: []model.Chapter{
 			{
-				ID:        "1",
-				Narrative: "Test narrative",
-				Hunks: []model.Hunk{
-					{File: "main.go", StartLine: 10, Diff: "+added line"},
+				ID:    "ch-1",
+				Title: "Changes",
+				Sections: []model.Section{
+					{
+						ID:        "1",
+						Narrative: "Test narrative",
+						Hunks: []model.Hunk{
+							{File: "main.go", StartLine: 10, Diff: "+added line"},
+						},
+					},
 				},
 			},
 		},
@@ -178,8 +184,8 @@ func TestStore_RoundTrip(t *testing.T) {
 	if loaded.WorkingDirectory != review.WorkingDirectory {
 		t.Errorf("WorkingDirectory mismatch: got %q, want %q", loaded.WorkingDirectory, review.WorkingDirectory)
 	}
-	if len(loaded.Sections) != len(review.Sections) {
-		t.Errorf("Sections length mismatch: got %d, want %d", len(loaded.Sections), len(review.Sections))
+	if loaded.SectionCount() != review.SectionCount() {
+		t.Errorf("Sections count mismatch: got %d, want %d", loaded.SectionCount(), review.SectionCount())
 	}
 }
 

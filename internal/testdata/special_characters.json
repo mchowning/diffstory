@@ -1,34 +1,40 @@
 {
   "workingDirectory": "/Users/dev/projects/parser",
   "title": "Fix string escaping in parser",
-  "sections": [
+  "chapters": [
     {
-      "id": "sec-escape",
-      "narrative": "Fixed handling of escape sequences including backslashes (\\), quotes (\"), tabs (\t), and newlines in string literals.",
-      "hunks": [
+      "id": "ch-1",
+      "title": "Escape Handling",
+      "sections": [
         {
-          "file": "internal/parser/string.go",
-          "startLine": 25,
-          "diff": "@@ -25,10 +25,20 @@ func parseString(input string) (string, error) {\n     var result strings.Builder\n     for i := 0; i < len(input); i++ {\n         switch input[i] {\n         case '\\\\':\n             i++\n             if i >= len(input) {\n                 return \"\", errors.New(\"unexpected end of string\")\n             }\n             switch input[i] {\n             case 'n':\n                 result.WriteByte('\\n')\n             case 't':\n                 result.WriteByte('\\t')\n             case '\\\\':\n                 result.WriteByte('\\\\')\n             case '\"':\n                 result.WriteByte('\"')\n+            case 'r':\n+                result.WriteByte('\\r')\n+            case '0':\n+                result.WriteByte(0)\n             default:\n                 return \"\", fmt.Errorf(\"unknown escape: \\\\%c\", input[i])\n             }\n         default:\n             result.WriteByte(input[i])\n         }\n     }\n     return result.String(), nil\n }",
-          "importance": "high"
+          "id": "sec-escape",
+          "narrative": "Fixed handling of escape sequences including backslashes (\\), quotes (\"), tabs (\t), and newlines in string literals.",
+          "hunks": [
+            {
+              "file": "internal/parser/string.go",
+              "startLine": 25,
+              "diff": "@@ -25,10 +25,20 @@ func parseString(input string) (string, error) {\n     var result strings.Builder\n     for i := 0; i < len(input); i++ {\n         switch input[i] {\n         case '\\\\':\n             i++\n             if i >= len(input) {\n                 return \"\", errors.New(\"unexpected end of string\")\n             }\n             switch input[i] {\n             case 'n':\n                 result.WriteByte('\\n')\n             case 't':\n                 result.WriteByte('\\t')\n             case '\\\\':\n                 result.WriteByte('\\\\')\n             case '\"':\n                 result.WriteByte('\"')\n+            case 'r':\n+                result.WriteByte('\\r')\n+            case '0':\n+                result.WriteByte(0)\n             default:\n                 return \"\", fmt.Errorf(\"unknown escape: \\\\%c\", input[i])\n             }\n         default:\n             result.WriteByte(input[i])\n         }\n     }\n     return result.String(), nil\n }",
+              "importance": "high"
+            },
+            {
+              "file": "internal/parser/testdata/escapes.txt",
+              "startLine": 1,
+              "diff": "@@ -0,0 +1,10 @@\n+Test cases for escape sequences:\n+\n+Backslash: \\\\\n+Quote: \\\"\n+Tab:\t<- there's a tab here\n+Newline follows:\n+<- that was a newline\n+\n+Path: C:\\\\Users\\\\test\\\\file.txt\n+JSON: {\\\"key\\\": \\\"value\\\"}",
+              "importance": "high"
+            }
+          ]
         },
         {
-          "file": "internal/parser/testdata/escapes.txt",
-          "startLine": 1,
-          "diff": "@@ -0,0 +1,10 @@\n+Test cases for escape sequences:\n+\n+Backslash: \\\\\n+Quote: \\\"\n+Tab:\t<- there's a tab here\n+Newline follows:\n+<- that was a newline\n+\n+Path: C:\\\\Users\\\\test\\\\file.txt\n+JSON: {\\\"key\\\": \\\"value\\\"}",
-          "importance": "high"
-        }
-      ]
-    },
-    {
-      "id": "sec-multiline",
-      "narrative": "The diff below contains actual multi-line content with preserved whitespace and various indentation levels.",
-      "hunks": [
-        {
-          "file": "config/template.yaml",
-          "startLine": 1,
-          "diff": "@@ -1,5 +1,15 @@\n server:\n   host: localhost\n   port: 8080\n+  tls:\n+    enabled: true\n+    cert: |\n+      -----BEGIN CERTIFICATE-----\n+      MIICpDCCAYwCCQDU+pQ4P3z5xDANBgkqhkiG9w0BAQsFADAUMRIwEAYD\n+      VQQDDAlsb2NhbGhvc3QwHhcNMjMwMTAxMDAwMDAwWhcNMjQwMTAxMMDAwMDAw\n+      -----END CERTIFICATE-----\n+    key_file: /etc/ssl/private/server.key\n \n database:\n   driver: postgres",
-          "importance": "medium"
+          "id": "sec-multiline",
+          "narrative": "The diff below contains actual multi-line content with preserved whitespace and various indentation levels.",
+          "hunks": [
+            {
+              "file": "config/template.yaml",
+              "startLine": 1,
+              "diff": "@@ -1,5 +1,15 @@\n server:\n   host: localhost\n   port: 8080\n+  tls:\n+    enabled: true\n+    cert: |\n+      -----BEGIN CERTIFICATE-----\n+      MIICpDCCAYwCCQDU+pQ4P3z5xDANBgkqhkiG9w0BAQsFADAUMRIwEAYD\n+      VQQDDAlsb2NhbGhvc3QwHhcNMjMwMTAxMDAwMDAwWhcNMjQwMTAxMMDAwMDAw\n+      -----END CERTIFICATE-----\n+    key_file: /etc/ssl/private/server.key\n \n database:\n   driver: postgres",
+              "importance": "medium"
+            }
+          ]
         }
       ]
     }

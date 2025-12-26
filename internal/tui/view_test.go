@@ -55,6 +55,7 @@ func modelWithReviewAndSize(numSections int) tui.Model {
 	for i := range numSections {
 		sections[i] = model.Section{
 			ID:        string(rune('1' + i)),
+			Title:     "Title " + string(rune('A'+i)),
 			Narrative: "Section " + string(rune('A'+i)),
 			Hunks: []model.Hunk{
 				{
@@ -65,10 +66,55 @@ func modelWithReviewAndSize(numSections int) tui.Model {
 			},
 		}
 	}
+	review := model.NewReviewWithSections("/test/project", "Test Review Title", sections)
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	return updated.(tui.Model)
+}
+
+func modelWithChapters() tui.Model {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	// Initialize viewport via WindowSizeMsg
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review with explicit chapters
 	review := model.Review{
 		WorkingDirectory: "/test/project",
-		Title:            "Test Review Title",
-		Sections:         sections,
+		Title:            "Test Review",
+		Chapters: []model.Chapter{
+			{
+				ID:    "ch1",
+				Title: "Authentication",
+				Sections: []model.Section{
+					{
+						ID:        "s1",
+						Title:     "Add login endpoint",
+						Narrative: "Implements POST /login with bcrypt hashing.",
+						Hunks:     []model.Hunk{{File: "auth.go", Diff: "+code"}},
+					},
+					{
+						ID:        "s2",
+						Title:     "Add login tests",
+						Narrative: "Tests the login endpoint.",
+						Hunks:     []model.Hunk{{File: "auth_test.go", Diff: "+test"}},
+					},
+				},
+			},
+			{
+				ID:    "ch2",
+				Title: "Database",
+				Sections: []model.Section{
+					{
+						ID:        "s3",
+						Title:     "Add user migration",
+						Narrative: "Creates users table with email column.",
+						Hunks:     []model.Hunk{{File: "migrate.go", Diff: "+sql"}},
+					},
+				},
+			},
+		},
 	}
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	return updated.(tui.Model)
@@ -87,11 +133,12 @@ func TestView_ReviewStateShowsSectionList(t *testing.T) {
 	m := modelWithReviewAndSize(2)
 	view := m.View()
 
-	if !strings.Contains(view, "Section A") {
-		t.Error("review state view should contain section A narrative")
+	// Section titles should be visible
+	if !strings.Contains(view, "Title A") {
+		t.Error("review state view should contain section A title")
 	}
-	if !strings.Contains(view, "Section B") {
-		t.Error("review state view should contain section B narrative")
+	if !strings.Contains(view, "Title B") {
+		t.Error("review state view should contain section B title")
 	}
 }
 
@@ -99,9 +146,9 @@ func TestView_SelectedSectionHasPrefix(t *testing.T) {
 	m := modelWithReviewAndSize(2)
 	view := m.View()
 
-	// First section should be selected with "› " prefix
-	if !strings.Contains(view, "› Section A") {
-		t.Error("selected section should have '› ' prefix")
+	// First section should be selected with "› " prefix (showing title)
+	if !strings.Contains(view, "› Title A") {
+		t.Error("selected section should have '› ' prefix with title")
 	}
 }
 
@@ -109,9 +156,9 @@ func TestView_NonSelectedSectionHasSpacePrefix(t *testing.T) {
 	m := modelWithReviewAndSize(2)
 	view := m.View()
 
-	// Second section should not be selected, should have "  " prefix
-	if !strings.Contains(view, "  Section B") {
-		t.Error("non-selected section should have '  ' prefix")
+	// Second section should not be selected, should have "  " prefix (showing title)
+	if !strings.Contains(view, "  Title B") {
+		t.Error("non-selected section should have '  ' prefix with title")
 	}
 }
 
@@ -125,14 +172,50 @@ func TestView_ReviewStateShowsHunkContent(t *testing.T) {
 	}
 }
 
+func TestView_ChapterHeadersAppearInSectionPane(t *testing.T) {
+	m := modelWithChapters()
+	view := m.View()
+
+	// Chapter headers should appear in the view
+	if !strings.Contains(view, "Authentication") {
+		t.Error("view should contain chapter header 'Authentication'")
+	}
+	if !strings.Contains(view, "Database") {
+		t.Error("view should contain chapter header 'Database'")
+	}
+}
+
+func TestView_NonSelectedSectionShowsOnlyTitle(t *testing.T) {
+	m := modelWithChapters()
+	view := m.View()
+
+	// Non-selected sections should show title but NOT narrative
+	// Section "Add login tests" (s2) is not selected (s1 is selected by default)
+	if !strings.Contains(view, "Add login tests") {
+		t.Error("view should contain non-selected section title 'Add login tests'")
+	}
+	if strings.Contains(view, "Tests the login endpoint") {
+		t.Error("view should NOT contain narrative for non-selected section")
+	}
+}
+
+func TestView_SelectedSectionShowsTitleAndNarrative(t *testing.T) {
+	m := modelWithChapters()
+	view := m.View()
+
+	// First section is selected by default - should show both title and narrative
+	if !strings.Contains(view, "Add login endpoint") {
+		t.Error("view should contain selected section title 'Add login endpoint'")
+	}
+	if !strings.Contains(view, "Implements POST /login") {
+		t.Error("view should contain narrative for selected section")
+	}
+}
+
 func TestView_NotReadyShowsInitializing(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Set a review but don't send WindowSizeMsg (so viewport not initialized)
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ := m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -153,13 +236,9 @@ func TestView_SectionListDoesNotTruncateText(t *testing.T) {
 
 	// Create a review with a long narrative
 	longNarrative := "This is a very long narrative that should wrap instead of being truncated with an ellipsis character"
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections: []model.Section{
-			{ID: "1", Narrative: longNarrative},
-		},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", Narrative: longNarrative},
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -184,11 +263,7 @@ func TestView_StatusBarShowsErrorText(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Set a review
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -213,11 +288,7 @@ func TestView_HelpOverlayContainsKeybindings(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Set a review
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -237,21 +308,22 @@ func TestView_SectionListHasSpacingBetweenSections(t *testing.T) {
 	m := modelWithReviewAndSize(2)
 	view := m.View()
 
-	// Find positions of both sections
-	posA := strings.Index(view, "Section A")
-	posB := strings.Index(view, "Section B")
+	// Find positions of both section titles
+	posA := strings.Index(view, "Title A")
+	posB := strings.Index(view, "Title B")
 
 	if posA == -1 || posB == -1 {
-		t.Fatal("could not find both sections in view")
+		t.Fatal("could not find both section titles in view")
 	}
 
-	// Extract text between sections and check for blank line
-	between := view[posA+len("Section A") : posB]
+	// Extract text between sections - should include narrative for selected section
+	// plus at least one newline before the next section
+	between := view[posA+len("Title A") : posB]
 
-	// Should have at least 2 newlines (indicating a blank line between sections)
+	// Should have at least 1 newline (separating sections)
 	newlineCount := strings.Count(between, "\n")
-	if newlineCount < 2 {
-		t.Errorf("expected at least 2 newlines between sections for spacing, got %d", newlineCount)
+	if newlineCount < 1 {
+		t.Errorf("expected at least 1 newline between sections, got %d", newlineCount)
 	}
 }
 
@@ -309,21 +381,17 @@ func modelWithFilesForView() tui.Model {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Test section",
-				Hunks: []model.Hunk{
-					{File: "src/main.go", Diff: "+added"},
-					{File: "src/util.go", Diff: "+added"},
-					{File: "pkg/lib.go", Diff: "+added"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Test section",
+			Hunks: []model.Hunk{
+				{File: "src/main.go", Diff: "+added"},
+				{File: "src/util.go", Diff: "+added"},
+				{File: "pkg/lib.go", Diff: "+added"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	return updated.(tui.Model)
 }
@@ -397,21 +465,17 @@ func modelWithMultipleFilesForDiff() tui.Model {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Test section",
-				Hunks: []model.Hunk{
-					{File: "src/main.go", Diff: "+added in main"},
-					{File: "src/util.go", Diff: "+added in util"},
-					{File: "pkg/lib.go", Diff: "+added in lib"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Test section",
+			Hunks: []model.Hunk{
+				{File: "src/main.go", Diff: "+added in main"},
+				{File: "src/util.go", Diff: "+added in util"},
+				{File: "pkg/lib.go", Diff: "+added in lib"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	return updated.(tui.Model)
 }
@@ -584,11 +648,7 @@ func TestView_HelpOverlayShowsNewKeybindings(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Set a review
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -638,11 +698,7 @@ func TestView_SectionPanelShowsPositionIndicator(t *testing.T) {
 			Hunks:     []model.Hunk{{File: "file.go", Diff: "+added"}},
 		}
 	}
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections:         sections,
-	}
+	review := model.NewReviewWithSections("/test/project", "Test", sections)
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -675,11 +731,7 @@ func TestView_SectionPaneScrollsWithOffset(t *testing.T) {
 			Hunks:     []model.Hunk{{File: "file.go", Diff: "+added"}},
 		}
 	}
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections:         sections,
-	}
+	review := model.NewReviewWithSections("/test/project", "Test", sections)
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -716,13 +768,9 @@ func TestView_FilesPaneScrollsWithOffset(t *testing.T) {
 			Diff: "+added",
 		}
 	}
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections: []model.Section{
-			{ID: "1", Narrative: "Test section", Hunks: hunks},
-		},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", Narrative: "Test section", Hunks: hunks},
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -767,11 +815,7 @@ func TestView_FilesPanelShowsPositionIndicator(t *testing.T) {
 			Diff: "+added",
 		}
 	}
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section", Hunks: hunks}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section", Hunks: hunks}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -801,21 +845,17 @@ func TestView_FileHeadingAppearsOnceForMultipleHunks(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Create review with multiple hunks for the same file
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Test section",
-				Hunks: []model.Hunk{
-					{File: "src/main.go", Diff: "+first hunk"},
-					{File: "src/main.go", Diff: "+second hunk"},
-					{File: "src/main.go", Diff: "+third hunk"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Test section",
+			Hunks: []model.Hunk{
+				{File: "src/main.go", Diff: "+first hunk"},
+				{File: "src/main.go", Diff: "+second hunk"},
+				{File: "src/main.go", Diff: "+third hunk"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -876,12 +916,8 @@ func TestView_ReviewStateShowsTimestamp(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Create review with CreatedAt set to 2 hours ago
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-		CreatedAt:        time.Now().Add(-2 * time.Hour),
-	}
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
+	review.CreatedAt = time.Now().Add(-2 * time.Hour)
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -903,12 +939,7 @@ func TestView_ReviewWithoutTimestampShowsNoCreatedLine(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Create review WITHOUT CreatedAt (zero time)
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-		// CreatedAt is zero
-	}
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -928,11 +959,7 @@ func TestView_ReviewStateShowsFilterIndicator(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -951,11 +978,7 @@ func TestView_FilterIndicatorShowsCurrentLevel(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -974,11 +997,7 @@ func TestView_FooterShowsFilterShortcut(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1002,21 +1021,17 @@ func modelWithFilterLevel(filterLevel string) tui.Model {
 
 	// Use a single file with multiple hunks of different importance
 	// This ensures the view shows all hunks for that file
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Section with mixed importance",
-				Hunks: []model.Hunk{
-					{File: "main.go", Diff: "+low importance change", Importance: "low"},
-					{File: "main.go", Diff: "+medium importance change", Importance: "medium"},
-					{File: "main.go", Diff: "+high importance change", Importance: "high"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Section with mixed importance",
+			Hunks: []model.Hunk{
+				{File: "main.go", Diff: "+low importance change", Importance: "low"},
+				{File: "main.go", Diff: "+medium importance change", Importance: "medium"},
+				{File: "main.go", Diff: "+high importance change", Importance: "high"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	return updated.(tui.Model)
 }
@@ -1075,19 +1090,15 @@ func TestView_ShowsFilteredIndicatorWhenAllHunksHidden(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Section with only low importance hunks
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "All low importance section",
-				Hunks: []model.Hunk{
-					{File: "low.go", Diff: "+low", Importance: "low"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "All low importance section",
+			Hunks: []model.Hunk{
+				{File: "low.go", Diff: "+low", Importance: "low"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1108,20 +1119,16 @@ func TestView_FilesPanelHidesFilesWithNoVisibleHunks(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Mixed section",
-				Hunks: []model.Hunk{
-					{File: "low.go", Diff: "+low", Importance: "low"},
-					{File: "high.go", Diff: "+high", Importance: "high"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Mixed section",
+			Hunks: []model.Hunk{
+				{File: "low.go", Diff: "+low", Importance: "low"},
+				{File: "high.go", Diff: "+high", Importance: "high"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1150,19 +1157,15 @@ func TestView_SectionListDoesNotShowFilteredIndicator(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Section with only low importance hunks - all will be filtered
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "All low importance section",
-				Hunks: []model.Hunk{
-					{File: "low.go", Diff: "+low", Importance: "low"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "All low importance section",
+			Hunks: []model.Hunk{
+				{File: "low.go", Diff: "+low", Importance: "low"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1189,20 +1192,16 @@ func TestView_DiffHeaderShowsFilteredWhenContentHidden(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Create review with mixed importance - some will be hidden
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Mixed section",
-				Hunks: []model.Hunk{
-					{File: "main.go", Diff: "+low change", Importance: "low"},
-					{File: "main.go", Diff: "+high change", Importance: "high"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Mixed section",
+			Hunks: []model.Hunk{
+				{File: "main.go", Diff: "+low change", Importance: "low"},
+				{File: "main.go", Diff: "+high change", Importance: "high"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1222,19 +1221,15 @@ func TestView_DiffHeaderNoFilteredWhenNoContentHidden(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Test section",
-				Hunks: []model.Hunk{
-					{File: "main.go", Diff: "+change", Importance: "low"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Test section",
+			Hunks: []model.Hunk{
+				{File: "main.go", Diff: "+change", Importance: "low"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1258,20 +1253,16 @@ func TestView_DiffHeaderNoFilteredWhenFilterActiveButAllPassFilter(t *testing.T)
 	m = updated.(tui.Model)
 
 	// All hunks are high importance - none will be hidden
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "High importance section",
-				Hunks: []model.Hunk{
-					{File: "main.go", Diff: "+high1", Importance: "high"},
-					{File: "main.go", Diff: "+high2", Importance: "high"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "High importance section",
+			Hunks: []model.Hunk{
+				{File: "main.go", Diff: "+high1", Importance: "high"},
+				{File: "main.go", Diff: "+high2", Importance: "high"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1292,21 +1283,17 @@ func TestView_DiffHeaderFilteredUpdatesWithFileNavigation(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// File with mixed importance vs file with only high
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Test section",
-				Hunks: []model.Hunk{
-					{File: "all_high.go", Diff: "+high", Importance: "high"},
-					{File: "mixed.go", Diff: "+low", Importance: "low"},
-					{File: "mixed.go", Diff: "+high", Importance: "high"},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Test section",
+			Hunks: []model.Hunk{
+				{File: "all_high.go", Diff: "+high", Importance: "high"},
+				{File: "mixed.go", Diff: "+low", Importance: "low"},
+				{File: "mixed.go", Diff: "+high", Importance: "high"},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1351,20 +1338,16 @@ func TestView_TestFilterHidesTestHunks(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Use same file for both hunks so they show in the same view
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Section with tests",
-				Hunks: []model.Hunk{
-					{File: "main.go", Diff: "+production code change", IsTest: boolPtr(false)},
-					{File: "main.go", Diff: "+test code change", IsTest: boolPtr(true)},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Section with tests",
+			Hunks: []model.Hunk{
+				{File: "main.go", Diff: "+production code change", IsTest: boolPtr(false)},
+				{File: "main.go", Diff: "+test code change", IsTest: boolPtr(true)},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1410,11 +1393,7 @@ func TestView_FooterShowsTestFilterShortcut(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1433,11 +1412,7 @@ func TestView_FilterIndicatorShowsTestFilterWhenExcluding(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1461,11 +1436,7 @@ func TestView_FilterIndicatorShowsTestFilterWhenOnly(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections:         []model.Section{{ID: "1", Narrative: "Section"}},
-	}
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1492,22 +1463,18 @@ func TestView_CompoundFilteringAppliesBothFilters(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.Review{
-		WorkingDirectory: "/test/project",
-		Title:            "Test Review",
-		Sections: []model.Section{
-			{
-				ID:        "1",
-				Narrative: "Section",
-				Hunks: []model.Hunk{
-					{File: "main.go", Diff: "+high prod", Importance: "high", IsTest: boolPtr(false)},
-					{File: "main.go", Diff: "+low prod", Importance: "low", IsTest: boolPtr(false)},
-					{File: "main_test.go", Diff: "+high test", Importance: "high", IsTest: boolPtr(true)},
-					{File: "main_test.go", Diff: "+low test", Importance: "low", IsTest: boolPtr(true)},
-				},
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Section",
+			Hunks: []model.Hunk{
+				{File: "main.go", Diff: "+high prod", Importance: "high", IsTest: boolPtr(false)},
+				{File: "main.go", Diff: "+low prod", Importance: "low", IsTest: boolPtr(false)},
+				{File: "main_test.go", Diff: "+high test", Importance: "high", IsTest: boolPtr(true)},
+				{File: "main_test.go", Diff: "+low test", Importance: "low", IsTest: boolPtr(true)},
 			},
 		},
-	}
+	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 

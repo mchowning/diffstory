@@ -49,12 +49,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "j", "down":
 			switch m.focusedPanel {
 			case PanelSection:
-				if m.review != nil && m.selected < len(m.review.Sections)-1 {
+				if m.review != nil && m.selected < m.review.SectionCount()-1 {
 					m.selected++
 					m.sectionScrollOffset = CalculateScrollOffset(
 						m.sectionScrollOffset,
 						m.selected,
-						len(m.review.Sections),
+						m.review.SectionCount(),
 						EstimateSectionVisibleCount(m.sectionPanelHeight()),
 					)
 					m.viewport.GotoTop()
@@ -84,7 +84,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.sectionScrollOffset = CalculateScrollOffset(
 						m.sectionScrollOffset,
 						m.selected,
-						len(m.review.Sections),
+						m.review.SectionCount(),
 						EstimateSectionVisibleCount(m.sectionPanelHeight()),
 					)
 					m.viewport.GotoTop()
@@ -239,11 +239,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.focusedPanel {
 			case PanelSection:
 				if m.review != nil {
-					m.selected = len(m.review.Sections) - 1
+					m.selected = m.review.SectionCount() - 1
 					m.sectionScrollOffset = CalculateScrollOffset(
 						m.sectionScrollOffset,
 						m.selected,
-						len(m.review.Sections),
+						m.review.SectionCount(),
 						EstimateSectionVisibleCount(m.sectionPanelHeight()),
 					)
 					m.updateFileTree()
@@ -273,7 +273,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.sectionScrollOffset = CalculateScrollOffset(
 					m.sectionScrollOffset,
 					m.selected,
-					len(m.review.Sections),
+					m.review.SectionCount(),
 					EstimateSectionVisibleCount(m.sectionPanelHeight()),
 				)
 				m.updateFileTree()
@@ -297,11 +297,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.focusedPanel {
 			case PanelSection:
 				if m.review != nil {
-					m.selected = min(len(m.review.Sections)-1, m.selected+pageSize)
+					m.selected = min(m.review.SectionCount()-1, m.selected+pageSize)
 					m.sectionScrollOffset = CalculateScrollOffset(
 						m.sectionScrollOffset,
 						m.selected,
-						len(m.review.Sections),
+						m.review.SectionCount(),
 						EstimateSectionVisibleCount(m.sectionPanelHeight()),
 					)
 					m.updateFileTree()
