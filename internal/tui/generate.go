@@ -33,7 +33,7 @@ Respond with JSON in this exact format (no markdown fences, no explanation text)
   "sections": [
     {
       "id": "section-identifier",
-      "narrative": "2-3 sentence explanation of what this section covers and why these changes matter",
+      "narrative": "Concise explanation of what and why. Mention key decisions or alternatives if relevant.",
       "hunks": [
         {"id": "file/path.go::45", "importance": "high", "isTest": false},
         {"id": "file/path_test.go::120", "importance": "medium", "isTest": true}
@@ -43,14 +43,16 @@ Respond with JSON in this exact format (no markdown fences, no explanation text)
 }
 
 Guidelines:
-- Group related hunks into logical sections (by feature, component, or concern)
+- Group hunks into small, focused logical sections. Prefer breaking changes into multiple granular sections that build on each other rather than combining them.
 - Each hunk must have importance: "high", "medium", or "low"
 - high: Critical changes (security, core logic, breaking changes)
 - medium: Important changes (new features, significant refactors)
 - low: Minor changes (formatting, comments, trivial fixes)
 - Each hunk must have isTest: true if the hunk is test code, false if production code
 - Test code includes: unit tests, integration tests, test fixtures, test utilities, mocks
-- Write narratives that explain the "why" not just the "what"
+- Narrative requirements:
+  - Explain the "what" and "why" in a concise manner (1-2 sentences).
+  - Explicitly mention any important technical decisions or alternatives that appear to have been considered.
 %s`
 
 const retryPromptAddendum = `
@@ -62,11 +64,11 @@ You MUST include ALL hunk IDs in your response, including the ones listed above.
 
 // GenerateParams holds parameters for review generation
 type GenerateParams struct {
-	DiffCommand  []string
-	Context      string
-	IsRetry      bool
-	MissingIDs   []string
-	ParsedHunks  []diff.ParsedHunk // Set on retry to avoid re-parsing
+	DiffCommand []string
+	Context     string
+	IsRetry     bool
+	MissingIDs  []string
+	ParsedHunks []diff.ParsedHunk // Set on retry to avoid re-parsing
 }
 
 // generateReviewCmd returns a command that runs the LLM generation with
@@ -322,4 +324,3 @@ func runCommand(ctx context.Context, workDir string, args []string, stdin []byte
 
 	return stdout.String(), nil
 }
-
