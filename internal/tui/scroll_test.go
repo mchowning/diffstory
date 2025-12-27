@@ -148,17 +148,15 @@ func TestCalcScrollbar_PositionAtBottom(t *testing.T) {
 
 // Tests for EstimateSectionVisibleCount
 
-func TestEstimateSectionVisibleCount_ConservativeEstimate(t *testing.T) {
-	// With a panel height of 20 (18 content lines after borders),
-	// we should conservatively estimate fewer sections to account for
-	// text wrapping. Using ~6 lines per section allows for narratives
-	// that wrap plus the blank line separator.
+func TestEstimateSectionVisibleCount_OneLinePerItem(t *testing.T) {
+	// With narratives in Description panel, each section/chapter header takes 1 line
+	// Panel height of 20 = 18 content lines (after borders) = 18 visible items
 	panelHeight := 20
 	result := EstimateSectionVisibleCount(panelHeight)
 
-	// With 18 content lines and ~6 lines per section, expect 3 sections
-	if result != 3 {
-		t.Errorf("expected 3 sections for height 20, got %d", result)
+	expected := 18 // contentHeight = 20 - 2 borders
+	if result != expected {
+		t.Errorf("expected %d sections for height 20, got %d", expected, result)
 	}
 }
 
@@ -172,15 +170,14 @@ func TestEstimateSectionVisibleCount_SmallPanel(t *testing.T) {
 	}
 }
 
-func TestEstimateSectionRenderCount_MoreGenerousThanVisible(t *testing.T) {
-	// Render count should be more generous than visible count
-	// to fill available space while scroll triggers early
+func TestEstimateSectionRenderCount_MatchesVisibleCount(t *testing.T) {
+	// With 1 line per item, render count equals visible count
 	panelHeight := 20
 
 	renderCount := EstimateSectionRenderCount(panelHeight)
 	visibleCount := EstimateSectionVisibleCount(panelHeight)
 
-	if renderCount <= visibleCount {
-		t.Errorf("renderCount (%d) should be greater than visibleCount (%d)", renderCount, visibleCount)
+	if renderCount != visibleCount {
+		t.Errorf("renderCount (%d) should equal visibleCount (%d)", renderCount, visibleCount)
 	}
 }

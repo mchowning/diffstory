@@ -1,36 +1,24 @@
 package tui
 
 // EstimateSectionVisibleCount estimates how many sections fit in the panel.
-// Uses a conservative heuristic of ~6 lines per section to account for
-// text wrapping in narratives plus the blank line separator.
-// Used for scroll triggering - we want scrolling to kick in early.
+// Each section/chapter header takes 1 line (narratives are in Description panel).
+// Used for scroll triggering.
 func EstimateSectionVisibleCount(panelHeight int) int {
 	contentHeight := panelHeight - 2 // account for borders
 	if contentHeight < 1 {
 		return 1
 	}
-	linesPerSection := 6 // conservative: allows for wrapped narratives + blank line
-	count := contentHeight / linesPerSection
-	if count < 1 {
-		return 1
-	}
-	return count
+	return contentHeight
 }
 
 // EstimateSectionRenderCount estimates how many sections to render.
-// Uses a generous heuristic of ~4 lines per section to fill available space.
-// The panel will clip any overflow.
+// Each section/chapter header takes 1 line (narratives are in Description panel).
 func EstimateSectionRenderCount(panelHeight int) int {
 	contentHeight := panelHeight - 2 // account for borders
 	if contentHeight < 1 {
 		return 1
 	}
-	linesPerSection := 4 // generous: fill available space, let panel clip overflow
-	count := contentHeight / linesPerSection
-	if count < 1 {
-		return 1
-	}
-	return count
+	return contentHeight
 }
 
 // EstimateFilesVisibleCount estimates how many files fit in the panel.
