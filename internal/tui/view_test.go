@@ -199,6 +199,33 @@ func TestView_NonSelectedSectionShowsOnlyTitle(t *testing.T) {
 	}
 }
 
+func TestView_SelectedSectionDoesNotShowNarrativeInline(t *testing.T) {
+	m := modelWithChapters()
+	view := m.View()
+
+	// The narrative prefix "  │ " should NOT appear in the sections panel
+	// because narratives are now displayed in the Description panel instead
+	if strings.Contains(view, "  │ ") {
+		t.Error("sections panel should NOT show narrative prefix '  │ ' - narratives belong in Description panel")
+	}
+}
+
+func TestView_DescriptionPanelShowsNarrative(t *testing.T) {
+	m := modelWithChapters()
+	view := m.View()
+
+	// Description panel should exist and show the narrative for the selected section
+	if !strings.Contains(view, "Description") {
+		t.Error("view should contain Description panel title")
+	}
+
+	// The first section is selected by default, its narrative should appear
+	// in the Description panel
+	if !strings.Contains(view, "Implements POST /login") {
+		t.Error("Description panel should contain narrative for selected section")
+	}
+}
+
 func TestView_SelectedSectionShowsTitleAndNarrative(t *testing.T) {
 	m := modelWithChapters()
 	view := m.View()
@@ -722,12 +749,14 @@ func TestView_SectionPaneScrollsWithOffset(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	// Create review with sections that have unique narratives
+	// Create review with sections that have unique titles and narratives
+	// Titles appear in Sections panel, narratives appear in Description panel
 	sections := make([]model.Section, 10)
 	for i := range 10 {
 		sections[i] = model.Section{
 			ID:        string(rune('0' + i)),
-			Narrative: "UniqueSection" + string(rune('A'+i)),
+			Title:     "SectionTitle" + string(rune('A'+i)),
+			Narrative: "Narrative for section " + string(rune('A'+i)),
 			Hunks:     []model.Hunk{{File: "file.go", Diff: "+added"}},
 		}
 	}
@@ -740,14 +769,21 @@ func TestView_SectionPaneScrollsWithOffset(t *testing.T) {
 
 	view := m.View()
 
-	// Section F (index 5) should be visible since scroll offset is 5
-	if !strings.Contains(view, "UniqueSectionF") {
-		t.Error("section at scroll offset (F) should be visible")
+	// Section F (index 5) should be visible in sections panel since scroll offset is 5
+	if !strings.Contains(view, "SectionTitleF") {
+		t.Error("section title at scroll offset (F) should be visible in sections panel")
 	}
 
-	// Section A (index 0) should NOT be visible since it's before the scroll offset
-	if strings.Contains(view, "UniqueSectionA") {
-		t.Error("section before scroll offset (A) should NOT be visible")
+	// Section A's title (index 0) should NOT be visible in sections panel
+	// since it's before the scroll offset
+	if strings.Contains(view, "SectionTitleA") {
+		t.Error("section title before scroll offset (A) should NOT be visible in sections panel")
+	}
+
+	// However, section A's narrative SHOULD be visible in Description panel
+	// because section 0 is still selected (just scrolled off in sections panel)
+	if !strings.Contains(view, "Narrative for section A") {
+		t.Error("narrative for selected section (A) should be visible in Description panel")
 	}
 }
 

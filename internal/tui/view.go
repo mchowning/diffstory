@@ -85,7 +85,7 @@ func (m Model) renderReviewState() string {
 
 	// Three-panel layout:
 	// Left column (1/3 width): Section (top) + Files (bottom)
-	// Right column (2/3 width): Diff
+	// Right column (2/3 width): Description (top) + Diff (bottom)
 	leftWidth := m.width / 3
 	rightWidth := m.width - leftWidth - 2 // account for borders
 
@@ -97,13 +97,23 @@ func (m Model) renderReviewState() string {
 	sectionHeight := contentHeight / 2
 	filesHeight := contentHeight - sectionHeight
 
+	// Calculate description panel height (dynamic based on content)
+	// Cap at (contentHeight - minDiffHeight) to ensure Diff panel remains usable
+	const minDiffHeight = 6
+	maxDescriptionHeight := contentHeight - minDiffHeight
+	descriptionHeight := m.descriptionPaneHeight(rightWidth, maxDescriptionHeight)
+	diffHeight := contentHeight - descriptionHeight
+
 	sectionPane := m.renderSectionPane(leftWidth, sectionHeight)
 	filesPane := m.renderFilesPane(leftWidth, filesHeight)
 
 	// Join Section and Files vertically to create left column
 	leftColumn := lipgloss.JoinVertical(lipgloss.Left, sectionPane, filesPane)
 
-	diffPane := m.renderDiffPaneWithTitle(rightWidth, contentHeight)
+	// Create right column: Description (top) + Diff (bottom)
+	descriptionPane := m.renderDescriptionPane(rightWidth, descriptionHeight)
+	diffPane := m.renderDiffPaneWithTitle(rightWidth, diffHeight)
+	rightColumn := lipgloss.JoinVertical(lipgloss.Left, descriptionPane, diffPane)
 
 	header := headerStyle.Render("diffguide - " + m.review.Title)
 	filterLine := m.renderFilterIndicator()
@@ -112,8 +122,8 @@ func (m Model) renderReviewState() string {
 		footer = statusStyle.Render(m.statusMsg) + "  " + footer
 	}
 
-	// Join left column with diff horizontally
-	content := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, diffPane)
+	// Join left column with right column horizontally
+	content := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, rightColumn)
 
 	if timestampLine != "" {
 		return lipgloss.JoinVertical(lipgloss.Left, header, timestampLine, content, filterLine, footer)
@@ -273,23 +283,62 @@ func (m Model) renderSection(section model.Section, flatIdx, contentWidth int) s
 	}
 
 	if isSelected {
-		// Selected: show title with prefix, then narrative indented below
-		titleLine := selectedStyle.Width(contentWidth).Render(selectedPrefix + title)
-
-		// Only show narrative if it's different from title and non-empty
-		if section.Narrative != "" && section.Narrative != title {
-			narrativeLines := wrapText(section.Narrative, contentWidth-len(narrativePrefix))
-			var narrativeRendered []string
-			for _, line := range narrativeLines {
-				narrativeRendered = append(narrativeRendered, normalStyle.Render(narrativePrefix+line))
-			}
-			return titleLine + "\n" + strings.Join(narrativeRendered, "\n")
-		}
-		return titleLine
+		return selectedStyle.Width(contentWidth).Render(selectedPrefix + title)
 	}
 
-	// Non-selected: show only title
 	return normalStyle.Width(contentWidth).Render(normalPrefix + title)
+}
+
+func (m Model) renderDescriptionPane(width, height int) string {
+	var narrative string
+	if m.review != nil {
+		sections := m.review.AllSections()
+		if m.selected < len(sections) {
+			narrative = sections[m.selected].Narrative
+		}
+	}
+
+	// Wrap narrative text to fit panel width (accounting for borders)
+	contentWidth := width - 2
+	var content string
+	if narrative != "" {
+		lines := wrapText(narrative, contentWidth)
+		content = strings.Join(lines, "\n")
+	}
+
+	return renderBorderedPanel("Description", content, width, height, false)
+}
+
+func (m Model) descriptionPaneHeight(width, maxHeight int) int {
+	const minHeight = 3 // 1 content line + 2 border lines
+
+	if m.review == nil {
+		return minHeight
+	}
+
+	sections := m.review.AllSections()
+	if m.selected >= len(sections) {
+		return minHeight
+	}
+
+	narrative := sections[m.selected].Narrative
+	if narrative == "" {
+		return minHeight
+	}
+
+	// Calculate wrapped line count
+	contentWidth := width - 2 // account for borders
+	lines := wrapText(narrative, contentWidth)
+
+	// Height = wrapped lines + 2 for borders, capped at maxHeight
+	height := len(lines) + 2
+	if height < minHeight {
+		height = minHeight
+	}
+	if height > maxHeight {
+		height = maxHeight
+	}
+	return height
 }
 
 func wrapText(text string, width int) []string {
