@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/mchowning/diffguide/internal/mcpserver"
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/mcpserver"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/storage"
 )
 
 func setupTestServer(t *testing.T) (*mcpserver.Server, *storage.Store) {

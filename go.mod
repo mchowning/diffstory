@@ -1,4 +1,4 @@
-module github.com/mchowning/diffguide
+module github.com/mchowning/diffstory
 
 go 1.24.0
 

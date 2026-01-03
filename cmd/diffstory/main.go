@@ -7,11 +7,11 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mchowning/diffguide/internal/config"
-	"github.com/mchowning/diffguide/internal/logging"
-	"github.com/mchowning/diffguide/internal/storage"
-	"github.com/mchowning/diffguide/internal/tui"
-	"github.com/mchowning/diffguide/internal/watcher"
+	"github.com/mchowning/diffstory/internal/config"
+	"github.com/mchowning/diffstory/internal/logging"
+	"github.com/mchowning/diffstory/internal/storage"
+	"github.com/mchowning/diffstory/internal/tui"
+	"github.com/mchowning/diffstory/internal/watcher"
 )
 
 func main() {
@@ -35,7 +35,7 @@ func main() {
 	}
 
 	// Viewer mode (default)
-	debug := flag.Bool("debug", false, "Enable debug logging to /tmp/diffguide.log")
+	debug := flag.Bool("debug", false, "Enable debug logging to /tmp/diffstory.log")
 	flag.Parse()
 	runViewer(*debug)
 }
@@ -50,7 +50,7 @@ func runViewer(debug bool) {
 	// Enable logging if flag or config enables it
 	debugEnabled := debug || (cfg != nil && cfg.DebugLoggingEnabled)
 	logger := logging.Setup(debugEnabled)
-	logger.Info("diffguide starting", "debug_flag", debug, "config_enabled", cfg != nil && cfg.DebugLoggingEnabled)
+	logger.Info("diffstory starting", "debug_flag", debug, "config_enabled", cfg != nil && cfg.DebugLoggingEnabled)
 
 	// Get current working directory
 	cwd, err := os.Getwd()

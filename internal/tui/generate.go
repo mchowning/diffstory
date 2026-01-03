@@ -13,10 +13,10 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mchowning/diffguide/internal/config"
-	"github.com/mchowning/diffguide/internal/diff"
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/config"
+	"github.com/mchowning/diffstory/internal/diff"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/storage"
 )
 
 const classificationPromptTemplate = `You are a code review assistant. Classify diff hunks into logical chapters and sections.
@@ -124,7 +124,7 @@ func generateReviewCmd(ctx context.Context, cfg *config.Config, workDir string, 
 		if err != nil {
 			return GenerateErrorMsg{Err: fmt.Errorf("failed to build hunks JSON: %w", err)}
 		}
-		inputPath := filepath.Join(workDir, ".diffguide-input.json")
+		inputPath := filepath.Join(workDir, ".diffstory-input.json")
 		if err := os.WriteFile(inputPath, []byte(hunksJSON), 0600); err != nil {
 			return GenerateErrorMsg{Err: fmt.Errorf("failed to write input file: %w", err)}
 		}

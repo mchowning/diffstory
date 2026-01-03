@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/review"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/review"
+	"github.com/mchowning/diffstory/internal/storage"
 )
 
 func setupTestService(t *testing.T) (*review.Service, *storage.Store) {

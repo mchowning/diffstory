@@ -3,9 +3,9 @@ package mcpserver
 import (
 	"context"
 
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/review"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/review"
+	"github.com/mchowning/diffstory/internal/storage"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -54,13 +54,13 @@ func (s *Server) SubmitReview(ctx context.Context, input SubmitReviewInput) (Sub
 
 func (s *Server) Run(ctx context.Context) error {
 	mcpServer := mcp.NewServer(&mcp.Implementation{
-		Name:    "diffguide",
+		Name:    "diffstory",
 		Version: "1.0.0",
 	}, nil)
 
 	mcp.AddTool(mcpServer, &mcp.Tool{
 		Name: "submit_review",
-		Description: "Submit a code review for display in the diffguide TUI viewer. " +
+		Description: "Submit a code review for display in the diffstory TUI viewer. " +
 			"Structure the review as a narrative that tells the story of the changes. " +
 			"Each section's narrative should both stand alone AND flow naturally into the next - " +
 			"reading just the narratives in sequence should feel like a guided tour through the changes, " +

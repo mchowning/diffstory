@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mchowning/diffguide/internal/config"
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/storage"
-	"github.com/mchowning/diffguide/internal/tui"
+	"github.com/mchowning/diffstory/internal/config"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/storage"
+	"github.com/mchowning/diffstory/internal/tui"
 )
 
 func TestUpdate_QuitWithQKey(t *testing.T) {
@@ -1479,7 +1479,7 @@ func TestUpdate_GKeyWithoutConfigShowsError(t *testing.T) {
 	updated, _ := m.Update(msg)
 	result := updated.(tui.Model)
 
-	expected := "LLM not configured. Create ~/.config/diffguide/config.json"
+	expected := "LLM not configured. Create ~/.config/diffstory/config.json"
 	if result.StatusMsg() != expected {
 		t.Errorf("StatusMsg() = %q, want %q", result.StatusMsg(), expected)
 	}
@@ -1496,7 +1496,7 @@ func TestUpdate_GKeyWithEmptyLLMCommandShowsError(t *testing.T) {
 	updated, _ := m.Update(msg)
 	result := updated.(tui.Model)
 
-	expected := "LLM not configured. Create ~/.config/diffguide/config.json"
+	expected := "LLM not configured. Create ~/.config/diffstory/config.json"
 	if result.StatusMsg() != expected {
 		t.Errorf("StatusMsg() = %q, want %q", result.StatusMsg(), expected)
 	}

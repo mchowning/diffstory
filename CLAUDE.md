@@ -17,7 +17,7 @@ nix develop -c go mod tidy
 Build and install to `~/dotfiles/bin/`:
 
 ```bash
-nix develop -c go build -o ~/dotfiles/bin/diffguide ./cmd/diffguide/
+nix develop -c go build -o ~/dotfiles/bin/diffstory ./cmd/diffstory/
 ```
 
 ## Reference Implementation

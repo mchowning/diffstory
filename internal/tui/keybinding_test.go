@@ -3,7 +3,7 @@ package tui_test
 import (
 	"testing"
 
-	"github.com/mchowning/diffguide/internal/tui"
+	"github.com/mchowning/diffstory/internal/tui"
 )
 
 func TestKeybindingRegistry_EmptyRegistry(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mchowning/diffguide/internal/model"
+	"github.com/mchowning/diffstory/internal/model"
 )
 
 // Store handles persisting reviews to disk
@@ -16,13 +16,13 @@ type Store struct {
 	baseDir string
 }
 
-// NewStore creates a store with the default base directory (~/.diffguide/reviews)
+// NewStore creates a store with the default base directory (~/.diffstory/reviews)
 func NewStore() (*Store, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
-	baseDir := filepath.Join(home, ".diffguide", "reviews")
+	baseDir := filepath.Join(home, ".diffstory", "reviews")
 	return NewStoreWithDir(baseDir)
 }
 

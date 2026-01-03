@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mchowning/diffguide/internal/highlight"
+	"github.com/mchowning/diffstory/internal/highlight"
 )
 
 func TestHighlightCode_GoFile(t *testing.T) {

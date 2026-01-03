@@ -3,7 +3,7 @@ package tui
 import (
 	"testing"
 
-	"github.com/mchowning/diffguide/internal/model"
+	"github.com/mchowning/diffstory/internal/model"
 )
 
 func TestFilterLevel_String_ReturnsDisplayName(t *testing.T) {

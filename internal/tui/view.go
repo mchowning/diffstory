@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mchowning/diffguide/internal/highlight"
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/timeutil"
+	"github.com/mchowning/diffstory/internal/highlight"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/timeutil"
 )
 
 func (m Model) View() string {
@@ -63,14 +63,14 @@ func (m Model) renderEmptyState() string {
 	return `
     ╔═══════════════════════════════════════════╗
     ║                                           ║
-    ║             d i f f g u i d e             ║
+    ║             d i f f s t o r y             ║
     ║                                           ║
     ╚═══════════════════════════════════════════╝
 
     Watching for reviews in:
     ` + m.workDir + `
 
-    Start server: diffguide server
+    Start server: diffstory server
     Send review:  POST http://localhost:8765/review
     Generate:     Press Shift+G
 ` + status + `
@@ -119,7 +119,7 @@ func (m Model) renderReviewState() string {
 	// Diff panel gets full height
 	diffPane := m.renderDiffPaneWithTitle(rightWidth, contentHeight)
 
-	header := headerStyle.Render("diffguide - " + m.review.Title)
+	header := headerStyle.Render("diffstory - " + m.review.Title)
 	filterLine := m.renderFilterIndicator()
 	footer := "j/k: navigate | J/K: scroll | h/l: panels | f: importance filter | t: test filter | q: quit | ?: help"
 	if m.statusMsg != "" {

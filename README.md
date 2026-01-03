@@ -1,4 +1,4 @@
-# diffguide
+# diffstory
 
 A terminal UI viewer for code reviews. Receives structured review data via HTTP or MCP (Model Context Protocol) and displays it in an interactive TUI with syntax highlighting.
 
@@ -8,34 +8,34 @@ Designed for use with Claude Code - when Claude reviews your code, the results a
 
 ```bash
 # Build from source
-go build -o diffguide ./cmd/diffguide/
+go build -o diffstory ./cmd/diffstory/
 
 # Or with nix
-nix develop -c go build -o diffguide ./cmd/diffguide/
+nix develop -c go build -o diffstory ./cmd/diffstory/
 ```
 
 ## Using with Claude Code
 
 ### Setup
 
-1. Build and install diffguide somewhere in your PATH:
+1. Build and install diffstory somewhere in your PATH:
    ```bash
-   go build -o ~/bin/diffguide ./cmd/diffguide/
+   go build -o ~/bin/diffstory ./cmd/diffstory/
    ```
 
 2. Register the MCP server with Claude Code:
    ```bash
-   claude mcp add --transport stdio diffguide --scope user -- ~/bin/diffguide mcp
+   claude mcp add --transport stdio diffstory --scope user -- ~/bin/diffstory mcp
    ```
 
 3. Restart Claude Code to pick up the new MCP server.
 
 ### Workflow
 
-**Terminal 1** - Run the diffguide viewer in your project directory:
+**Terminal 1** - Run the diffstory viewer in your project directory:
 ```bash
 cd /path/to/your/project
-diffguide
+diffstory
 ```
 
 The viewer starts in "waiting" mode, ready to display reviews.
@@ -50,11 +50,11 @@ When you want Claude to review code, ask it directly:
 
 > "Review the changes I made to the authentication module"
 
-> "Use diffguide to review this PR"
+> "Use diffstory to review this PR"
 
 > "Submit a code review of the recent commits"
 
-Claude will use the `submit_review` tool to send a structured review to diffguide. The review appears instantly in the viewer with:
+Claude will use the `submit_review` tool to send a structured review to diffstory. The review appears instantly in the viewer with:
 
 - Sections organized by topic/concern
 - Narrative explanations for each section
@@ -76,11 +76,11 @@ The viewer displays this in a split-pane interface - sections on the left, detai
 
 ### TUI Viewer (default)
 
-Run `diffguide` in any directory to start the viewer. It watches for reviews submitted to that directory.
+Run `diffstory` in any directory to start the viewer. It watches for reviews submitted to that directory.
 
 ```bash
 cd /path/to/project
-diffguide
+diffstory
 ```
 
 **Keybindings:**
@@ -113,9 +113,9 @@ The filter indicator at the bottom shows current state: `Diff filter: High only 
 Start an HTTP server to receive reviews:
 
 ```bash
-diffguide server              # Default port 8765
-diffguide server -port 9000   # Custom port
-diffguide server -v           # Verbose logging
+diffstory server              # Default port 8765
+diffstory server -port 9000   # Custom port
+diffstory server -v           # Verbose logging
 ```
 
 Submit reviews via POST:
@@ -148,8 +148,8 @@ curl -X POST http://localhost:8765/review \
 Run as an MCP server (used by Claude Code):
 
 ```bash
-diffguide mcp      # Runs on stdio
-diffguide mcp -v   # Verbose logging to stderr
+diffstory mcp      # Runs on stdio
+diffstory mcp -v   # Verbose logging to stderr
 ```
 
 See [Using with Claude Code](#using-with-claude-code) for setup instructions.
@@ -181,7 +181,7 @@ Reviews are JSON objects with this structure:
 
 ## How It Works
 
-1. **Storage**: Reviews are stored in `~/.diffguide/reviews/` as JSON files, hashed by working directory
+1. **Storage**: Reviews are stored in `~/.diffstory/reviews/` as JSON files, hashed by working directory
 2. **File Watching**: The TUI watches for file changes and updates automatically
 3. **Syntax Highlighting**: Diffs are displayed with syntax-aware colorization
 4. **Multi-source**: Both HTTP and MCP interfaces write to the same storage, so the TUI shows reviews from either source
@@ -193,22 +193,22 @@ Reviews are JSON objects with this structure:
 nix develop -c go test ./...
 
 # Build
-nix develop -c go build ./cmd/diffguide/
+nix develop -c go build ./cmd/diffstory/
 
 # Run the viewer
-nix develop -c go run ./cmd/diffguide/
+nix develop -c go run ./cmd/diffstory/
 
 # Run the HTTP server
-nix develop -c go run ./cmd/diffguide/ server -v
+nix develop -c go run ./cmd/diffstory/ server -v
 
 # Run the MCP server
-nix develop -c go run ./cmd/diffguide/ mcp -v
+nix develop -c go run ./cmd/diffstory/ mcp -v
 ```
 
 ## Architecture
 
 ```
-cmd/diffguide/
+cmd/diffstory/
   main.go      # CLI entry point
   server.go    # HTTP server runner
   mcp.go       # MCP server runner

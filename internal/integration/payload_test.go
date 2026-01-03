@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/server"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/server"
+	"github.com/mchowning/diffstory/internal/storage"
 )
 
 // testdataDir returns the path to the testdata directory

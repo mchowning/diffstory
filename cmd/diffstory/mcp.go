@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mchowning/diffguide/internal/mcpserver"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/mcpserver"
+	"github.com/mchowning/diffstory/internal/storage"
 )
 
 func runMCP(verbose bool) {

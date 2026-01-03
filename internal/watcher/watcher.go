@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/storage"
 )
 
 // Watcher watches for review file changes for a specific directory
@@ -24,7 +24,7 @@ type Watcher struct {
 }
 
 // New creates a watcher for the given working directory.
-// Uses the default storage location (~/.diffguide/reviews).
+// Uses the default storage location (~/.diffstory/reviews).
 func New(workDir string, logger *slog.Logger) (*Watcher, error) {
 	store, err := storage.NewStore()
 	if err != nil {

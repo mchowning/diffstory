@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mchowning/diffguide/internal/server"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/server"
+	"github.com/mchowning/diffstory/internal/storage"
 )
 
 func runServer(port string, verbose bool) {

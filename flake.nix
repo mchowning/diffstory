@@ -1,5 +1,5 @@
 {
-  description = "diffguide - TUI for reviewing AI-generated code changes";
+  description = "diffstory - TUI for reviewing AI-generated code changes";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -21,7 +21,7 @@
           ];
 
           shellHook = ''
-            echo "diffguide Development Environment"
+            echo "diffstory Development Environment"
             echo "Go version: $(go version)"
           '';
         };

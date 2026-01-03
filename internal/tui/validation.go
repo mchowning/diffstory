@@ -1,8 +1,8 @@
 package tui
 
 import (
-	"github.com/mchowning/diffguide/internal/diff"
-	"github.com/mchowning/diffguide/internal/model"
+	"github.com/mchowning/diffstory/internal/diff"
+	"github.com/mchowning/diffstory/internal/model"
 )
 
 // LLMResponse is the classification returned by the LLM

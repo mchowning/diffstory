@@ -8,7 +8,7 @@ import (
 
 func TestLoad_FromXDGConfigHome(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestLoad_FromXDGConfigHome(t *testing.T) {
 
 func TestLoad_FallbackToHomeConfig(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, ".config", "diffguide")
+	configDir := filepath.Join(tmpDir, ".config", "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func TestLoad_MissingFileReturnsNil(t *testing.T) {
 
 func TestLoad_InvalidJSONReturnsError(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func TestLoad_InvalidJSONReturnsError(t *testing.T) {
 
 func TestLoad_AppliesDefaultDiffCommand(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +133,7 @@ func TestLoad_AppliesDefaultDiffCommand(t *testing.T) {
 
 func TestLoad_PreservesCustomDiffCommand(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestLoad_PreservesCustomDiffCommand(t *testing.T) {
 
 func TestLoad_ParsesDebugLoggingEnabled(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -183,7 +183,7 @@ func TestLoad_ParsesDebugLoggingEnabled(t *testing.T) {
 
 func TestLoad_SupportsJSONCWithSingleLineComments(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +218,7 @@ func TestLoad_SupportsJSONCWithSingleLineComments(t *testing.T) {
 
 func TestLoad_SupportsJSONCWithInlineComments(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +251,7 @@ func TestLoad_SupportsJSONCWithInlineComments(t *testing.T) {
 
 func TestLoad_PreservesDoubleSlashInsideStrings(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -284,7 +284,7 @@ func TestLoad_PreservesDoubleSlashInsideStrings(t *testing.T) {
 
 func TestLoad_SupportsJSONCWithBlockComments(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -319,7 +319,7 @@ func TestLoad_SupportsJSONCWithBlockComments(t *testing.T) {
 
 func TestLoad_SupportsJSONCWithTrailingCommas(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -352,7 +352,7 @@ func TestLoad_SupportsJSONCWithTrailingCommas(t *testing.T) {
 
 func TestLoad_LoadsFromJSONCExtension(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -387,7 +387,7 @@ func TestLoad_LoadsFromJSONCExtension(t *testing.T) {
 
 func TestLoad_ErrorsWhenBothJSONAndJSONCExist(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -416,7 +416,7 @@ func TestLoad_ErrorsWhenBothJSONAndJSONCExist(t *testing.T) {
 
 func TestLoad_DefaultFilterLevelDefaultsToMedium(t *testing.T) {
 	tmpDir := t.TempDir()
-	configDir := filepath.Join(tmpDir, "diffguide")
+	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -453,7 +453,7 @@ func TestLoad_ParsesDefaultFilterLevel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.configValue, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			configDir := filepath.Join(tmpDir, "diffguide")
+			configDir := filepath.Join(tmpDir, "diffstory")
 			if err := os.MkdirAll(configDir, 0755); err != nil {
 				t.Fatal(err)
 			}

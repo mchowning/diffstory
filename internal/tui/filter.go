@@ -1,6 +1,6 @@
 package tui
 
-import "github.com/mchowning/diffguide/internal/model"
+import "github.com/mchowning/diffstory/internal/model"
 
 // FilterLevel represents the importance filter threshold
 type FilterLevel int

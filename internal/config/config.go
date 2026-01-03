@@ -66,11 +66,11 @@ func configDirs() []string {
 	var dirs []string
 
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
-		dirs = append(dirs, filepath.Join(xdg, "diffguide"))
+		dirs = append(dirs, filepath.Join(xdg, "diffstory"))
 	}
 
 	if home, err := os.UserHomeDir(); err == nil {
-		dirs = append(dirs, filepath.Join(home, ".config", "diffguide"))
+		dirs = append(dirs, filepath.Join(home, ".config", "diffstory"))
 	}
 
 	return dirs

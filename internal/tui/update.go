@@ -169,7 +169,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil // Ignore if already generating
 			}
 			if m.config == nil || len(m.config.LLMCommand) == 0 {
-				m.statusMsg = "LLM not configured. Create ~/.config/diffguide/config.json"
+				m.statusMsg = "LLM not configured. Create ~/.config/diffstory/config.json"
 				return m, nil
 			}
 			if m.store == nil {

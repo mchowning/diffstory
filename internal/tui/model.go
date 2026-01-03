@@ -11,10 +11,10 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mchowning/diffguide/internal/config"
-	"github.com/mchowning/diffguide/internal/diff"
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/config"
+	"github.com/mchowning/diffstory/internal/diff"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/storage"
 )
 
 type Panel int

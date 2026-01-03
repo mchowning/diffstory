@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/server"
-	"github.com/mchowning/diffguide/internal/storage"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/server"
+	"github.com/mchowning/diffstory/internal/storage"
 )
 
 func setupTestServer(t *testing.T) (*server.Server, *storage.Store, string) {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/mchowning/diffguide/internal/diff"
+	"github.com/mchowning/diffstory/internal/diff"
 )
 
 func TestLLMChapter_UnmarshalJSON(t *testing.T) {

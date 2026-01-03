@@ -7,9 +7,9 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mchowning/diffguide/internal/config"
-	"github.com/mchowning/diffguide/internal/model"
-	"github.com/mchowning/diffguide/internal/tui"
+	"github.com/mchowning/diffstory/internal/config"
+	"github.com/mchowning/diffstory/internal/model"
+	"github.com/mchowning/diffstory/internal/tui"
 )
 
 func TestView_EmptyStateContainsWorkingDirectory(t *testing.T) {
@@ -34,7 +34,7 @@ func TestView_EmptyStateContainsServerInstructions(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	view := m.View()
 
-	if !strings.Contains(view, "diffguide server") {
+	if !strings.Contains(view, "diffstory server") {
 		t.Error("empty state view should contain server start instructions")
 	}
 	if !strings.Contains(view, "POST") {

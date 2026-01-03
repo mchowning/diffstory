@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-const LogPath = "/tmp/diffguide.log"
+const LogPath = "/tmp/diffstory.log"
 
 func Setup(enabled bool) *slog.Logger {
 	if !enabled {

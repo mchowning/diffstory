@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mchowning/diffguide/internal/diff"
+	"github.com/mchowning/diffstory/internal/diff"
 )
 
 func TestExtractLLMResponse_CleanOutput(t *testing.T) {

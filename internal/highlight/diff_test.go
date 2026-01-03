@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mchowning/diffguide/internal/highlight"
+	"github.com/mchowning/diffstory/internal/highlight"
 	"github.com/muesli/termenv"
 )
 

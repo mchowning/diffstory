@@ -8,7 +8,7 @@ import (
 
 func TestSetup_EnabledWritesToLogFile(t *testing.T) {
 	// Clean up any existing log file
-	logPath := "/tmp/diffguide.log"
+	logPath := "/tmp/diffstory.log"
 	os.Remove(logPath)
 
 	logger := Setup(true)
@@ -29,7 +29,7 @@ func TestSetup_EnabledWritesToLogFile(t *testing.T) {
 }
 
 func TestSetup_DisabledDoesNotWriteLogFile(t *testing.T) {
-	logPath := "/tmp/diffguide.log"
+	logPath := "/tmp/diffstory.log"
 	os.Remove(logPath)
 
 	logger := Setup(false)
