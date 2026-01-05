@@ -13,6 +13,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/kaptinlin/jsonrepair"
 	"github.com/mchowning/diffstory/internal/config"
 	"github.com/mchowning/diffstory/internal/diff"
 	"github.com/mchowning/diffstory/internal/model"
@@ -169,7 +170,7 @@ func generateReviewCmd(ctx context.Context, cfg *config.Config, workDir string, 
 		}
 
 		// Step 6: Parse LLM response
-		response, err := extractLLMResponse(output)
+		response, err := extractLLMResponse(output, logger)
 		if err != nil {
 			if logger != nil {
 				logger.Error("LLM response parse failed", "output", output, "error", err)
@@ -231,18 +232,37 @@ func buildHunksJSON(hunks []diff.ParsedHunk) (string, error) {
 }
 
 // extractLLMResponse parses the LLM output to find JSON response
-func extractLLMResponse(output string) (*LLMResponse, error) {
+func extractLLMResponse(output string, logger *slog.Logger) (*LLMResponse, error) {
 	// Find the first '{' character (LLM may include preamble)
 	start := strings.Index(output, "{")
 	if start == -1 {
 		return nil, fmt.Errorf("no JSON object found in response")
 	}
 
-	// Use json.Decoder to parse exactly one JSON object
-	decoder := json.NewDecoder(strings.NewReader(output[start:]))
+	jsonStr := output[start:]
+
+	// Try parsing as-is first
+	decoder := json.NewDecoder(strings.NewReader(jsonStr))
 	var response LLMResponse
 	if err := decoder.Decode(&response); err != nil {
-		return nil, fmt.Errorf("failed to decode JSON: %w", err)
+		// Attempt repair
+		repaired, repairErr := jsonrepair.JSONRepair(jsonStr)
+		if repairErr != nil {
+			return nil, fmt.Errorf("failed to decode JSON: %w (repair also failed: %v)", err, repairErr)
+		}
+
+		// Try parsing repaired JSON
+		decoder = json.NewDecoder(strings.NewReader(repaired))
+		if err := decoder.Decode(&response); err != nil {
+			return nil, fmt.Errorf("failed to decode repaired JSON: %w", err)
+		}
+
+		// Log that repair was needed
+		if logger != nil {
+			logger.Info("JSON repair applied to LLM output",
+				"originalLength", len(jsonStr),
+				"repairedLength", len(repaired))
+		}
 	}
 
 	return &response, nil

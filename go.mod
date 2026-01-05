@@ -1,6 +1,6 @@
 module github.com/mchowning/diffstory
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/alecthomas/chroma/v2 v2.21.1
@@ -23,6 +23,7 @@ require (
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/google/jsonschema-go v0.3.0 // indirect
+	github.com/kaptinlin/jsonrepair v0.2.6 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect

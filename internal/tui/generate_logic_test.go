@@ -11,7 +11,7 @@ import (
 func TestExtractLLMResponse_CleanOutput(t *testing.T) {
 	input := `{"title": "Test Review", "chapters": []}`
 
-	response, err := extractLLMResponse(input)
+	response, err := extractLLMResponse(input, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -23,7 +23,7 @@ func TestExtractLLMResponse_CleanOutput(t *testing.T) {
 func TestExtractLLMResponse_MarkdownFences(t *testing.T) {
 	input := "```json\n{\"title\": \"Fenced Review\", \"chapters\": []}\n```"
 
-	response, err := extractLLMResponse(input)
+	response, err := extractLLMResponse(input, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestExtractLLMResponse_MarkdownFences(t *testing.T) {
 func TestExtractLLMResponse_MarkdownFencesNoLang(t *testing.T) {
 	input := "```\n{\"title\": \"No Lang\", \"chapters\": []}\n```"
 
-	response, err := extractLLMResponse(input)
+	response, err := extractLLMResponse(input, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -51,7 +51,7 @@ func TestExtractLLMResponse_SurroundingText(t *testing.T) {
 
 I hope this helps!`
 
-	response, err := extractLLMResponse(input)
+	response, err := extractLLMResponse(input, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -79,7 +79,7 @@ func TestExtractLLMResponse_NestedBraces(t *testing.T) {
 		]
 	}`
 
-	response, err := extractLLMResponse(input)
+	response, err := extractLLMResponse(input, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -94,27 +94,35 @@ func TestExtractLLMResponse_NestedBraces(t *testing.T) {
 func TestExtractLLMResponse_NoJSON(t *testing.T) {
 	input := "This is just plain text with no JSON at all."
 
-	_, err := extractLLMResponse(input)
+	_, err := extractLLMResponse(input, nil)
 	if err == nil {
 		t.Fatal("expected error for missing JSON")
 	}
 }
 
 func TestExtractLLMResponse_UnclosedBrace(t *testing.T) {
+	// Missing closing brackets - should be repaired
 	input := `{"title": "Unclosed", "chapters": [`
 
-	_, err := extractLLMResponse(input)
-	if err == nil {
-		t.Fatal("expected error for unclosed brace")
+	response, err := extractLLMResponse(input, nil)
+	if err != nil {
+		t.Fatalf("expected repair to succeed, got: %v", err)
+	}
+	if response.Title != "Unclosed" {
+		t.Errorf("expected title 'Unclosed', got %q", response.Title)
 	}
 }
 
 func TestExtractLLMResponse_InvalidJSON(t *testing.T) {
+	// Unquoted value - jsonrepair can fix this
 	input := `{"title": invalid}`
 
-	_, err := extractLLMResponse(input)
-	if err == nil {
-		t.Fatal("expected error for invalid JSON")
+	response, err := extractLLMResponse(input, nil)
+	if err != nil {
+		t.Fatalf("expected repair to succeed, got: %v", err)
+	}
+	if response.Title != "invalid" {
+		t.Errorf("expected title 'invalid', got %q", response.Title)
 	}
 }
 
@@ -138,12 +146,35 @@ func TestExtractLLMResponse_UnbalancedBracesInStringValues(t *testing.T) {
 		]
 	}`
 
-	response, err := extractLLMResponse(input)
+	response, err := extractLLMResponse(input, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if response.Title != "Test" {
 		t.Errorf("expected title 'Test', got %q", response.Title)
+	}
+}
+
+func TestExtractLLMResponse_TrailingComma(t *testing.T) {
+	// Trailing comma - should be repaired
+	input := `{"title": "Test", "chapters": [],}`
+
+	response, err := extractLLMResponse(input, nil)
+	if err != nil {
+		t.Fatalf("expected repair to succeed, got: %v", err)
+	}
+	if response.Title != "Test" {
+		t.Errorf("expected title 'Test', got %q", response.Title)
+	}
+}
+
+func TestExtractLLMResponse_Unrepairable(t *testing.T) {
+	// Completely malformed - should fail even after repair attempt
+	input := `not json at all {{{`
+
+	_, err := extractLLMResponse(input, nil)
+	if err == nil {
+		t.Fatal("expected error for unrepairable JSON")
 	}
 }
 
