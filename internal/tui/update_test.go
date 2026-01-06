@@ -1952,11 +1952,11 @@ func TestUpdate_EscapeInSourcePickerCancelsGenerate(t *testing.T) {
 
 // Filter Level Tests
 
-func TestModel_FilterLevelDefaultsToMediumWithNilConfig(t *testing.T) {
+func TestModel_FilterLevelDefaultsToLowWithNilConfig(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 
-	if m.FilterLevel() != tui.FilterLevelMedium {
-		t.Errorf("FilterLevel() = %v, want FilterLevelMedium with nil config", m.FilterLevel())
+	if m.FilterLevel() != tui.FilterLevelLow {
+		t.Errorf("FilterLevel() = %v, want FilterLevelLow with nil config", m.FilterLevel())
 	}
 }
 

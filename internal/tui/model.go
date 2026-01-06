@@ -118,15 +118,15 @@ func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *
 	ctx.SetHeight(5)
 
 	// Initialize filter level from config
-	filterLevel := FilterLevelMedium // default
+	filterLevel := FilterLevelLow // default
 	if cfg != nil {
 		switch cfg.DefaultFilterLevel {
-		case "low":
-			filterLevel = FilterLevelLow
+		case "medium":
+			filterLevel = FilterLevelMedium
 		case "high":
 			filterLevel = FilterLevelHigh
 		default:
-			filterLevel = FilterLevelMedium
+			filterLevel = FilterLevelLow
 		}
 	}
 

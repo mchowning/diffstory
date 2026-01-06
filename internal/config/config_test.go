@@ -414,7 +414,7 @@ func TestLoad_ErrorsWhenBothJSONAndJSONCExist(t *testing.T) {
 	}
 }
 
-func TestLoad_DefaultFilterLevelDefaultsToMedium(t *testing.T) {
+func TestLoad_DefaultFilterLevelDefaultsToLow(t *testing.T) {
 	tmpDir := t.TempDir()
 	configDir := filepath.Join(tmpDir, "diffstory")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
@@ -435,8 +435,8 @@ func TestLoad_DefaultFilterLevelDefaultsToMedium(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if cfg.DefaultFilterLevel != "medium" {
-		t.Errorf("expected defaultFilterLevel to be 'medium', got %q", cfg.DefaultFilterLevel)
+	if cfg.DefaultFilterLevel != "low" {
+		t.Errorf("expected defaultFilterLevel to be 'low', got %q", cfg.DefaultFilterLevel)
 	}
 }
 

@@ -53,7 +53,7 @@ func Load() (*Config, error) {
 			cfg.DiffCommand = []string{"git", "diff", "HEAD"}
 		}
 		if cfg.DefaultFilterLevel == "" {
-			cfg.DefaultFilterLevel = "medium"
+			cfg.DefaultFilterLevel = "low"
 		}
 
 		return &cfg, nil
