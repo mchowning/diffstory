@@ -7,8 +7,8 @@ var (
 	activeBorderColor   = lipgloss.Color("63")
 	inactiveBorderColor = lipgloss.Color("240")
 
-	// Section list - use prefix glyph for accessibility
-	selectedPrefix = "› "
+	// Section list - indented to align with chapter title text
+	selectedPrefix = "  "
 	normalPrefix   = "  "
 
 	// Chapter headers in section pane

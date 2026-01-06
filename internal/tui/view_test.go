@@ -146,9 +146,9 @@ func TestView_SelectedSectionHasPrefix(t *testing.T) {
 	m := modelWithReviewAndSize(2)
 	view := m.View()
 
-	// First section should be selected with "› " prefix (showing title)
-	if !strings.Contains(view, "› Title A") {
-		t.Error("selected section should have '› ' prefix with title")
+	// First section should be selected with "  " prefix (showing title)
+	if !strings.Contains(view, "  Title A") {
+		t.Error("selected section should have '  ' prefix with title")
 	}
 }
 
