@@ -84,8 +84,8 @@ func (m Model) renderReviewState() string {
 	}
 
 	// Layout:
-	// Left column (1/3 width): Sections + Description + Files (3 panels)
-	// Right column (2/3 width): Diff (full height)
+	// Left column (1/3 width): Sections + Files (2 panels)
+	// Right column (2/3 width): Description + Diff (2 panels stacked)
 	leftWidth := m.width / 3
 	rightWidth := m.width - leftWidth - 2 // account for borders
 
@@ -95,29 +95,29 @@ func (m Model) renderReviewState() string {
 		contentHeight-- // account for timestamp line
 	}
 
-	// Sections panel: wraps to content, capped at half screen
+	// Left column: Sections panel wraps to content, capped at half screen
 	sectionHeight := m.sectionPaneHeight(contentHeight / 2)
 
-	// Description panel: wraps to content, capped to leave room for Files
-	const minFilesHeight = 5
-	maxDescriptionHeight := contentHeight - sectionHeight - minFilesHeight
-	if maxDescriptionHeight < 3 {
-		maxDescriptionHeight = 3
-	}
-	descriptionHeight := m.descriptionPaneHeight(leftWidth, maxDescriptionHeight)
+	// Left column: Files panel takes remaining space
+	filesHeight := contentHeight - sectionHeight
 
-	// Files panel: takes remaining space
-	filesHeight := contentHeight - sectionHeight - descriptionHeight
+	// Right column: Description panel wraps to content (using right column width)
+	descriptionHeight := m.descriptionPaneHeight(rightWidth, contentHeight/2)
+
+	// Right column: Diff panel takes remaining space
+	diffHeight := contentHeight - descriptionHeight
 
 	sectionPane := m.renderSectionPane(leftWidth, sectionHeight)
-	descriptionPane := m.renderDescriptionPane(leftWidth, descriptionHeight)
 	filesPane := m.renderFilesPane(leftWidth, filesHeight)
 
-	// Join Sections, Description, and Files vertically to create left column
-	leftColumn := lipgloss.JoinVertical(lipgloss.Left, sectionPane, descriptionPane, filesPane)
+	descriptionPane := m.renderDescriptionPane(rightWidth, descriptionHeight)
+	diffPane := m.renderDiffPaneWithTitle(rightWidth, diffHeight)
 
-	// Diff panel gets full height
-	diffPane := m.renderDiffPaneWithTitle(rightWidth, contentHeight)
+	// Join Sections and Files vertically to create left column
+	leftColumn := lipgloss.JoinVertical(lipgloss.Left, sectionPane, filesPane)
+
+	// Join Description and Diff vertically to create right column
+	rightColumn := lipgloss.JoinVertical(lipgloss.Left, descriptionPane, diffPane)
 
 	header := headerStyle.Render("diffstory - " + m.review.Title)
 	filterLine := m.renderFilterIndicator()
@@ -126,8 +126,8 @@ func (m Model) renderReviewState() string {
 		footer = statusStyle.Render(m.statusMsg) + "  " + footer
 	}
 
-	// Join left column with diff horizontally
-	content := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, diffPane)
+	// Join left column with right column horizontally
+	content := lipgloss.JoinHorizontal(lipgloss.Top, leftColumn, rightColumn)
 
 	if timestampLine != "" {
 		return lipgloss.JoinVertical(lipgloss.Left, header, timestampLine, content, filterLine, footer)
@@ -302,19 +302,34 @@ func (m Model) renderDescriptionPane(width, height int) string {
 		}
 	}
 
-	// Wrap narrative text to fit panel width (accounting for borders)
-	contentWidth := width - 2
+	// Calculate responsive horizontal padding
+	hPadding := CalcDescriptionPadding(width)
+
+	// Content width accounts for borders and horizontal padding on both sides
+	contentWidth := width - 2 - (hPadding * 2)
+	if contentWidth < 10 {
+		contentWidth = 10
+	}
+
 	var content string
 	if narrative != "" {
 		lines := wrapText(narrative, contentWidth)
-		content = strings.Join(lines, "\n")
+		// Apply horizontal padding to each line
+		paddedLines := make([]string, 0, len(lines)+2)
+		paddedLines = append(paddedLines, "") // vertical padding top
+		padding := strings.Repeat(" ", hPadding)
+		for _, line := range lines {
+			paddedLines = append(paddedLines, padding+line)
+		}
+		paddedLines = append(paddedLines, "") // vertical padding bottom
+		content = strings.Join(paddedLines, "\n")
 	}
 
 	return renderBorderedPanel("Description", content, width, height, false)
 }
 
 func (m Model) descriptionPaneHeight(width, maxHeight int) int {
-	const minHeight = 3 // 1 content line + 2 border lines
+	const minHeight = 5 // 2 border lines + 2 vertical padding lines + 1 content line minimum
 
 	if m.review == nil {
 		return minHeight
@@ -330,12 +345,17 @@ func (m Model) descriptionPaneHeight(width, maxHeight int) int {
 		return minHeight
 	}
 
-	// Calculate wrapped line count
-	contentWidth := width - 2 // account for borders
+	// Calculate content width accounting for borders and horizontal padding
+	hPadding := CalcDescriptionPadding(width)
+	contentWidth := width - 2 - (hPadding * 2)
+	if contentWidth < 10 {
+		contentWidth = 10
+	}
+
 	lines := wrapText(narrative, contentWidth)
 
-	// Height = wrapped lines + 2 for borders, capped at maxHeight
-	height := len(lines) + 2
+	// Height = wrapped lines + 2 borders + 2 vertical padding lines
+	height := len(lines) + 4
 	if height < minHeight {
 		height = minHeight
 	}

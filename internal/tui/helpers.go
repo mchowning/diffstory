@@ -2,6 +2,20 @@ package tui
 
 import "strings"
 
+// CalcDescriptionPadding returns the horizontal padding for the description pane.
+// Uses capped linear scaling: padding grows with width but caps at a maximum.
+func CalcDescriptionPadding(width int) int {
+	// Approximately 5% of width on each side, capped at 8 characters
+	padding := width / 20
+	if padding < 1 {
+		padding = 1
+	}
+	if padding > 8 {
+		padding = 8
+	}
+	return padding
+}
+
 // Truncate shortens a string to maxLen, adding "…" if truncated
 func Truncate(s string, maxLen int) string {
 	if len(s) <= maxLen {
