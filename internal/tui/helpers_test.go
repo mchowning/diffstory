@@ -26,10 +26,10 @@ func TestCalcDescriptionPadding_GrowsWithWidth(t *testing.T) {
 }
 
 func TestCalcDescriptionPadding_CapsAtMaximum(t *testing.T) {
-	// Padding should cap at 8 for very wide terminals
+	// Padding should cap at 16 for very wide terminals
 	result := tui.CalcDescriptionPadding(500)
-	if result != 8 {
-		t.Errorf("CalcDescriptionPadding(500) = %d, want 8 (maximum)", result)
+	if result != 16 {
+		t.Errorf("CalcDescriptionPadding(500) = %d, want 16 (maximum)", result)
 	}
 }
 
