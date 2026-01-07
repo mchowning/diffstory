@@ -1535,3 +1535,131 @@ func TestView_CompoundFilteringAppliesBothFilters(t *testing.T) {
 		t.Error("compound filter should hide low importance test code")
 	}
 }
+
+// Files Header Filtered Label Tests
+
+func TestView_FilesHeaderShowsFilteredWhenFileCompletelyHidden(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// One file with only low importance hunks - will be completely hidden by high filter
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Section",
+			Hunks: []model.Hunk{
+				{File: "visible.go", Diff: "+high", Importance: "high"},
+				{File: "hidden.go", Diff: "+low", Importance: "low"},
+			},
+		},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Files header should show "(filtered)" because hidden.go is completely hidden
+	if !strings.Contains(view, "Files (filtered)") {
+		t.Error("files header should show '(filtered)' when a file is completely hidden by filter")
+	}
+}
+
+func TestView_FilesHeaderNoFilteredWhenAllFilesHaveVisibleHunks(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "high"}
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Both files have high importance hunks - none completely hidden
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Section",
+			Hunks: []model.Hunk{
+				{File: "file1.go", Diff: "+high", Importance: "high"},
+				{File: "file2.go", Diff: "+high", Importance: "high"},
+			},
+		},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Files header should NOT show "(filtered)" - no files completely hidden
+	if strings.Contains(view, "Files (filtered)") {
+		t.Error("files header should NOT show '(filtered)' when all files have visible hunks")
+	}
+	if !strings.Contains(view, "[2] Files") {
+		t.Error("files header should show '[2] Files'")
+	}
+}
+
+func TestView_FilesHeaderNoFilteredWhenDefaultFilter(t *testing.T) {
+	cfg := &config.Config{DefaultFilterLevel: "low"} // Show all
+	m := tui.NewModel("/test/project", cfg, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Section",
+			Hunks: []model.Hunk{
+				{File: "file1.go", Diff: "+low", Importance: "low"},
+				{File: "file2.go", Diff: "+low", Importance: "low"},
+			},
+		},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// With low filter (show all), no files should be hidden
+	if strings.Contains(view, "Files (filtered)") {
+		t.Error("files header should NOT show '(filtered)' when filter shows all")
+	}
+}
+
+func TestView_FilesHeaderShowsFilteredWhenTestFilterHidesFile(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// One file is only tests, one is production code
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
+		{
+			ID:        "1",
+			Narrative: "Section",
+			Hunks: []model.Hunk{
+				{File: "main.go", Diff: "+prod", IsTest: boolPtr(false)},
+				{File: "main_test.go", Diff: "+test", IsTest: boolPtr(true)},
+			},
+		},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Set test filter to Excluding (press t once)
+	tMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("t")}
+	updated, _ = m.Update(tMsg)
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Files header should show "(filtered)" because main_test.go is completely hidden
+	if !strings.Contains(view, "Files (filtered)") {
+		t.Error("files header should show '(filtered)' when test filter hides a file")
+	}
+}

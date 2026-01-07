@@ -171,6 +171,37 @@ func (m Model) sectionHasVisibleHunks(section model.Section) bool {
 	return false
 }
 
+// filesViewHasFilteredContent returns true if any files in the current section
+// are completely hidden because all their hunks are filtered out
+func (m Model) filesViewHasFilteredContent() bool {
+	if m.review == nil {
+		return false
+	}
+	sections := m.review.AllSections()
+	if m.selected >= len(sections) {
+		return false
+	}
+
+	section := sections[m.selected]
+
+	// Get all unique files from hunks
+	allFiles := make(map[string]bool)
+	for _, hunk := range section.Hunks {
+		allFiles[hunk.File] = true
+	}
+
+	// Get files that have at least one visible hunk
+	visibleFiles := make(map[string]bool)
+	for _, hunk := range section.Hunks {
+		if m.hunkPassesFilters(hunk) {
+			visibleFiles[hunk.File] = true
+		}
+	}
+
+	// If any file has no visible hunks, it's completely hidden
+	return len(allFiles) != len(visibleFiles)
+}
+
 // currentViewHasFilteredContent returns true if any hunks in the current view
 // are being filtered out by the active filters
 func (m Model) currentViewHasFilteredContent() bool {
@@ -431,7 +462,12 @@ func (m Model) renderFilesPane(width, height int) string {
 		scrollbar = &ScrollbarInfo{Start: start, Height: sbHeight}
 	}
 
-	return renderBorderedPanelWithScrollbar("[2] Files", content, width, height, m.focusedPanel == PanelFiles, scrollbar)
+	title := "[2] Files"
+	if m.filesViewHasFilteredContent() {
+		title = "[2] Files (filtered)"
+	}
+
+	return renderBorderedPanelWithScrollbar(title, content, width, height, m.focusedPanel == PanelFiles, scrollbar)
 }
 
 func countFiles(nodes []*FileNode) int {
