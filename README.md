@@ -87,10 +87,13 @@ diffstory
 
 | Key | Action |
 |-----|--------|
-| `j` / `k` | Navigate sections up/down |
+| `j` / `k` | Navigate in focused panel (sections, files, or diff) |
 | `J` / `K` | Scroll diff content |
 | `h` / `l` | Cycle panel focus |
 | `0` / `1` / `2` | Focus Diff/Section/Files panel |
+| `<` / `>` | Jump to first/last item |
+| `,` / `.` | Page up/down |
+| `enter` | Select file (when in files panel) |
 | `f` | Cycle importance filter |
 | `t` | Cycle test filter |
 | `G` | Generate review (LLM) |
@@ -214,14 +217,17 @@ cmd/diffstory/
   mcp.go       # MCP server runner
 
 internal/
+  config/      # Configuration loading
+  diff/        # Diff parsing utilities
+  highlight/   # Syntax highlighting
+  logging/     # Debug logging
+  mcpserver/   # MCP server implementation
   model/       # Review data structures
-  storage/     # File-based persistence
   review/      # Shared business logic (validation, normalization)
   server/      # HTTP server implementation
-  mcpserver/   # MCP server implementation
-  watcher/     # File system watcher
+  storage/     # File-based persistence
   tui/         # Terminal UI (Bubble Tea)
-  highlight/   # Syntax highlighting
+  watcher/     # File system watcher
 ```
 
 ## License
