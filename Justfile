@@ -1,7 +1,9 @@
-# Build and install diffguide to ~/dotfiles/bin/
-install:
-    go build -o ~/dotfiles/bin/diffstory ./cmd/diffstory/
+import? 'Justfile.local'
+
+# Build and install diffstory to specified path
+install path:
+    nix develop -c go build -o {{path}} ./cmd/diffstory/
 
 # Start the MCP server
 mcp:
-    go run ./cmd/diffstory mcp
+    nix develop -c go run ./cmd/diffstory mcp
