@@ -1,6 +1,6 @@
 # diffstory
 
-A terminal UI viewer for code reviews. Receives structured review data via HTTP or MCP (Model Context Protocol) and displays it in an interactive TUI with syntax highlighting.
+A terminal UI viewer for code reviews. Receives structured review data via HTTP and displays it in an interactive TUI with syntax highlighting.
 
 Designed for use with Claude Code - when Claude reviews your code, the results appear in a dedicated viewer with syntax-highlighted diffs, organized by topic.
 
@@ -23,12 +23,10 @@ nix develop -c go build -o diffstory ./cmd/diffstory/
    go build -o ~/bin/diffstory ./cmd/diffstory/
    ```
 
-2. Register the MCP server with Claude Code:
+2. Start the HTTP server in your project directory:
    ```bash
-   claude mcp add --transport stdio diffstory --scope user -- ~/bin/diffstory mcp
+   diffstory server
    ```
-
-3. Restart Claude Code to pick up the new MCP server.
 
 ### Workflow
 
@@ -146,17 +144,6 @@ curl -X POST http://localhost:8765/review \
   }'
 ```
 
-### MCP Server
-
-Run as an MCP server (used by Claude Code):
-
-```bash
-diffstory mcp      # Runs on stdio
-diffstory mcp -v   # Verbose logging to stderr
-```
-
-See [Using with Claude Code](#using-with-claude-code) for setup instructions.
-
 ## Review Data Format
 
 Reviews are JSON objects with this structure:
@@ -182,12 +169,18 @@ Reviews are JSON objects with this structure:
 }
 ```
 
+**Field guidance:**
+
+- **narrative**: Should be understandable on its own and connect smoothly to adjacent sections, building a coherent narrative arc
+- **diff**: Complete unified diff content - include all lines, do not truncate or summarize
+- **importance**: `high` (critical changes), `medium` (significant changes), or `low` (minor changes)
+- **isTest** (optional): `true` for test code changes, `false` for production code
+
 ## How It Works
 
 1. **Storage**: Reviews are stored in `~/.diffstory/reviews/` as JSON files, hashed by working directory
 2. **File Watching**: The TUI watches for file changes and updates automatically
 3. **Syntax Highlighting**: Diffs are displayed with syntax-aware colorization
-4. **Multi-source**: Both HTTP and MCP interfaces write to the same storage, so the TUI shows reviews from either source
 
 ## Development
 
@@ -203,9 +196,6 @@ nix develop -c go run ./cmd/diffstory/
 
 # Run the HTTP server
 nix develop -c go run ./cmd/diffstory/ server -v
-
-# Run the MCP server
-nix develop -c go run ./cmd/diffstory/ mcp -v
 ```
 
 ## Architecture
@@ -214,14 +204,12 @@ nix develop -c go run ./cmd/diffstory/ mcp -v
 cmd/diffstory/
   main.go      # CLI entry point
   server.go    # HTTP server runner
-  mcp.go       # MCP server runner
 
 internal/
   config/      # Configuration loading
   diff/        # Diff parsing utilities
   highlight/   # Syntax highlighting
   logging/     # Debug logging
-  mcpserver/   # MCP server implementation
   model/       # Review data structures
   review/      # Shared business logic (validation, normalization)
   server/      # HTTP server implementation

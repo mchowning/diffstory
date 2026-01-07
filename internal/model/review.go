@@ -75,22 +75,22 @@ func NewReviewWithSections(workDir, title string, sections []Section) Review {
 }
 
 type Chapter struct {
-	ID       string    `json:"id" jsonschema_description:"Unique identifier for this chapter"`
-	Title    string    `json:"title" jsonschema_description:"Short chapter title (~20-30 characters)"`
-	Sections []Section `json:"sections" jsonschema_description:"Sections belonging to this chapter"`
+	ID       string    `json:"id"`
+	Title    string    `json:"title"`
+	Sections []Section `json:"sections"`
 }
 
 type Section struct {
-	ID        string `json:"id" jsonschema_description:"Unique identifier for this section"`
-	Title     string `json:"title" jsonschema_description:"Short title for list display (~30-40 characters)"`
-	Narrative string `json:"narrative" jsonschema_description:"Summary explaining what changed and why - should be understandable on its own AND connect smoothly to adjacent sections, building a coherent narrative arc"`
-	Hunks     []Hunk `json:"hunks" jsonschema_description:"Code changes belonging to this section"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Narrative string `json:"narrative"`
+	Hunks     []Hunk `json:"hunks"`
 }
 
 type Hunk struct {
-	File       string `json:"file" jsonschema_description:"File path relative to working directory"`
-	StartLine  int    `json:"startLine" jsonschema_description:"Starting line number of the hunk"`
-	Diff       string `json:"diff" jsonschema_description:"Complete unified diff content - include ALL lines, do not truncate or summarize"`
-	Importance string `json:"importance" jsonschema:"enum=high,enum=medium,enum=low" jsonschema_description:"Importance level: high (critical changes), medium (significant changes), or low (minor changes)"`
-	IsTest     *bool  `json:"isTest,omitempty" jsonschema_description:"True if this hunk contains test code changes, false for production code"`
+	File       string `json:"file"`
+	StartLine  int    `json:"startLine"`
+	Diff       string `json:"diff"`
+	Importance string `json:"importance"`
+	IsTest     *bool  `json:"isTest,omitempty"`
 }

@@ -25,15 +25,6 @@ func main() {
 		return
 	}
 
-	if len(os.Args) > 1 && os.Args[1] == "mcp" {
-		// MCP server mode
-		mcpCmd := flag.NewFlagSet("mcp", flag.ExitOnError)
-		verbose := mcpCmd.Bool("v", false, "Enable verbose logging (logs to stderr)")
-		mcpCmd.Parse(os.Args[2:])
-		runMCP(*verbose)
-		return
-	}
-
 	// Viewer mode (default)
 	debug := flag.Bool("debug", false, "Enable debug logging to /tmp/diffstory.log")
 	flag.Parse()
