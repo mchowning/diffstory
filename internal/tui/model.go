@@ -3,6 +3,7 @@ package tui
 import (
 	"context"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -37,6 +38,10 @@ const (
 	GenerateUIStateContextInput
 	GenerateUIStateValidationError
 )
+
+// DefaultReviewerInstructions is the default content shown in the context input textarea.
+// Users can edit or extend these instructions before generating a review.
+const DefaultReviewerInstructions = "Prefer many small, focused sections over fewer large ones. Keep section narratives to 1-2 sentences explaining what and why. "
 
 type Model struct {
 	review       *model.Review
@@ -115,7 +120,15 @@ func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *
 	ctx.Placeholder = "Additional context for the reviewer (optional)..."
 	ctx.CharLimit = 2000
 	ctx.SetWidth(60)
-	ctx.SetHeight(5)
+	ctx.SetValue(DefaultReviewerInstructions)
+	ctx.SetHeight(calcTextareaHeight(ctx.Value(), 60))
+
+	// Remove cursor line background highlight to avoid highlighting entire wrapped text
+	focusedStyle, blurredStyle := textarea.DefaultStyles()
+	focusedStyle.CursorLine = lipgloss.NewStyle()
+	ctx.FocusedStyle = focusedStyle
+	ctx.BlurredStyle = blurredStyle
+	ctx.ShowLineNumbers = false
 
 	// Initialize filter level from config
 	filterLevel := FilterLevelLow // default
@@ -348,4 +361,21 @@ func (m Model) extractFilteredFilePaths(section model.Section) []string {
 // hunkPassesFilters returns true if the hunk passes both importance and test filters
 func (m Model) hunkPassesFilters(hunk model.Hunk) bool {
 	return m.filterLevel.PassesFilter(hunk.Importance) && m.testFilter.PassesFilter(hunk.IsTest)
+}
+
+// calcTextareaHeight calculates the visual height needed for text in a textarea of given width.
+func calcTextareaHeight(text string, width int) int {
+	if text == "" {
+		return 1
+	}
+	lines := strings.Split(text, "\n")
+	height := 0
+	for _, line := range lines {
+		if len(line) == 0 {
+			height++
+		} else {
+			height += (len(line) + width - 1) / width
+		}
+	}
+	return max(height, 1)
 }

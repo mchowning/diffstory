@@ -122,10 +122,10 @@ func (m Model) renderCommitSelector() string {
 // renderContextInput renders the context input UI
 func (m Model) renderContextInput() string {
 	var sb strings.Builder
-	sb.WriteString("Additional context (optional)\n\n")
+	sb.WriteString("Instructions for reviewer (editable)\n\n")
 	sb.WriteString(m.contextInput.View())
 	sb.WriteString("\n\n")
-	sb.WriteString(helpStyle.Render("Enter  generate\nShift+Enter  new line\nEsc  cancel"))
+	sb.WriteString(helpStyle.Render("Enter  generate\nAlt+Enter  new line\nEsc  cancel"))
 
 	dialog := dialogStyle.Render(sb.String())
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, dialog)
@@ -265,8 +265,9 @@ func (m Model) updateContextInput(msg tea.KeyMsg) (Model, tea.Cmd) {
 	switch msg.Type {
 	case tea.KeyEnter:
 		if msg.Alt {
-			// Shift+Enter or Alt+Enter: insert newline
+			// Alt+Enter: insert newline
 			m.contextInput.InsertString("\n")
+			m.contextInput.SetHeight(calcTextareaHeight(m.contextInput.Value(), 60))
 			return m, nil
 		}
 		// Enter: submit and generate
@@ -280,6 +281,7 @@ func (m Model) updateContextInput(msg tea.KeyMsg) (Model, tea.Cmd) {
 	default:
 		var cmd tea.Cmd
 		m.contextInput, cmd = m.contextInput.Update(msg)
+		m.contextInput.SetHeight(calcTextareaHeight(m.contextInput.Value(), 60))
 		return m, cmd
 	}
 }

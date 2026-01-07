@@ -55,8 +55,6 @@ Guidelines:
 - Chapter title: ~20-30 characters, describes the theme (e.g., "Authentication", "Database Schema").
 - Each chapter contains one or more small, focused sections.
 - Section title: ~30-40 characters, describes the specific change (e.g., "Add login endpoint handler").
-- Section narrative: 1-2 sentences explaining "what" and "why". Mention key decisions or alternatives if relevant.
-- Prefer multiple granular sections over fewer large ones.
 - Each hunk must have importance: "high", "medium", or "low"
   - high: Critical changes (security, core logic, breaking changes)
   - medium: Important changes (new features, significant refactors)
