@@ -50,10 +50,18 @@ Respond with JSON in this exact format (no markdown fences, no explanation text)
   ]
 }
 
-Guidelines:
-- Organize hunks into chapters, each containing related sections.
+## Grouping Philosophy
+
+Group hunks by FUNCTIONAL PURPOSE, not by file path. Hunks that work together to achieve a goal belong in the same section, even if they span multiple files.
+
+DO NOT:
+- Group by file path. "Changes to auth.go" is never a good chapter title.
+- Separate documentation into its own chapter. Docs belong with their related code.
+
+## Format Requirements
+
+- Each chapter contains one or more sections.
 - Chapter title: ~20-30 characters, describes the theme (e.g., "Authentication", "Database Schema").
-- Each chapter contains one or more small, focused sections.
 - Section title: ~30-40 characters, describes the specific change (e.g., "Add login endpoint handler").
 - Each hunk must have importance: "high", "medium", or "low"
   - high: Critical changes (security, core logic, breaking changes)

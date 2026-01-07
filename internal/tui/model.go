@@ -41,7 +41,9 @@ const (
 
 // DefaultReviewerInstructions is the default content shown in the context input textarea.
 // Users can edit or extend these instructions before generating a review.
-const DefaultReviewerInstructions = "Prefer many small, focused sections over fewer large ones. Keep section narratives to 1-2 sentences explaining what and why. "
+const DefaultReviewerInstructions = `Section sizing: Combine trivial hunks (imports, formatting, small fixes) with the substantial changes they support. Don't leave trivial hunks isolated, but also don't combine unrelated hunks just to reduce section count. A substantial hunk can stand alone; trivial hunks should join their related work.
+
+Keep section narratives to 1-2 sentences explaining what and why. `
 
 type Model struct {
 	review       *model.Review
