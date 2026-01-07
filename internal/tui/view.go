@@ -292,9 +292,6 @@ func (m Model) renderSectionPane(width, height int) string {
 	content := strings.Join(items, "\n")
 
 	title := "[1] Sections"
-	if sectionCount > 0 {
-		title = fmt.Sprintf("[1] Sections [%d/%d]", m.selected+1, sectionCount)
-	}
 
 	// Use conservative estimate for scrollbar (matches scroll triggering)
 	visibleCount := EstimateSectionVisibleCount(height)
@@ -356,7 +353,15 @@ func (m Model) renderDescriptionPane(width, height int) string {
 		content = strings.Join(paddedLines, "\n")
 	}
 
-	return renderBorderedPanel("Description", content, width, height, false)
+	title := "Description"
+	if m.review != nil {
+		sectionCount := m.review.SectionCount()
+		if sectionCount > 0 {
+			title = fmt.Sprintf("Description [%d/%d]", m.selected+1, sectionCount)
+		}
+	}
+
+	return renderBorderedPanel(title, content, width, height, false)
 }
 
 func (m Model) descriptionPaneHeight(width, maxHeight int) int {

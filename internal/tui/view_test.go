@@ -709,7 +709,7 @@ func TestView_HelpOverlayShowsNewKeybindings(t *testing.T) {
 
 // Phase 5: Position Indicators and Visual Polish Tests
 
-func TestView_SectionPanelShowsPositionIndicator(t *testing.T) {
+func TestView_DescriptionPanelShowsPositionIndicator(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -736,9 +736,38 @@ func TestView_SectionPanelShowsPositionIndicator(t *testing.T) {
 
 	view := m.View()
 
-	// Should show [2/5] position indicator
-	if !strings.Contains(view, "[2/5]") {
-		t.Error("section panel should show [2/5] position indicator")
+	// Should show Description [2/5] position indicator
+	if !strings.Contains(view, "Description [2/5]") {
+		t.Error("description panel should show 'Description [2/5]' position indicator")
+	}
+}
+
+func TestView_SectionPanelDoesNotShowPositionIndicator(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review with 5 sections
+	sections := make([]model.Section, 5)
+	for i := range 5 {
+		sections[i] = model.Section{
+			ID:        string(rune('1' + i)),
+			Narrative: "Section " + string(rune('A'+i)),
+			Hunks:     []model.Hunk{{File: "file.go", Diff: "+added"}},
+		}
+	}
+	review := model.NewReviewWithSections("/test/project", "Test", sections)
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Sections header should NOT contain position indicator like [1/5]
+	// It should just show "[1] Sections"
+	if strings.Contains(view, "Sections [1/5]") {
+		t.Error("sections panel should NOT show position indicator - counter moved to Description panel")
 	}
 }
 
