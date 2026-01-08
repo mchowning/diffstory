@@ -2099,3 +2099,166 @@ func TestUpdate_TKeyDoesNothingWithoutReview(t *testing.T) {
 		t.Errorf("TestFilter() = %v, want %v (should not change without review)", result.TestFilter(), tui.TestFilterAll)
 	}
 }
+
+// Untracked Files Warning Dialog Tests
+
+func modelInUntrackedWarningState() tui.Model {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, _ := storage.NewStoreWithDir("/tmp/test-diffstory-store")
+	m := tui.NewModel("/test/project", cfg, store, nil)
+	m = m.SetUntrackedWarningState([]string{"newfile.txt", "another.go"})
+	return m
+}
+
+func TestUpdate_SpaceInUntrackedWarningStartsGeneration(t *testing.T) {
+	m := modelInUntrackedWarningState()
+
+	if m.GenerateUIState() != tui.GenerateUIStateUntrackedWarning {
+		t.Fatalf("expected GenerateUIStateUntrackedWarning, got %v", m.GenerateUIState())
+	}
+
+	// Press space to proceed without staging
+	spaceMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(" ")}
+	updated, cmd := m.Update(spaceMsg)
+	result := updated.(tui.Model)
+
+	// Should start generation
+	if result.GenerateUIState() != tui.GenerateUIStateNone {
+		t.Errorf("expected GenerateUIStateNone (generation started), got %v", result.GenerateUIState())
+	}
+	if !result.IsGenerating() {
+		t.Error("expected IsGenerating() to be true")
+	}
+	if cmd == nil {
+		t.Error("expected a command to start generation")
+	}
+}
+
+func TestUpdate_EscapeInUntrackedWarningReturnsToContextInput(t *testing.T) {
+	m := modelInUntrackedWarningState()
+
+	// Press escape to go back to context input
+	escMsg := tea.KeyMsg{Type: tea.KeyEscape}
+	updated, _ := m.Update(escMsg)
+	result := updated.(tui.Model)
+
+	if result.GenerateUIState() != tui.GenerateUIStateContextInput {
+		t.Errorf("expected GenerateUIStateContextInput after escape, got %v", result.GenerateUIState())
+	}
+}
+
+func TestUpdate_CheckUntrackedMsgWithFilesShowsWarning(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, _ := storage.NewStoreWithDir("/tmp/test-diffstory-store")
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Send CheckUntrackedMsg with files
+	msg := tui.CheckUntrackedMsg{Files: []string{"untracked.txt"}}
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.GenerateUIState() != tui.GenerateUIStateUntrackedWarning {
+		t.Errorf("expected GenerateUIStateUntrackedWarning, got %v", result.GenerateUIState())
+	}
+}
+
+func TestUpdate_CheckUntrackedMsgWithNoFilesStartsGeneration(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, _ := storage.NewStoreWithDir("/tmp/test-diffstory-store")
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Set selected diff source
+	m = m.SetSelectedDiffSource()
+
+	// Send CheckUntrackedMsg with no files - should start generation
+	msg := tui.CheckUntrackedMsg{Files: nil}
+	updated, cmd := m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Should start generation (return to normal state with generation in progress)
+	if result.GenerateUIState() != tui.GenerateUIStateNone {
+		t.Errorf("expected GenerateUIStateNone (generation started), got %v", result.GenerateUIState())
+	}
+	if !result.IsGenerating() {
+		t.Error("expected IsGenerating() to be true")
+	}
+	if cmd == nil {
+		t.Error("expected a command to start generation")
+	}
+}
+
+func TestUpdate_CheckUntrackedMsgWithErrorStartsGeneration(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, _ := storage.NewStoreWithDir("/tmp/test-diffstory-store")
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Set selected diff source
+	m = m.SetSelectedDiffSource()
+
+	// Send CheckUntrackedMsg with error (should proceed with generation, not block)
+	msg := tui.CheckUntrackedMsg{Err: errors.New("git failed")}
+	updated, cmd := m.Update(msg)
+	result := updated.(tui.Model)
+
+	// On error, we proceed with generation anyway
+	if result.GenerateUIState() != tui.GenerateUIStateNone {
+		t.Errorf("expected GenerateUIStateNone (generation started), got %v", result.GenerateUIState())
+	}
+	if !result.IsGenerating() {
+		t.Error("expected IsGenerating() to be true")
+	}
+	if cmd == nil {
+		t.Error("expected a command to start generation")
+	}
+}
+
+func TestUpdate_SelectUncommittedChangesGoesToContextInput(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, _ := storage.NewStoreWithDir("/tmp/test-diffstory-store")
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Enter source picker state with G key
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	if m.GenerateUIState() != tui.GenerateUIStateSourcePicker {
+		t.Fatalf("expected GenerateUIStateSourcePicker, got %v", m.GenerateUIState())
+	}
+
+	// First source should be "Uncommitted changes" - press enter to select
+	enterMsg := tea.KeyMsg{Type: tea.KeyEnter}
+	updated, _ = m.Update(enterMsg)
+	result := updated.(tui.Model)
+
+	// Should go to context input first (untracked check happens on submit)
+	if result.GenerateUIState() != tui.GenerateUIStateContextInput {
+		t.Errorf("expected GenerateUIStateContextInput, got %v", result.GenerateUIState())
+	}
+}
+
+func TestUpdate_SelectNonUncommittedSourceGoesToContextInput(t *testing.T) {
+	cfg := &config.Config{LLMCommand: []string{"echo", "test"}}
+	store, _ := storage.NewStoreWithDir("/tmp/test-diffstory-store")
+	m := tui.NewModel("/test/project", cfg, store, nil)
+
+	// Enter source picker state with G key
+	gMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+	updated, _ := m.Update(gMsg)
+	m = updated.(tui.Model)
+
+	// Navigate to "Staged changes" (second option)
+	jMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")}
+	updated, _ = m.Update(jMsg)
+	m = updated.(tui.Model)
+
+	// Select staged changes
+	enterMsg := tea.KeyMsg{Type: tea.KeyEnter}
+	updated, _ = m.Update(enterMsg)
+	result := updated.(tui.Model)
+
+	// Should go directly to context input (no untracked check for staged changes)
+	if result.GenerateUIState() != tui.GenerateUIStateContextInput {
+		t.Errorf("expected GenerateUIStateContextInput for staged changes, got %v", result.GenerateUIState())
+	}
+}

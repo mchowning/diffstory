@@ -63,3 +63,12 @@ type GenerateValidationFailedMsg struct {
 	Invalid    []string
 	Response   *LLMResponse // The partial response for "proceed with partial" option
 }
+
+// CheckUntrackedMsg delivers the result of checking for untracked files
+type CheckUntrackedMsg struct {
+	Files []string
+	Err   error
+}
+
+// StageCompleteMsg signals that git add completed successfully
+type StageCompleteMsg struct{}

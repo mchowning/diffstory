@@ -1,6 +1,10 @@
 package tui
 
 import (
+	"context"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -493,6 +497,105 @@ func TestAssemblePartialReview_PreservesIsTestField(t *testing.T) {
 	unclassifiedSection := review.Chapters[1].Sections[0]
 	if unclassifiedSection.Hunks[0].IsTest != nil {
 		t.Error("expected IsTest to be nil for unclassified hunk")
+	}
+}
+
+func setupTempGitRepo(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+
+	// Initialize git repo
+	cmd := exec.Command("git", "init")
+	cmd.Dir = dir
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("failed to init git repo: %v", err)
+	}
+
+	// Configure git user for commits
+	cmd = exec.Command("git", "config", "user.email", "test@test.com")
+	cmd.Dir = dir
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("failed to configure git email: %v", err)
+	}
+	cmd = exec.Command("git", "config", "user.name", "Test")
+	cmd.Dir = dir
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("failed to configure git name: %v", err)
+	}
+
+	return dir
+}
+
+func TestGetUntrackedFiles_ReturnsUntrackedFiles(t *testing.T) {
+	dir := setupTempGitRepo(t)
+
+	// Create an untracked file
+	untrackedPath := filepath.Join(dir, "untracked.txt")
+	if err := os.WriteFile(untrackedPath, []byte("content"), 0644); err != nil {
+		t.Fatalf("failed to create untracked file: %v", err)
+	}
+
+	files, err := getUntrackedFiles(context.Background(), dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(files) != 1 {
+		t.Fatalf("expected 1 untracked file, got %d", len(files))
+	}
+	if files[0] != "untracked.txt" {
+		t.Errorf("expected 'untracked.txt', got %q", files[0])
+	}
+}
+
+func TestGetUntrackedFiles_ReturnsEmptyWhenNoUntrackedFiles(t *testing.T) {
+	dir := setupTempGitRepo(t)
+
+	files, err := getUntrackedFiles(context.Background(), dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(files) != 0 {
+		t.Errorf("expected no untracked files, got %d", len(files))
+	}
+}
+
+func TestGetUntrackedFiles_ExcludesTrackedFiles(t *testing.T) {
+	dir := setupTempGitRepo(t)
+
+	// Create and commit a tracked file
+	trackedPath := filepath.Join(dir, "tracked.txt")
+	if err := os.WriteFile(trackedPath, []byte("content"), 0644); err != nil {
+		t.Fatalf("failed to create tracked file: %v", err)
+	}
+	cmd := exec.Command("git", "add", "tracked.txt")
+	cmd.Dir = dir
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("failed to stage file: %v", err)
+	}
+	cmd = exec.Command("git", "commit", "-m", "initial")
+	cmd.Dir = dir
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("failed to commit: %v", err)
+	}
+
+	// Create an untracked file
+	untrackedPath := filepath.Join(dir, "untracked.txt")
+	if err := os.WriteFile(untrackedPath, []byte("content"), 0644); err != nil {
+		t.Fatalf("failed to create untracked file: %v", err)
+	}
+
+	files, err := getUntrackedFiles(context.Background(), dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(files) != 1 {
+		t.Fatalf("expected 1 untracked file, got %d", len(files))
+	}
+	if files[0] != "untracked.txt" {
+		t.Errorf("expected 'untracked.txt', got %q", files[0])
 	}
 }
 

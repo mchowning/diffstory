@@ -185,6 +185,23 @@ func (m Model) updateSourcePicker(msg tea.KeyMsg) (Model, tea.Cmd) {
 	return m, nil
 }
 
+// isUncommittedChangesSource returns true if the source is the "Uncommitted changes" source
+func isUncommittedChangesSource(source DiffSource) bool {
+	return len(source.Command) >= 3 &&
+		source.Command[0] == "git" &&
+		source.Command[1] == "diff" &&
+		source.Command[2] == "HEAD"
+}
+
+// checkUntrackedFilesCmd returns a command that checks for untracked files
+func checkUntrackedFilesCmd(workDir string) tea.Cmd {
+	return func() tea.Msg {
+		ctx := context.Background()
+		files, err := getUntrackedFiles(ctx, workDir)
+		return CheckUntrackedMsg{Files: files, Err: err}
+	}
+}
+
 // updateCommitSelector handles key events in the commit selector state
 func (m Model) updateCommitSelector(msg tea.KeyMsg) (Model, tea.Cmd) {
 	if m.commitInputActive {
@@ -272,6 +289,10 @@ func (m Model) updateContextInput(msg tea.KeyMsg) (Model, tea.Cmd) {
 		}
 		// Enter: submit and generate
 		m.lastContext = m.contextInput.Value()
+		// Check for untracked files when using "Uncommitted changes"
+		if m.selectedDiffSource != nil && isUncommittedChangesSource(*m.selectedDiffSource) {
+			return m, checkUntrackedFilesCmd(m.workDir)
+		}
 		m.generateUIState = GenerateUIStateNone
 		return m, m.startGeneration()
 	case tea.KeyEsc:
@@ -408,4 +429,64 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen-3] + "..."
+}
+
+// renderUntrackedWarning renders the untracked files warning dialog
+func (m Model) renderUntrackedWarning() string {
+	var sb strings.Builder
+	sb.WriteString("Untracked files found\n\n")
+	sb.WriteString("The following files are not tracked by git and\n")
+	sb.WriteString("will not be included in this review:\n\n")
+
+	maxToShow := 5
+	for i, file := range m.untrackedFiles {
+		if i >= maxToShow {
+			remaining := len(m.untrackedFiles) - maxToShow
+			sb.WriteString(fmt.Sprintf("  (and %d more...)\n", remaining))
+			break
+		}
+		sb.WriteString(fmt.Sprintf("  %s\n", file))
+	}
+
+	sb.WriteString("\n")
+
+	help := helpStyle.Render("Space  proceed without untracked\nEnter  stage all and proceed\nEsc    cancel")
+	sb.WriteString(help)
+
+	dialog := dialogStyle.Render(sb.String())
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, dialog)
+}
+
+// updateUntrackedWarning handles key events in the untracked warning state
+func (m Model) updateUntrackedWarning(msg tea.KeyMsg) (Model, tea.Cmd) {
+	switch msg.String() {
+	case " ":
+		// Proceed without untracked files - start generation
+		m.untrackedFiles = nil
+		m.generateUIState = GenerateUIStateNone
+		return m, m.startGeneration()
+	case "enter":
+		// Stage all files and proceed
+		m.untrackedFiles = nil
+		return m.stageAllAndProceed()
+	case "esc":
+		// Return to context input
+		m.generateUIState = GenerateUIStateContextInput
+		m.untrackedFiles = nil
+		m.contextInput.Focus()
+		return m, textarea.Blink
+	}
+	return m, nil
+}
+
+// stageAllAndProceed stages all files with git add and proceeds with generation
+func (m Model) stageAllAndProceed() (Model, tea.Cmd) {
+	return m, func() tea.Msg {
+		ctx := context.Background()
+		_, err := runCommand(ctx, m.workDir, []string{"git", "add", "."}, nil)
+		if err != nil {
+			return GenerateErrorMsg{Err: fmt.Errorf("failed to stage files: %w", err)}
+		}
+		return StageCompleteMsg{}
+	}
 }

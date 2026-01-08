@@ -22,6 +22,8 @@ func (m Model) View() string {
 		return m.renderContextInput()
 	case GenerateUIStateValidationError:
 		return m.renderValidationError()
+	case GenerateUIStateUntrackedWarning:
+		return m.renderUntrackedWarning()
 	}
 
 	// Cancel confirmation prompt

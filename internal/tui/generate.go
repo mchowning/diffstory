@@ -358,6 +358,20 @@ func assemblePartialReview(workDir string, response *LLMResponse, hunks []diff.P
 	return review
 }
 
+func getUntrackedFiles(ctx context.Context, workDir string) ([]string, error) {
+	output, err := runCommand(ctx, workDir, []string{"git", "ls-files", "--others", "--exclude-standard"}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	output = strings.TrimSpace(output)
+	if output == "" {
+		return nil, nil
+	}
+
+	return strings.Split(output, "\n"), nil
+}
+
 func runCommand(ctx context.Context, workDir string, args []string, stdin []byte) (string, error) {
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 	cmd.Dir = workDir

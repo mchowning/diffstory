@@ -37,6 +37,7 @@ const (
 	GenerateUIStateCommitRangeEnd
 	GenerateUIStateContextInput
 	GenerateUIStateValidationError
+	GenerateUIStateUntrackedWarning
 )
 
 // DefaultReviewerInstructions is the default content shown in the context input textarea.
@@ -97,6 +98,9 @@ type Model struct {
 	// Context input state
 	contextInput textarea.Model
 	lastContext  string // Preserved for retry
+
+	// Untracked files warning state
+	untrackedFiles []string
 
 	// Validation error state
 	parsedHunks     []diff.ParsedHunk
@@ -284,6 +288,29 @@ func (m Model) SetCancelFunc(cancel func()) Model {
 
 func (m Model) ShowCancelPrompt() bool {
 	return m.showCancelPrompt
+}
+
+// SetUntrackedWarningState is a test helper to set the untracked warning state
+func (m Model) SetUntrackedWarningState(files []string) Model {
+	m.generateUIState = GenerateUIStateUntrackedWarning
+	m.untrackedFiles = files
+	// Also set a default diff source for testing
+	source := DiffSource{
+		Label:   "Uncommitted changes",
+		Command: []string{"git", "diff", "HEAD", "--no-color", "--no-ext-diff"},
+	}
+	m.selectedDiffSource = &source
+	return m
+}
+
+// SetSelectedDiffSource is a test helper to set a default diff source
+func (m Model) SetSelectedDiffSource() Model {
+	source := DiffSource{
+		Label:   "Uncommitted changes",
+		Command: []string{"git", "diff", "HEAD", "--no-color", "--no-ext-diff"},
+	}
+	m.selectedDiffSource = &source
+	return m
 }
 
 // Commits returns the loaded commit list (for testing)

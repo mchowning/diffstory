@@ -21,6 +21,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.updateContextInput(msg)
 		case GenerateUIStateValidationError:
 			return m.updateValidationError(msg)
+		case GenerateUIStateUntrackedWarning:
+			return m.updateUntrackedWarning(msg)
 		}
 
 		// Handle arrow keys for panel focus cycling
@@ -411,6 +413,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.spinner, cmd = m.spinner.Update(msg)
 			return m, cmd
 		}
+	case CheckUntrackedMsg:
+		if msg.Err != nil {
+			// If we can't check, just proceed with generation
+			m.generateUIState = GenerateUIStateNone
+			return m, m.startGeneration()
+		}
+		if len(msg.Files) > 0 {
+			m.untrackedFiles = msg.Files
+			m.generateUIState = GenerateUIStateUntrackedWarning
+			return m, nil
+		}
+		// No untracked files, proceed with generation
+		m.generateUIState = GenerateUIStateNone
+		return m, m.startGeneration()
+	case StageCompleteMsg:
+		// Staging complete, start generation
+		m.generateUIState = GenerateUIStateNone
+		return m, m.startGeneration()
 	}
 	return m, nil
 }
