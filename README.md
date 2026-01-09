@@ -178,7 +178,7 @@ Reviews are JSON objects with this structure:
 
 ## How It Works
 
-1. **Storage**: Reviews are stored in `~/.diffstory/reviews/` as JSON files, hashed by working directory
+1. **Storage**: Reviews are stored in `~/.cache/diffstory/` (or `XDG_CACHE_HOME/diffstory/`) as JSON files, hashed by working directory
 2. **File Watching**: The TUI watches for file changes and updates automatically
 3. **Syntax Highlighting**: Diffs are displayed with syntax-aware colorization
 

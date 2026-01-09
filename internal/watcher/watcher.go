@@ -24,7 +24,7 @@ type Watcher struct {
 }
 
 // New creates a watcher for the given working directory.
-// Uses the default storage location (~/.diffstory/reviews).
+// Uses the default storage location (~/.cache/diffstory or XDG_CACHE_HOME/diffstory).
 func New(workDir string, logger *slog.Logger) (*Watcher, error) {
 	store, err := storage.NewStore()
 	if err != nil {

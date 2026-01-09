@@ -201,3 +201,47 @@ func TestStore_ReadNonExistentFileReturnsError(t *testing.T) {
 		t.Error("expected error for nonexistent file")
 	}
 }
+
+func TestNewStore_UsesXDGCacheHomeWhenSet(t *testing.T) {
+	tmpDir := t.TempDir()
+	originalXDG := os.Getenv("XDG_CACHE_HOME")
+	t.Cleanup(func() {
+		os.Setenv("XDG_CACHE_HOME", originalXDG)
+	})
+
+	os.Setenv("XDG_CACHE_HOME", tmpDir)
+
+	store, err := storage.NewStore()
+	if err != nil {
+		t.Fatalf("NewStore failed: %v", err)
+	}
+
+	expected := filepath.Join(tmpDir, "diffstory")
+	if store.BaseDir() != expected {
+		t.Errorf("expected BaseDir %q, got %q", expected, store.BaseDir())
+	}
+}
+
+func TestNewStore_FallsBackToDotCacheWhenXDGUnset(t *testing.T) {
+	originalXDG := os.Getenv("XDG_CACHE_HOME")
+	t.Cleanup(func() {
+		os.Setenv("XDG_CACHE_HOME", originalXDG)
+	})
+
+	os.Unsetenv("XDG_CACHE_HOME")
+
+	store, err := storage.NewStore()
+	if err != nil {
+		t.Fatalf("NewStore failed: %v", err)
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatalf("UserHomeDir failed: %v", err)
+	}
+
+	expected := filepath.Join(home, ".cache", "diffstory")
+	if store.BaseDir() != expected {
+		t.Errorf("expected BaseDir %q, got %q", expected, store.BaseDir())
+	}
+}

@@ -16,13 +16,18 @@ type Store struct {
 	baseDir string
 }
 
-// NewStore creates a store with the default base directory (~/.diffstory/reviews)
+// NewStore creates a store with the default base directory (~/.cache/diffstory or XDG_CACHE_HOME/diffstory)
 func NewStore() (*Store, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
+	var baseDir string
+	if xdg := os.Getenv("XDG_CACHE_HOME"); xdg != "" {
+		baseDir = filepath.Join(xdg, "diffstory")
+	} else {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+		baseDir = filepath.Join(home, ".cache", "diffstory")
 	}
-	baseDir := filepath.Join(home, ".diffstory", "reviews")
 	return NewStoreWithDir(baseDir)
 }
 
