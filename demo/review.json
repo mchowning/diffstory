@@ -1,0 +1,57 @@
+{
+  "workingDirectory": "/demo/project",
+  "title": "Add user authentication middleware",
+  "chapters": [
+    {
+      "id": "ch-1",
+      "title": "Core Implementation",
+      "sections": [
+        {
+          "id": "sec-1",
+          "title": "Add JWT authentication middleware",
+          "narrative": "This change introduces JWT-based authentication middleware. The middleware extracts the Bearer token from the Authorization header, validates it against the signing key, and attaches the decoded user claims to the request context for downstream handlers.",
+          "hunks": [
+            {
+              "file": "internal/middleware/auth.go",
+              "startLine": 1,
+              "diff": "@@ -0,0 +1,45 @@\n+package middleware\n+\n+import (\n+\t\"context\"\n+\t\"net/http\"\n+\t\"strings\"\n+\n+\t\"github.com/golang-jwt/jwt/v5\"\n+)\n+\n+type contextKey string\n+\n+const UserClaimsKey contextKey = \"userClaims\"\n+\n+func AuthMiddleware(signingKey []byte) func(http.Handler) http.Handler {\n+\treturn func(next http.Handler) http.Handler {\n+\t\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n+\t\t\tauthHeader := r.Header.Get(\"Authorization\")\n+\t\t\tif !strings.HasPrefix(authHeader, \"Bearer \") {\n+\t\t\t\thttp.Error(w, \"Missing or invalid Authorization header\", http.StatusUnauthorized)\n+\t\t\t\treturn\n+\t\t\t}\n+\n+\t\t\ttokenStr := strings.TrimPrefix(authHeader, \"Bearer \")\n+\t\t\ttoken, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {\n+\t\t\t\treturn signingKey, nil\n+\t\t\t})\n+\t\t\tif err != nil || !token.Valid {\n+\t\t\t\thttp.Error(w, \"Invalid token\", http.StatusUnauthorized)\n+\t\t\t\treturn\n+\t\t\t}\n+\n+\t\t\tctx := context.WithValue(r.Context(), UserClaimsKey, token.Claims)\n+\t\t\tnext.ServeHTTP(w, r.WithContext(ctx))\n+\t\t})\n+\t}\n+}",
+              "importance": "high"
+            }
+          ]
+        },
+        {
+          "id": "sec-2",
+          "title": "Configure protected routes",
+          "narrative": "Updated the router to apply the auth middleware to protected routes. Public endpoints like /health and /login remain accessible without authentication.",
+          "hunks": [
+            {
+              "file": "cmd/server/main.go",
+              "startLine": 25,
+              "diff": "@@ -25,6 +25,8 @@ func main() {\n \trouter := http.NewServeMux()\n \n \t// Public routes\n \trouter.HandleFunc(\"/health\", handlers.Health)\n \trouter.HandleFunc(\"/login\", handlers.Login)\n+\n+\t// Protected routes (with auth middleware)\n+\tprotected := middleware.AuthMiddleware([]byte(os.Getenv(\"JWT_SECRET\")))\n+\trouter.Handle(\"/api/\", protected(http.StripPrefix(\"/api\", apiRouter)))\n \n \tlog.Fatal(http.ListenAndServe(\":8080\", router))\n }",
+              "importance": "medium"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch-2",
+      "title": "Tests",
+      "sections": [
+        {
+          "id": "sec-3",
+          "title": "Add auth middleware tests",
+          "narrative": "Added comprehensive tests for the auth middleware covering valid tokens, expired tokens, malformed tokens, and missing headers.",
+          "hunks": [
+            {
+              "file": "internal/middleware/auth_test.go",
+              "startLine": 1,
+              "diff": "@@ -0,0 +1,89 @@\n+package middleware_test\n+\n+import (\n+\t\"net/http\"\n+\t\"net/http/httptest\"\n+\t\"testing\"\n+\t\"time\"\n+\n+\t\"github.com/golang-jwt/jwt/v5\"\n+\t\"github.com/myapp/internal/middleware\"\n+)\n+\n+var testSigningKey = []byte(\"test-secret-key\")\n+\n+func createTestToken(t *testing.T, exp time.Time) string {\n+\tt.Helper()\n+\ttoken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{\n+\t\t\"sub\": \"user123\",\n+\t\t\"exp\": exp.Unix(),\n+\t})\n+\ttokenStr, err := token.SignedString(testSigningKey)\n+\tif err != nil {\n+\t\tt.Fatalf(\"failed to sign token: %v\", err)\n+\t}\n+\treturn tokenStr\n+}\n+\n+func TestAuthMiddleware_ValidToken(t *testing.T) {\n+\ttoken := createTestToken(t, time.Now().Add(time.Hour))\n+\t// ... test implementation\n+}",
+              "importance": "medium"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
