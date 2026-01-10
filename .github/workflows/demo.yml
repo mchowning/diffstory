@@ -50,6 +50,7 @@ jobs:
 
           # Save GIF to temp location before any git operations
           cp navigation.gif "$RUNNER_TEMP/navigation.gif"
+          rm navigation.gif
 
           # Fetch assets branch or create it
           if git fetch origin assets:assets 2>/dev/null; then
