@@ -4,6 +4,8 @@ A terminal UI viewer for code reviews. Receives structured review data via HTTP 
 
 Designed for use with Claude Code - when Claude reviews your code, the results appear in a dedicated viewer with syntax-highlighted diffs, organized by topic.
 
+![Navigation Demo](https://github.com/mchowning/diffstory/raw/assets/navigation.gif)
+
 ## Installation
 
 ```bash

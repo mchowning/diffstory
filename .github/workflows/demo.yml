@@ -1,0 +1,67 @@
+name: Update Demo GIFs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'demo/**'
+      - 'internal/tui/**'
+      - 'cmd/diffstory/**'
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    # Prevent infinite loop from auto-commits
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Build diffstory
+        run: go build -o diffstory ./cmd/diffstory
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg ttyd gifsicle
+
+      - name: Install VHS
+        run: go install github.com/charmbracelet/vhs@latest
+
+      - name: Generate navigation demo
+        run: vhs demo/navigation.tape
+
+      - name: Optimize GIF
+        run: |
+          gifsicle -O3 --lossy=80 navigation.gif -o navigation-optimized.gif
+          mv navigation-optimized.gif navigation.gif
+
+      - name: Push to assets branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Save GIF to temp location before any git operations
+          cp navigation.gif "$RUNNER_TEMP/navigation.gif"
+
+          # Fetch assets branch or create it
+          if git fetch origin assets:assets 2>/dev/null; then
+            git checkout assets
+          else
+            echo "Assets branch doesn't exist, creating it"
+            git checkout --orphan assets
+            git rm -rf .
+          fi
+
+          # Restore GIF and commit
+          cp "$RUNNER_TEMP/navigation.gif" navigation.gif
+          git add navigation.gif
+          git commit -m "Update navigation demo GIF" || echo "No changes to commit"
+          git push origin assets
