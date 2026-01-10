@@ -18,6 +18,9 @@
             gopls
             golangci-lint
             just
+            vhs      # For generating demo GIFs
+            ffmpeg   # Required by vhs
+            ttyd     # Required by vhs
           ];
 
           shellHook = ''

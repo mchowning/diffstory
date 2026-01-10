@@ -111,7 +111,17 @@ type Model struct {
 	logger *slog.Logger
 }
 
-func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *slog.Logger) Model {
+// ModelOption configures a Model
+type ModelOption func(*Model)
+
+// WithInitialReview sets an initial review to display (bypasses watcher)
+func WithInitialReview(review *model.Review) ModelOption {
+	return func(m *Model) {
+		m.review = review
+	}
+}
+
+func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *slog.Logger, opts ...ModelOption) Model {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
@@ -149,7 +159,7 @@ func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *
 		}
 	}
 
-	return Model{
+	m := Model{
 		workDir:      workDir,
 		focusedPanel: PanelSection,
 		filterLevel:  filterLevel,
@@ -162,6 +172,12 @@ func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *
 		commitInput:  ci,
 		contextInput: ctx,
 	}
+
+	for _, opt := range opts {
+		opt(&m)
+	}
+
+	return m
 }
 
 func (m Model) Init() tea.Cmd {

@@ -2262,3 +2262,66 @@ func TestUpdate_SelectNonUncommittedSourceGoesToContextInput(t *testing.T) {
 		t.Errorf("expected GenerateUIStateContextInput for staged changes, got %v", result.GenerateUIState())
 	}
 }
+
+func TestNewModel_WithInitialReview_SetsReview(t *testing.T) {
+	review := &model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Initial Review",
+		Chapters: []model.Chapter{{
+			ID:    "ch-1",
+			Title: "Chapter 1",
+			Sections: []model.Section{{
+				ID:        "sec-1",
+				Narrative: "Test section",
+			}},
+		}},
+	}
+
+	m := tui.NewModel("/test/project", nil, nil, nil, tui.WithInitialReview(review))
+
+	if m.Review() == nil {
+		t.Fatal("expected review to be set, got nil")
+	}
+	if m.Review().Title != "Initial Review" {
+		t.Errorf("Title = %q, want %q", m.Review().Title, "Initial Review")
+	}
+}
+
+func TestNewModel_WithInitialReview_NilReviewIsNoOp(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil, tui.WithInitialReview(nil))
+
+	if m.Review() != nil {
+		t.Errorf("expected review to be nil, got %v", m.Review())
+	}
+}
+
+func TestUpdate_WindowSizeMsg_InitializesFileTreeForPreloadedReview(t *testing.T) {
+	review := &model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Chapters: []model.Chapter{{
+			ID:    "ch-1",
+			Title: "Chapter 1",
+			Sections: []model.Section{
+				{ID: "sec-1", Narrative: "First", Hunks: []model.Hunk{{File: "a.go", Diff: "+test"}}},
+				{ID: "sec-2", Narrative: "Second", Hunks: []model.Hunk{{File: "b.go", Diff: "+test"}}},
+			},
+		}},
+	}
+	m := tui.NewModel("/test/project", nil, nil, nil, tui.WithInitialReview(review))
+
+	// Before WindowSizeMsg, file tree should not be initialized
+	if m.FlattenedFilesCount() != 0 {
+		t.Errorf("expected no flattened files before WindowSizeMsg, got %d", m.FlattenedFilesCount())
+	}
+
+	// Send WindowSizeMsg to trigger initialization
+	msg := tea.WindowSizeMsg{Width: 100, Height: 50}
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	// After WindowSizeMsg, file tree should be initialized for the pre-loaded review
+	if result.FlattenedFilesCount() == 0 {
+		t.Error("expected flattened files to be initialized after WindowSizeMsg with pre-loaded review")
+	}
+}

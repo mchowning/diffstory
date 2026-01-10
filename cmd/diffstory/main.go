@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mchowning/diffstory/internal/config"
 	"github.com/mchowning/diffstory/internal/logging"
+	"github.com/mchowning/diffstory/internal/model"
 	"github.com/mchowning/diffstory/internal/storage"
 	"github.com/mchowning/diffstory/internal/tui"
 	"github.com/mchowning/diffstory/internal/watcher"
@@ -27,11 +28,12 @@ func main() {
 
 	// Viewer mode (default)
 	debug := flag.Bool("debug", false, "Enable debug logging to /tmp/diffstory.log")
+	reviewPath := flag.String("review", "", "Load review from JSON file (bypasses watcher)")
 	flag.Parse()
-	runViewer(*debug)
+	runViewer(*debug, *reviewPath)
 }
 
-func runViewer(debug bool) {
+func runViewer(debug bool, reviewPath string) {
 	// Load config
 	cfg, err := config.Load()
 	if err != nil {
@@ -49,36 +51,56 @@ func runViewer(debug bool) {
 		log.Fatalf("Failed to get working directory: %v", err)
 	}
 
+	// Load review from file if provided (bypasses watcher)
+	var initialReview *model.Review
+	if reviewPath != "" {
+		review, err := loadReviewFromFile(reviewPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error loading review: %v\n", err)
+			os.Exit(1)
+		}
+		initialReview = review
+	}
+
 	// Create shared storage for both TUI persistence and watcher
+	// (not needed when loading from file, but doesn't hurt)
 	store, err := storage.NewStore()
 	if err != nil {
 		log.Fatalf("Failed to create storage: %v", err)
 	}
 
-	w, err := watcher.NewWithStore(cwd, store, logger)
-	if err != nil {
-		log.Fatalf("Failed to create watcher: %v", err)
+	var opts []tui.ModelOption
+	if initialReview != nil {
+		opts = append(opts, tui.WithInitialReview(initialReview))
 	}
-	defer w.Close()
 
-	w.Start()
-
-	m := tui.NewModel(cwd, cfg, store, logger)
+	m := tui.NewModel(cwd, cfg, store, logger, opts...)
 	p := tea.NewProgram(m, tea.WithAltScreen())
 
-	// Pump watcher events to TUI
-	go func() {
-		for {
-			select {
-			case review := <-w.Reviews:
-				p.Send(tui.ReviewReceivedMsg{Review: review})
-			case <-w.Cleared:
-				p.Send(tui.ReviewClearedMsg{})
-			case err := <-w.Errors:
-				p.Send(tui.WatchErrorMsg{Err: err})
-			}
+	// Only create watcher if not in direct review mode
+	if initialReview == nil {
+		w, err := watcher.NewWithStore(cwd, store, logger)
+		if err != nil {
+			log.Fatalf("Failed to create watcher: %v", err)
 		}
-	}()
+		defer w.Close()
+
+		w.Start()
+
+		// Pump watcher events to TUI
+		go func() {
+			for {
+				select {
+				case review := <-w.Reviews:
+					p.Send(tui.ReviewReceivedMsg{Review: review})
+				case <-w.Cleared:
+					p.Send(tui.ReviewClearedMsg{})
+				case err := <-w.Errors:
+					p.Send(tui.WatchErrorMsg{Err: err})
+				}
+			}
+		}()
+	}
 
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

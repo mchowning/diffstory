@@ -337,6 +337,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if !m.ready {
 			m.viewport = viewport.New(rightWidth, viewportHeight)
 			m.ready = true
+			// Initialize file tree if review was pre-loaded (e.g., via --review flag)
+			if m.review != nil {
+				m.updateFileTree()
+			}
 		} else {
 			m.viewport.Width = rightWidth
 			m.viewport.Height = viewportHeight
