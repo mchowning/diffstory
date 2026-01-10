@@ -3,8 +3,8 @@ Output navigation.gif
 
 Set Shell "bash"
 Set FontSize 24
-Set Width 1200
-Set Height 700
+Set Width 1600
+Set Height 900
 Set Theme "Catppuccin Mocha"
 Set Padding 20
 Set TypingSpeed 75ms
