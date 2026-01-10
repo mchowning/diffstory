@@ -10,20 +10,15 @@ Set Padding 20
 Set TypingSpeed 75ms
 Set CursorBlink false
 
-# Build binary (hidden) - ensures binary is available
+# Build binary and launch (hidden) - recording starts with app already running
 Hide
 Type "go build -o ./diffstory ./cmd/diffstory && clear"
 Enter
 Sleep 1s
-Show
-
-# Launch with pre-loaded review
 Type "./diffstory --review demo/review.json"
-Sleep 500ms
 Enter
-
-# Wait for UI to render
 Sleep 2s
+Show
 
 # Navigate between sections
 Type "j"
