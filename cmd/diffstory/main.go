@@ -7,12 +7,14 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/mchowning/diffstory/internal/config"
 	"github.com/mchowning/diffstory/internal/logging"
 	"github.com/mchowning/diffstory/internal/model"
 	"github.com/mchowning/diffstory/internal/storage"
 	"github.com/mchowning/diffstory/internal/tui"
 	"github.com/mchowning/diffstory/internal/watcher"
+	"github.com/muesli/termenv"
 )
 
 func main() {
@@ -34,6 +36,9 @@ func main() {
 }
 
 func runViewer(debug bool, reviewPath string) {
+	// Force TrueColor for consistent rendering in headless environments (e.g., VHS recordings)
+	lipgloss.SetColorProfile(termenv.TrueColor)
+
 	// Load config
 	cfg, err := config.Load()
 	if err != nil {
