@@ -9,6 +9,7 @@ Set Theme "Catppuccin Mocha"
 Set Padding 20
 Set TypingSpeed 75ms
 Set CursorBlink false
+Set LoopOffset 1
 
 # Build binary and launch (hidden) - recording starts with app already running
 Hide
