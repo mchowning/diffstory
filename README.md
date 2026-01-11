@@ -220,6 +220,12 @@ internal/
   watcher/     # File system watcher
 ```
 
+## Inspirations & Alternatives
+
+**[lazygit](https://github.com/jesseduffield/lazygit)** - The primary inspiration for diffstory's UI patterns, split-pane interface, and keybindings.
+
+**[review.fast](https://review.fast/)** - If you want AI-powered code reviews directly on GitHub PRs rather than reviewing local code in the terminal, review.fast may be a better fit.
+
 ## License
 
 MIT

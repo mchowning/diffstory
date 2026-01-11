@@ -12,9 +12,11 @@ nix develop -c go test ./...
 nix develop -c go mod tidy
 ```
 
-## Reference Implementation
+## Reference Implementations
 
 Use [lazygit](https://github.com/jesseduffield/lazygit) as inspiration for UI patterns and codebase structure.
+
+Use [review.fast](https://review.fast/) as inspiration for functionality and feature ideas.
 
 ## Keeping README Up-to-Date
 
