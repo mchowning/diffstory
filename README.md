@@ -2,7 +2,11 @@
 
 A terminal UI viewer for code reviews. Receives structured review data via HTTP and displays it in an interactive TUI with syntax highlighting.
 
-Designed for use with Claude Code - when Claude reviews your code, the results appear in a dedicated viewer with syntax-highlighted diffs, organized by topic.
+## Why diffstory?
+
+With AI generating so massive amounts of code, it is even more critical to be able to quickly absorb the meaning and intention behind code changes that you have not written yourself. `diffstory` organizes diffs into a narrative story that walks you through not only *what* has changed, but more importantly, *why* code changed. This makes it possible to review code more quickly and with better comprehension.
+
+`diffstory` can be used with any coding agent, like Claude Code. The coding agent constructs a story out of the selected code changes and shows the results appear in a dedicated viewer with syntax-highlighted diffs, organized by topic.
 
 ![Navigation Demo](https://github.com/mchowning/diffstory/raw/assets/navigation.gif)
 
