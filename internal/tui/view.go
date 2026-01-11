@@ -97,8 +97,8 @@ func (m Model) renderReviewState() string {
 		contentHeight-- // account for timestamp line
 	}
 
-	// Left column: Sections panel wraps to content, capped at half screen
-	sectionHeight := m.sectionPaneHeight(contentHeight / 2)
+	// Left column: Sections panel wraps to content, capped at 80% of content height
+	sectionHeight := m.sectionPaneHeight(contentHeight * 4 / 5)
 
 	// Left column: Files panel takes remaining space
 	filesHeight := contentHeight - sectionHeight
@@ -269,7 +269,10 @@ func (m Model) renderSectionPane(width, height int) string {
 
 		// Render chapter header if we're at or past its first section
 		if flatIdx >= startIdx || (flatIdx < startIdx && startIdx < chapterEndIdx) {
-			chapterHeader := chapterStyle.Width(contentWidth).Render(chapterPrefix + chapter.Title)
+			// Truncate chapter title to fit on single line (accounting for prefix)
+			maxChapterWidth := contentWidth - len([]rune(chapterPrefix))
+			displayChapter := Truncate(chapter.Title, maxChapterWidth)
+			chapterHeader := chapterStyle.Render(chapterPrefix + displayChapter)
 			items = append(items, chapterHeader)
 		}
 
@@ -316,11 +319,15 @@ func (m Model) renderSection(section model.Section, flatIdx, contentWidth int) s
 		title = section.Narrative
 	}
 
+	// Truncate title to fit on single line (accounting for prefix)
+	maxTitleWidth := contentWidth - len(selectedPrefix)
+	displayTitle := Truncate(title, maxTitleWidth)
+
 	if isSelected {
-		return selectedStyle.Width(contentWidth).Render(selectedPrefix + title)
+		return selectedStyle.Render(selectedPrefix + displayTitle)
 	}
 
-	return normalStyle.Width(contentWidth).Render(normalPrefix + title)
+	return normalStyle.Render(normalPrefix + displayTitle)
 }
 
 func (m Model) renderDescriptionPane(width, height int) string {

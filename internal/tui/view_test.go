@@ -185,6 +185,48 @@ func TestView_ChapterHeadersAppearInSectionPane(t *testing.T) {
 	}
 }
 
+func TestView_ChapterHeadersTruncateLongTitles(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	// Initialize viewport - width 120 gives section pane ~40 chars width
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review with a long chapter title
+	longChapterTitle := "This is a very long chapter title that should be truncated with an ellipsis character at the end"
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Chapters: []model.Chapter{
+			{
+				ID:    "ch1",
+				Title: longChapterTitle,
+				Sections: []model.Section{
+					{ID: "s1", Title: "Short section", Hunks: []model.Hunk{{File: "file.go", Diff: "+code"}}},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// Should contain truncation ellipsis
+	if !strings.Contains(view, "…") {
+		t.Error("chapter header should truncate long titles with ellipsis")
+	}
+	// Should contain the beginning of the chapter title
+	if !strings.Contains(view, "This is a very long") {
+		t.Error("chapter header should show beginning of truncated title")
+	}
+	// Should NOT contain the end of the chapter title (it's truncated)
+	if strings.Contains(view, "at the end") {
+		t.Error("chapter header should NOT show full title - it should be truncated")
+	}
+}
+
 func TestView_NonSelectedSectionShowsOnlyTitle(t *testing.T) {
 	m := modelWithChapters()
 	view := m.View()
@@ -253,31 +295,35 @@ func TestView_NotReadyShowsInitializing(t *testing.T) {
 	}
 }
 
-func TestView_SectionListDoesNotTruncateText(t *testing.T) {
+func TestView_SectionListTruncatesLongTitles(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 
-	// Initialize viewport - width 120 gives section pane ~30 chars for wrapping test
+	// Initialize viewport - width 120 gives section pane ~40 chars width
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	// Create a review with a long narrative
-	longNarrative := "This is a very long narrative that should wrap instead of being truncated with an ellipsis character"
+	// Create a review with a long title that exceeds section pane width
+	longTitle := "This is a very long section title that should be truncated with an ellipsis character at the end"
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: longNarrative},
+		{ID: "1", Title: longTitle, Narrative: "Short narrative"},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
 	view := m.View()
 
-	// Should NOT contain truncation ellipsis
-	if strings.Contains(view, "…") {
-		t.Error("section list should wrap text, not truncate with ellipsis")
+	// Should contain truncation ellipsis in section pane
+	if !strings.Contains(view, "…") {
+		t.Error("section list should truncate long titles with ellipsis")
 	}
-	// Should contain the full text (or at least the ending words)
-	if !strings.Contains(view, "ellipsis character") {
-		t.Error("section list should contain full narrative text")
+	// Should contain the beginning of the title
+	if !strings.Contains(view, "This is a very long") {
+		t.Error("section list should show beginning of truncated title")
+	}
+	// Should NOT contain the end of the title (it's truncated)
+	if strings.Contains(view, "at the end") {
+		t.Error("section list should NOT show full title - it should be truncated")
 	}
 }
 
