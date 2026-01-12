@@ -1,0 +1,29 @@
+{
+  // Command to invoke your LLM. The prompt will be appended as the final argument.
+  // If not set, diffstory will use Claude Code if available: ["claude", "-p"]
+  //
+  // Examples:
+  //   Claude Code: ["claude", "-p"]
+  //   llm CLI:     ["llm", "prompt"]
+  //   Ollama:      ["ollama", "run", "llama2"]
+  "llmCommand": ["claude", "-p"],
+
+  // Command to get the diff to review.
+  // Default: ["git", "diff", "HEAD"]
+  //
+  // Examples:
+  //   Staged changes only: ["git", "diff", "--cached"]
+  //   Compare to main:     ["git", "diff", "main"]
+  //   Specific files:      ["git", "diff", "HEAD", "--", "src/"]
+  "diffCommand": ["git", "diff", "HEAD"],
+
+  // Initial importance filter level when viewer starts.
+  // Options: "low" (show all), "medium", "high"
+  // Default: "low"
+  "defaultFilterLevel": "low",
+
+  // Enable debug logging to /tmp/diffstory.log
+  // Useful for troubleshooting LLM integration issues.
+  // Default: false
+  "debugLoggingEnabled": false
+}
