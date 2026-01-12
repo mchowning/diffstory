@@ -1,84 +1,115 @@
 # diffstory
 
-A terminal UI viewer for code reviews. Receives structured review data via HTTP and displays it in an interactive TUI with syntax highlighting.
+A terminal UI viewer for code reviews. Organizes diffs into a narrative story that walks you through not only *what* has changed, but more importantly, *why* code changed.
 
 ## Why diffstory?
 
-With AI generating so massive amounts of code, it is even more critical to be able to quickly absorb the meaning and intention behind code changes that you have not written yourself. `diffstory` organizes diffs into a narrative story that walks you through not only *what* has changed, but more importantly, *why* code changed. This makes it possible to review code more quickly and with better comprehension.
+With AI generating massive amounts of code, it is even more critical to be able to quickly absorb the meaning and intention behind code changes that you have not written yourself. `diffstory` makes it possible to review code more quickly and with better comprehension.
 
-`diffstory` can be used with any coding agent, like Claude Code. The coding agent constructs a story out of the selected code changes and shows the results appear in a dedicated viewer with syntax-highlighted diffs, organized by topic.
+`diffstory` can be used with any coding agent, like Claude Code. The coding agent constructs a story out of the selected code changes and shows the results in a dedicated viewer with syntax-highlighted diffs, organized by topic.
 
 ![Navigation Demo](https://github.com/mchowning/diffstory/raw/assets/navigation.gif)
 
-## Installation
+## Quick Start
 
-```bash
-# Build from source
-go build -o diffstory ./cmd/diffstory/
+If you have [Claude Code](https://www.anthropic.com/claude-code) installed:
 
-# Or with nix
-nix develop -c go build -o diffstory ./cmd/diffstory/
-```
-
-## Using with Claude Code
-
-### Setup
-
-1. Build and install diffstory somewhere in your PATH:
+1. Build and install:
    ```bash
    go build -o ~/bin/diffstory ./cmd/diffstory/
    ```
 
-2. Start the HTTP server in your project directory:
+2. Make some changes to your code, then:
    ```bash
-   diffstory server
+   diffstory
    ```
 
-### Workflow
+3. Press `G` to generate a review of your uncommitted changes.
 
-**Terminal 1** - Run the diffstory viewer in your project directory:
+That's it! diffstory will use Claude Code to analyze your diff and present it as a narrative story.
+
+## Installation
+
+### From Source (with Go)
+
 ```bash
-cd /path/to/your/project
-diffstory
+go build -o diffstory ./cmd/diffstory/
 ```
 
-The viewer starts in "waiting" mode, ready to display reviews.
+### From Source (with Nix)
 
-**Terminal 2** - Work with Claude Code as usual:
 ```bash
-cd /path/to/your/project
-claude
+nix develop -c go build -o diffstory ./cmd/diffstory/
 ```
 
-When you want Claude to review code, ask it directly:
+### Build with Version
 
-> "Review the changes I made to the authentication module"
+```bash
+go build -ldflags "-X main.Version=1.0.0" -o diffstory ./cmd/diffstory/
+```
 
-> "Use diffstory to review this PR"
+## Configuration
 
-> "Submit a code review of the recent commits"
+diffstory looks for a config file at:
+1. `$XDG_CONFIG_HOME/diffstory/config.jsonc` (if XDG_CONFIG_HOME is set)
+2. `~/.config/diffstory/config.jsonc`
 
-Claude will use the `submit_review` tool to send a structured review to diffstory. The review appears instantly in the viewer with:
+Both `.json` and `.jsonc` extensions are supported. JSONC allows comments.
 
-- Sections organized by topic/concern
-- Narrative explanations for each section
-- Syntax-highlighted diffs showing the relevant code
-- Importance levels (high/medium/low)
+See `config.example.jsonc` for a documented example.
 
-### What Claude Sends
+### Options
 
-When Claude submits a review, it provides:
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `llmCommand` | `string[]` | `["claude", "-p"]` | Command to invoke your LLM. Prompt is appended as final arg. |
+| `diffCommand` | `string[]` | `["git", "diff", "HEAD"]` | Command to generate the diff to review. |
+| `defaultFilterLevel` | `string` | `"low"` | Initial importance filter: `"low"`, `"medium"`, or `"high"`. |
+| `debugLoggingEnabled` | `bool` | `false` | Enable debug logging to `/tmp/diffstory.log`. |
 
-- **Title**: Summary of what's being reviewed
-- **Sections**: Grouped by topic (e.g., "Error Handling", "Performance", "Security")
-- **Narrative**: Claude's explanation of each concern or suggestion
-- **Hunks**: The actual code diffs with file paths and line numbers
+### Using a Different LLM
 
-The viewer displays this in a split-pane interface - sections on the left, details on the right.
+Configure `llmCommand` to use any CLI tool that accepts a prompt as the final argument:
+
+```jsonc
+{
+  // Using llm CLI (https://llm.datasette.io/)
+  "llmCommand": ["llm", "prompt"]
+}
+```
 
 ## Usage
 
-### TUI Viewer (default)
+### Generating Reviews (G keybinding)
+
+Press `G` in the viewer to generate a review of your local changes:
+
+1. **Choose diff source**: Select what to review (uncommitted changes, staged changes, commit range, etc.)
+2. **Add context** (optional): Provide guidance for the LLM
+3. **Wait for generation**: The LLM analyzes your diff and creates a structured review
+4. **Browse the story**: Navigate the review organized by topic
+
+#### Requirements
+
+- An LLM CLI tool that accepts a prompt as the final argument
+- By default, diffstory uses Claude Code (`claude -p`)
+- Configure a different LLM via `llmCommand` in your config file
+
+#### Example Workflow
+
+```bash
+# Make some changes to your code
+vim src/auth.go
+
+# Start diffstory
+diffstory
+
+# Press G, select "Uncommitted changes", optionally add context
+# Wait for the LLM to generate the review
+# Navigate the story with j/k/h/l
+```
+
+### TUI Viewer
 
 Run `diffstory` in any directory to start the viewer. It watches for reviews submitted to that directory.
 
@@ -108,8 +139,8 @@ diffstory
 
 The TUI supports two filter dimensions that work together:
 
-- **Importance filter** (`f`): Cycles through Low (all) → Medium → High only
-- **Test filter** (`t`): Cycles through All → Excluding Tests → Only Tests
+- **Importance filter** (`f`): Cycles through Low (all) -> Medium -> High only
+- **Test filter** (`t`): Cycles through All -> Excluding Tests -> Only Tests
 
 Filters combine - a hunk must pass both filters to be displayed. For example, with importance "High only" and test filter "Excluding Tests", only high-importance production code hunks are shown.
 
@@ -117,7 +148,7 @@ The filter indicator at the bottom shows current state: `Diff filter: High only 
 
 ### HTTP Server
 
-Start an HTTP server to receive reviews:
+Start an HTTP server to receive reviews from external tools:
 
 ```bash
 diffstory server              # Default port 8765
@@ -210,6 +241,7 @@ nix develop -c go run ./cmd/diffstory/ server -v
 cmd/diffstory/
   main.go      # CLI entry point
   server.go    # HTTP server runner
+  version.go   # Version info (set via ldflags)
 
 internal/
   config/      # Configuration loading
