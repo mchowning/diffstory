@@ -146,6 +146,23 @@ Filters combine - a hunk must pass both filters to be displayed. For example, wi
 
 The filter indicator at the bottom shows current state: `Diff filter: High only | Excluding tests`
 
+### Lazygit Integration
+
+I primarily use [lazygit](https://github.com/jesseduffield/lazygit) for viewing diffs day-to-day. When I'm having trouble wrapping my head around a complex set of changes, I trigger diffstory from within lazygit to get the AI-powered narrative breakdown.
+
+My lazygit config includes a custom command to launch diffstory:
+
+```yaml
+customCommands:
+  - key: "<c-d>"
+    command: "diffstory"
+    context: "global"
+    description: "Open diffstory"
+    output: terminal
+```
+
+This binds `Ctrl+D` to open diffstory from any lazygit panel. You might find a similar setup works well for you.
+
 ### HTTP Server
 
 Start an HTTP server to receive reviews from external tools:
