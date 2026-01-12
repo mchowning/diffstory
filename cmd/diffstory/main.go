@@ -18,6 +18,20 @@ import (
 )
 
 func main() {
+	// Handle --version anywhere in args
+	for _, arg := range os.Args[1:] {
+		if arg == "--version" || arg == "-version" {
+			fmt.Printf("diffstory %s\n", Version)
+			return
+		}
+	}
+
+	// Handle help for main command
+	if len(os.Args) > 1 && (os.Args[1] == "--help" || os.Args[1] == "-help" || os.Args[1] == "-h") {
+		printUsage()
+		return
+	}
+
 	if len(os.Args) > 1 && os.Args[1] == "server" {
 		// Server mode
 		serverCmd := flag.NewFlagSet("server", flag.ExitOnError)
@@ -33,6 +47,25 @@ func main() {
 	reviewPath := flag.String("review", "", "Load review from JSON file (bypasses watcher)")
 	flag.Parse()
 	runViewer(*debug, *reviewPath)
+}
+
+func printUsage() {
+	fmt.Print(`diffstory - A terminal UI viewer for code reviews
+
+Usage:
+  diffstory [flags]         Start the TUI viewer
+  diffstory server [flags]  Start the HTTP server
+
+Viewer flags:
+  -debug    Enable debug logging to /tmp/diffstory.log
+  -review   Load review from JSON file (bypasses watcher)
+
+Server flags:
+  -port     HTTP server port (default: 8765)
+  -v        Enable verbose logging
+
+See README.md for configuration options and keybindings.
+`)
 }
 
 func runViewer(debug bool, reviewPath string) {
