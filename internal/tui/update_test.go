@@ -1472,33 +1472,56 @@ func TestUpdate_ArrowKeysDoNotAffectDiffPanel(t *testing.T) {
 
 // LLM Generation Tests
 
-func TestUpdate_GKeyWithoutConfigShowsError(t *testing.T) {
-	m := tui.NewModel("/test/project", nil, nil, nil)
+func TestUpdate_GKeyWithoutConfigAndNoClaudeShowsError(t *testing.T) {
+	mockLookPath := func(file string) (string, error) {
+		return "", errors.New("not found")
+	}
+	m := tui.NewModel("/test/project", nil, nil, nil, tui.WithLookPath(mockLookPath))
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
 
 	updated, _ := m.Update(msg)
 	result := updated.(tui.Model)
 
-	expected := "LLM not configured. Create ~/.config/diffstory/config.json"
-	if result.StatusMsg() != expected {
-		t.Errorf("StatusMsg() = %q, want %q", result.StatusMsg(), expected)
+	if !strings.Contains(result.StatusMsg(), "Claude Code not found") {
+		t.Errorf("StatusMsg() = %q, want to contain 'Claude Code not found'", result.StatusMsg())
 	}
 	if result.IsGenerating() {
 		t.Error("expected IsGenerating() to be false")
 	}
 }
 
-func TestUpdate_GKeyWithEmptyLLMCommandShowsError(t *testing.T) {
+func TestUpdate_GKeyWithEmptyLLMCommandAndNoClaudeShowsError(t *testing.T) {
+	mockLookPath := func(file string) (string, error) {
+		return "", errors.New("not found")
+	}
 	cfg := &config.Config{LLMCommand: []string{}}
-	m := tui.NewModel("/test/project", cfg, nil, nil)
+	m := tui.NewModel("/test/project", cfg, nil, nil, tui.WithLookPath(mockLookPath))
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
 
 	updated, _ := m.Update(msg)
 	result := updated.(tui.Model)
 
-	expected := "LLM not configured. Create ~/.config/diffstory/config.json"
-	if result.StatusMsg() != expected {
-		t.Errorf("StatusMsg() = %q, want %q", result.StatusMsg(), expected)
+	if !strings.Contains(result.StatusMsg(), "Claude Code not found") {
+		t.Errorf("StatusMsg() = %q, want to contain 'Claude Code not found'", result.StatusMsg())
+	}
+}
+
+func TestUpdate_GKeyWithExplicitCommandNotFoundShowsError(t *testing.T) {
+	mockLookPath := func(file string) (string, error) {
+		return "", errors.New("not found")
+	}
+	cfg := &config.Config{LLMCommand: []string{"nonexistent-llm", "--flag"}}
+	m := tui.NewModel("/test/project", cfg, nil, nil, tui.WithLookPath(mockLookPath))
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")}
+
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	if !strings.Contains(result.StatusMsg(), "nonexistent-llm") {
+		t.Errorf("StatusMsg() = %q, want to contain 'nonexistent-llm'", result.StatusMsg())
+	}
+	if !strings.Contains(result.StatusMsg(), "not found") {
+		t.Errorf("StatusMsg() = %q, want to contain 'not found'", result.StatusMsg())
 	}
 }
 

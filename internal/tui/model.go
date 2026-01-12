@@ -76,6 +76,8 @@ type Model struct {
 	// LLM generation state
 	config             *config.Config
 	store              *storage.Store
+	lookPath           LookPathFunc // For testing, defaults to DefaultLookPath
+	resolvedLLMCommand []string     // Resolved LLM command to use for generation
 	isGenerating       bool
 	generateStartTime  time.Time
 	cancelGenerate     context.CancelFunc
@@ -118,6 +120,13 @@ type ModelOption func(*Model)
 func WithInitialReview(review *model.Review) ModelOption {
 	return func(m *Model) {
 		m.review = review
+	}
+}
+
+// WithLookPath sets a custom lookPath function (for testing)
+func WithLookPath(lookPath LookPathFunc) ModelOption {
+	return func(m *Model) {
+		m.lookPath = lookPath
 	}
 }
 
@@ -166,6 +175,7 @@ func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *
 		keybindings:  initKeybindings(),
 		config:       cfg,
 		store:        store,
+		lookPath:     DefaultLookPath,
 		spinner:      s,
 		logger:       logger,
 		diffSources:  DefaultDiffSources(),

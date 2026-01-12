@@ -365,13 +365,14 @@ func (m *Model) startGeneration() tea.Cmd {
 
 	params := GenerateParams{
 		DiffCommand: m.selectedDiffSource.Command,
+		LLMCommand:  m.resolvedLLMCommand,
 		Context:     m.lastContext,
 		IsRetry:     false,
 	}
 
 	return tea.Batch(
 		m.spinner.Tick,
-		generateReviewCmd(ctx, m.config, m.workDir, m.store, m.logger, params),
+		generateReviewCmd(ctx, m.workDir, m.store, m.logger, params),
 	)
 }
 
@@ -388,6 +389,7 @@ func (m *Model) startRetryGeneration() tea.Cmd {
 
 	params := GenerateParams{
 		DiffCommand: m.selectedDiffSource.Command,
+		LLMCommand:  m.resolvedLLMCommand,
 		Context:     m.lastContext,
 		IsRetry:     true,
 		MissingIDs:  m.missingHunkIDs,
@@ -396,7 +398,7 @@ func (m *Model) startRetryGeneration() tea.Cmd {
 
 	return tea.Batch(
 		m.spinner.Tick,
-		generateReviewCmd(ctx, m.config, m.workDir, m.store, m.logger, params),
+		generateReviewCmd(ctx, m.workDir, m.store, m.logger, params),
 	)
 }
 

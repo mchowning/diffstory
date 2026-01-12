@@ -14,7 +14,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kaptinlin/jsonrepair"
-	"github.com/mchowning/diffstory/internal/config"
 	"github.com/mchowning/diffstory/internal/diff"
 	"github.com/mchowning/diffstory/internal/model"
 	"github.com/mchowning/diffstory/internal/storage"
@@ -81,6 +80,7 @@ You MUST include ALL hunk IDs in your response, including the ones listed above.
 // GenerateParams holds parameters for review generation
 type GenerateParams struct {
 	DiffCommand []string
+	LLMCommand  []string // Resolved LLM command to use
 	Context     string
 	IsRetry     bool
 	MissingIDs  []string
@@ -89,7 +89,7 @@ type GenerateParams struct {
 
 // generateReviewCmd returns a command that runs the LLM generation with
 // deterministic diff parsing and classification validation.
-func generateReviewCmd(ctx context.Context, cfg *config.Config, workDir string, store *storage.Store, logger *slog.Logger, params GenerateParams) tea.Cmd {
+func generateReviewCmd(ctx context.Context, workDir string, store *storage.Store, logger *slog.Logger, params GenerateParams) tea.Cmd {
 	return func() tea.Msg {
 		var parsedHunks []diff.ParsedHunk
 
@@ -158,9 +158,9 @@ func generateReviewCmd(ctx context.Context, cfg *config.Config, workDir string, 
 			return GenerateCancelledMsg{}
 		}
 
-		llmArgs := append([]string{}, cfg.LLMCommand[1:]...)
+		llmArgs := append([]string{}, params.LLMCommand[1:]...)
 		llmArgs = append(llmArgs, prompt)
-		llmCmd := append([]string{cfg.LLMCommand[0]}, llmArgs...)
+		llmCmd := append([]string{params.LLMCommand[0]}, llmArgs...)
 		if logger != nil {
 			logger.Info("calling LLM", "fullCommand", llmCmd, "prompt", prompt)
 		}

@@ -170,14 +170,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.isGenerating {
 				return m, nil // Ignore if already generating
 			}
-			if m.config == nil || len(m.config.LLMCommand) == 0 {
-				m.statusMsg = "LLM not configured. Create ~/.config/diffstory/config.json"
+			result := ResolveLLMCommand(m.config, m.lookPath)
+			if result.Error != "" {
+				m.statusMsg = result.Error
 				return m, nil
 			}
 			if m.store == nil {
 				m.statusMsg = "Storage not initialized"
 				return m, nil
 			}
+			m.resolvedLLMCommand = result.Command
 			m.generateUIState = GenerateUIStateSourcePicker
 			m.diffSourceSelected = 0
 			return m, nil
