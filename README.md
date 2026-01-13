@@ -163,41 +163,6 @@ customCommands:
 
 This binds `Ctrl+D` to open diffstory from any lazygit panel. You might find a similar setup works well for you.
 
-### HTTP Server
-
-Start an HTTP server to receive reviews from external tools:
-
-```bash
-diffstory server              # Default port 8765
-diffstory server -port 9000   # Custom port
-diffstory server -v           # Verbose logging
-```
-
-Submit reviews via POST:
-
-```bash
-curl -X POST http://localhost:8765/review \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workingDirectory": "/path/to/project",
-    "title": "Code Review",
-    "sections": [
-      {
-        "id": "section-1",
-        "narrative": "Improved error handling",
-        "importance": "high",
-        "hunks": [
-          {
-            "file": "main.go",
-            "startLine": 42,
-            "diff": "@@ -42,3 +42,5 @@\n func main() {\n+    if err != nil {\n+        return err\n+    }\n }"
-          }
-        ]
-      }
-    ]
-  }'
-```
-
 ## Review Data Format
 
 Reviews are JSON objects with this structure:
@@ -247,9 +212,6 @@ nix develop -c go build ./cmd/diffstory/
 
 # Run the viewer
 nix develop -c go run ./cmd/diffstory/
-
-# Run the HTTP server
-nix develop -c go run ./cmd/diffstory/ server -v
 ```
 
 ## Architecture
@@ -257,7 +219,6 @@ nix develop -c go run ./cmd/diffstory/ server -v
 ```
 cmd/diffstory/
   main.go      # CLI entry point
-  server.go    # HTTP server runner
   version.go   # Version info (set via ldflags)
 
 internal/
@@ -267,7 +228,6 @@ internal/
   logging/     # Debug logging
   model/       # Review data structures
   review/      # Shared business logic (validation, normalization)
-  server/      # HTTP server implementation
   storage/     # File-based persistence
   tui/         # Terminal UI (Bubble Tea)
   watcher/     # File system watcher

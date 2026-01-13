@@ -72,9 +72,7 @@ func (m Model) renderEmptyState() string {
     Watching for reviews in:
     ` + m.workDir + `
 
-    Start server: diffstory server
-    Send review:  POST http://localhost:8765/review
-    Generate:     Press Shift+G
+    Generate: Press Shift+G
 ` + status + `
     q: quit | ?: help
 `

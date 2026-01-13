@@ -30,18 +30,6 @@ func TestView_EmptyStateContainsQuitInstruction(t *testing.T) {
 	}
 }
 
-func TestView_EmptyStateContainsServerInstructions(t *testing.T) {
-	m := tui.NewModel("/test/project", nil, nil, nil)
-	view := m.View()
-
-	if !strings.Contains(view, "diffstory server") {
-		t.Error("empty state view should contain server start instructions")
-	}
-	if !strings.Contains(view, "POST") {
-		t.Error("empty state view should contain POST instruction")
-	}
-}
-
 func modelWithReviewAndSize(numSections int) tui.Model {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 
