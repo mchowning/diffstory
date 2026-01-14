@@ -20,13 +20,27 @@ Use [review.fast](https://review.fast/) as inspiration for functionality and fea
 
 ## Keeping README Up-to-Date
 
-When making changes, check if the README needs updating:
+**IMPORTANT**: Updating the README is a required part of any change that affects documented behavior. Before completing a task, verify whether the README needs updates.
 
-- **Keybindings**: Update the keybindings table when adding/changing/removing keyboard shortcuts in `internal/tui/update.go`
-- **Architecture**: Update the architecture section when adding new packages to `internal/`
-- **CLI flags**: Update usage examples when changing command-line arguments in `cmd/diffstory/`
-- **Data format**: Update the review JSON schema when changing `internal/model/`
-- **Storage**: Update the "How It Works" section if storage paths or behavior changes
+### When to Update
+
+| If you change... | Update this README section |
+|------------------|---------------------------|
+| `internal/tui/update.go` keybindings | Keybindings table |
+| `internal/model/review.go` structs | Review Data Format (JSON schema + field guidance) |
+| `internal/model/review.go` field names | Review Data Format (JSON example + field guidance) |
+| New packages in `internal/` | Architecture diagram |
+| `cmd/diffstory/` CLI args | Usage examples |
+| `internal/storage/` paths | How It Works section |
+| `internal/config/` options | Configuration Options table |
+
+### Review Data Format Section
+
+The "Review Data Format" section must match `internal/model/review.go` exactly:
+
+- JSON example should reflect all struct fields and their nesting (Review → Chapter → Section → Hunk)
+- Field guidance should explain the purpose of each field
+- When adding/removing/renaming fields, update both the JSON example and the field guidance
 
 # Additional Information
 

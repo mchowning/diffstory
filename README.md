@@ -171,16 +171,25 @@ Reviews are JSON objects with this structure:
 {
   "workingDirectory": "/absolute/path/to/project",
   "title": "Review Title",
-  "sections": [
+  "chapters": [
     {
-      "id": "unique-section-id",
-      "narrative": "Explanation of changes in this section",
-      "importance": "high|medium|low",
-      "hunks": [
+      "id": "chapter-id",
+      "title": "Chapter Title",
+      "sections": [
         {
-          "file": "relative/path/to/file.go",
-          "startLine": 10,
-          "diff": "@@ -10,3 +10,5 @@\n context\n+added line\n-removed line"
+          "id": "unique-section-id",
+          "title": "Section Title",
+          "what": "Description of what changed",
+          "why": "Explanation of why it changed",
+          "hunks": [
+            {
+              "file": "relative/path/to/file.go",
+              "startLine": 10,
+              "diff": "@@ -10,3 +10,5 @@\n context\n+added line\n-removed line",
+              "importance": "high|medium|low",
+              "isTest": false
+            }
+          ]
         }
       ]
     }
@@ -190,10 +199,11 @@ Reviews are JSON objects with this structure:
 
 **Field guidance:**
 
-- **narrative**: Should be understandable on its own and connect smoothly to adjacent sections, building a coherent narrative arc
+- **what**: Describes what changed - the factual summary of the modification
+- **why**: Explains the reasoning behind the change - the motivation and intent
 - **diff**: Complete unified diff content - include all lines, do not truncate or summarize
-- **importance**: `high` (critical changes), `medium` (significant changes), or `low` (minor changes)
-- **isTest** (optional): `true` for test code changes, `false` for production code
+- **importance**: `high` (critical changes), `medium` (significant changes), or `low` (minor changes) - set per hunk
+- **isTest** (optional): `true` for test code changes, `false` for production code - set per hunk
 
 ## How It Works
 
