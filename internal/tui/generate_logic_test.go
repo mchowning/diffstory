@@ -237,7 +237,7 @@ func TestAssembleReview_CombinesHunksWithClassification(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Made changes",
-						Narrative: "Made some changes",
+						What: "Made some changes",
 						Hunks: []LLMHunkRef{
 							{ID: "file.go::10", Importance: "high"},
 							{ID: "file.go::50", Importance: "low"},
@@ -289,7 +289,7 @@ func TestAssemblePartialReview_AddsUnclassifiedChapter(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Some changes",
-						Narrative: "Some changes",
+						What: "Some changes",
 						Hunks: []LLMHunkRef{
 							{ID: "file.go::10", Importance: "high"},
 						},
@@ -338,7 +338,7 @@ func TestAssembleReview_SetsCreatedAt(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Test",
-						Narrative: "Test",
+						What: "Test",
 						Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "high"}},
 					},
 				},
@@ -380,7 +380,7 @@ func TestAssembleReview_CopiesIsTestField(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Mixed section",
-						Narrative: "Mixed section",
+						What: "Mixed section",
 						Hunks: []LLMHunkRef{
 							{ID: "main.go::10", Importance: "high", IsTest: boolPtrLLM(false)},
 							{ID: "main_test.go::20", Importance: "medium", IsTest: boolPtrLLM(true)},
@@ -432,7 +432,7 @@ func TestAssembleReview_NilIsTestWhenOmitted(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Legacy section",
-						Narrative: "Legacy section",
+						What: "Legacy section",
 						Hunks: []LLMHunkRef{
 							{ID: "file.go::10", Importance: "high"},
 							// Note: IsTest is not set (nil)
@@ -472,7 +472,7 @@ func TestAssemblePartialReview_PreservesIsTestField(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Some changes",
-						Narrative: "Some changes",
+						What: "Some changes",
 						Hunks: []LLMHunkRef{
 							{ID: "main.go::10", Importance: "high", IsTest: boolPtrLLM(false)},
 						},

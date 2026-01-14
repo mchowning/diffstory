@@ -62,7 +62,7 @@ func TestUpdate_WindowSizeMsg(t *testing.T) {
 func TestUpdate_ReviewReceivedMsgSetsReview(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
-		{ID: "1", Narrative: "Test narrative"},
+		{ID: "1", What: "Test narrative"},
 	})
 	msg := tui.ReviewReceivedMsg{Review: review}
 
@@ -81,8 +81,8 @@ func TestUpdate_ReviewReceivedMsgResetsSelected(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Simulate having previously selected something
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
-		{ID: "1", Narrative: "First"},
-		{ID: "2", Narrative: "Second"},
+		{ID: "1", What: "First"},
+		{ID: "2", What: "Second"},
 	})
 	msg := tui.ReviewReceivedMsg{Review: review}
 
@@ -117,8 +117,8 @@ func TestUpdate_ReviewClearedMsgResetsSelected(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	// First set a review
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
-		{ID: "1", Narrative: "First"},
-		{ID: "2", Narrative: "Second"},
+		{ID: "1", What: "First"},
+		{ID: "2", What: "Second"},
 	})
 	updated, _ := m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
@@ -135,7 +135,7 @@ func TestUpdate_ReviewClearedMsgResetsSelected(t *testing.T) {
 func modelWithReview(numSections int) tui.Model {
 	sections := make([]model.Section, numSections)
 	for i := range numSections {
-		sections[i] = model.Section{ID: string(rune('1' + i)), Narrative: "Section"}
+		sections[i] = model.Section{ID: string(rune('1' + i)), What: "Section"}
 	}
 	review := model.NewReviewWithSections("/test/project", "Test", sections)
 	m := tui.NewModel("/test/project", nil, nil, nil)
@@ -170,9 +170,9 @@ func TestUpdate_ReviewReceivedResetsScrollOffsets(t *testing.T) {
 
 	// First review
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: "Section 1"},
-		{ID: "2", Narrative: "Section 2"},
-		{ID: "3", Narrative: "Section 3"},
+		{ID: "1", What: "Section 1"},
+		{ID: "2", What: "Section 2"},
+		{ID: "3", What: "Section 3"},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
@@ -183,7 +183,7 @@ func TestUpdate_ReviewReceivedResetsScrollOffsets(t *testing.T) {
 
 	// Receive a new review
 	newReview := model.NewReviewWithSections("/test/project", "New Test", []model.Section{
-		{ID: "1", Narrative: "New Section"},
+		{ID: "1", What: "New Section"},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: newReview})
 	m = updated.(tui.Model)
@@ -200,7 +200,7 @@ func TestUpdate_ReviewReceivedResetsScrollOffsets(t *testing.T) {
 func modelWithReviewAndSmallWindow(numSections int) tui.Model {
 	sections := make([]model.Section, numSections)
 	for i := range numSections {
-		sections[i] = model.Section{ID: string(rune('1' + i)), Narrative: "Section"}
+		sections[i] = model.Section{ID: string(rune('1' + i)), What: "Section"}
 	}
 	review := model.NewReviewWithSections("/test/project", "Test", sections)
 	m := tui.NewModel("/test/project", nil, nil, nil)
@@ -349,11 +349,11 @@ func TestUpdate_JKeyNavigatesAcrossChapterBoundaries(t *testing.T) {
 		Title:            "Test",
 		Chapters: []model.Chapter{
 			{ID: "ch1", Title: "Chapter 1", Sections: []model.Section{
-				{ID: "s1", Title: "Section 1", Narrative: "First", Hunks: []model.Hunk{{File: "a.go", Diff: "+a"}}},
-				{ID: "s2", Title: "Section 2", Narrative: "Second", Hunks: []model.Hunk{{File: "b.go", Diff: "+b"}}},
+				{ID: "s1", Title: "Section 1", What: "First", Hunks: []model.Hunk{{File: "a.go", Diff: "+a"}}},
+				{ID: "s2", Title: "Section 2", What: "Second", Hunks: []model.Hunk{{File: "b.go", Diff: "+b"}}},
 			}},
 			{ID: "ch2", Title: "Chapter 2", Sections: []model.Section{
-				{ID: "s3", Title: "Section 3", Narrative: "Third", Hunks: []model.Hunk{{File: "c.go", Diff: "+c"}}},
+				{ID: "s3", Title: "Section 3", What: "Third", Hunks: []model.Hunk{{File: "c.go", Diff: "+c"}}},
 			}},
 		},
 	}
@@ -426,7 +426,7 @@ func TestUpdate_ShiftJScrollsViewportDown(t *testing.T) {
 
 	// Set a review
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: "First", Hunks: []model.Hunk{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
 			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
 		}},
 	})
@@ -454,7 +454,7 @@ func TestUpdate_ShiftKScrollsViewportUp(t *testing.T) {
 
 	// Set a review with enough content to scroll
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: "First", Hunks: []model.Hunk{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
 			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
 		}},
 	})
@@ -620,13 +620,13 @@ func TestIntegration_FullWorkflow(t *testing.T) {
 
 	// 3. Receive review with multiple sections
 	review := model.NewReviewWithSections("/test/project", "Full Workflow Test", []model.Section{
-		{ID: "1", Narrative: "First section", Hunks: []model.Hunk{
+		{ID: "1", What: "First section", Hunks: []model.Hunk{
 			{File: "file1.go", Diff: strings.Repeat("line\n", 100)},
 		}},
-		{ID: "2", Narrative: "Second section", Hunks: []model.Hunk{
+		{ID: "2", What: "Second section", Hunks: []model.Hunk{
 			{File: "file2.go", Diff: "+added\n-removed"},
 		}},
-		{ID: "3", Narrative: "Third section", Hunks: []model.Hunk{
+		{ID: "3", What: "Third section", Hunks: []model.Hunk{
 			{File: "file3.go", Diff: "@@ -1,3 +1,4 @@\n context\n+new"},
 		}},
 	})
@@ -736,8 +736,8 @@ func TestUpdate_NavigationResetsViewportToTop(t *testing.T) {
 
 	// Set a review with multiple sections
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: "First"},
-		{ID: "2", Narrative: "Second"},
+		{ID: "1", What: "First"},
+		{ID: "2", What: "Second"},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
@@ -924,7 +924,7 @@ func modelWithReviewAndSizeForFiles() tui.Model {
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Section 1",
+			What: "Section 1",
 			Hunks: []model.Hunk{
 				{File: "src/main.go", Diff: "+added"},
 				{File: "src/util.go", Diff: "+added"},
@@ -1022,11 +1022,11 @@ func TestUpdate_SectionChangeResetsFileSelection(t *testing.T) {
 
 	// Set review with multiple sections
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: "Section 1", Hunks: []model.Hunk{
+		{ID: "1", What: "Section 1", Hunks: []model.Hunk{
 			{File: "a.go", Diff: "+"},
 			{File: "b.go", Diff: "+"},
 		}},
-		{ID: "2", Narrative: "Section 2", Hunks: []model.Hunk{
+		{ID: "2", What: "Section 2", Hunks: []model.Hunk{
 			{File: "c.go", Diff: "+"},
 		}},
 	})
@@ -1109,7 +1109,7 @@ func modelWithManySections(count int) tui.Model {
 	for i := range count {
 		sections[i] = model.Section{
 			ID:        string(rune('1' + i)),
-			Narrative: "Section " + string(rune('A'+i)),
+			What: "Section " + string(rune('A'+i)),
 			Hunks: []model.Hunk{
 				{File: "file" + string(rune('a'+i)) + ".go", Diff: strings.Repeat("line\n", 50)},
 			},
@@ -1135,7 +1135,7 @@ func modelWithManyFiles() tui.Model {
 		}
 	}
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: "Section", Hunks: hunks},
+		{ID: "1", What: "Section", Hunks: hunks},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	return updated.(tui.Model)
@@ -1641,7 +1641,7 @@ func TestUpdate_GenerateErrorMsgClearsReview(t *testing.T) {
 	m := tui.NewModel("/test/project", cfg, store, nil)
 
 	// First set a review
-	review := model.NewReviewWithSections("/test/project", "Existing Review", []model.Section{{ID: "1", Narrative: "test"}})
+	review := model.NewReviewWithSections("/test/project", "Existing Review", []model.Section{{ID: "1", What: "test"}})
 	reviewMsg := tui.ReviewReceivedMsg{Review: review}
 	updated, _ := m.Update(reviewMsg)
 	m = updated.(tui.Model)
@@ -1809,7 +1809,7 @@ func TestUpdate_CtrlJMovesFileSelectionDownRegardlessOfFocus(t *testing.T) {
 
 	// Set a review with multiple files
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: "First", Hunks: []model.Hunk{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
 			{File: "file1.go", Diff: "diff1"},
 			{File: "file2.go", Diff: "diff2"},
 			{File: "file3.go", Diff: "diff3"},
@@ -1848,7 +1848,7 @@ func TestUpdate_CtrlKMovesFileSelectionUpRegardlessOfFocus(t *testing.T) {
 
 	// Set a review with multiple files
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: "First", Hunks: []model.Hunk{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
 			{File: "file1.go", Diff: "diff1"},
 			{File: "file2.go", Diff: "diff2"},
 			{File: "file3.go", Diff: "diff3"},
@@ -2014,7 +2014,7 @@ func TestUpdate_FKeyCyclesFilterLevel(t *testing.T) {
 	m = updated.(tui.Model)
 
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
-		{ID: "1", Narrative: "Section 1"},
+		{ID: "1", What: "Section 1"},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
@@ -2074,7 +2074,7 @@ func TestUpdate_TKeyCyclesTestFilter(t *testing.T) {
 	m = updated.(tui.Model)
 
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
-		{ID: "1", Narrative: "Section 1"},
+		{ID: "1", What: "Section 1"},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
@@ -2295,7 +2295,7 @@ func TestNewModel_WithInitialReview_SetsReview(t *testing.T) {
 			Title: "Chapter 1",
 			Sections: []model.Section{{
 				ID:        "sec-1",
-				Narrative: "Test section",
+				What: "Test section",
 			}},
 		}},
 	}
@@ -2326,8 +2326,8 @@ func TestUpdate_WindowSizeMsg_InitializesFileTreeForPreloadedReview(t *testing.T
 			ID:    "ch-1",
 			Title: "Chapter 1",
 			Sections: []model.Section{
-				{ID: "sec-1", Narrative: "First", Hunks: []model.Hunk{{File: "a.go", Diff: "+test"}}},
-				{ID: "sec-2", Narrative: "Second", Hunks: []model.Hunk{{File: "b.go", Diff: "+test"}}},
+				{ID: "sec-1", What: "First", Hunks: []model.Hunk{{File: "a.go", Diff: "+test"}}},
+				{ID: "sec-2", What: "Second", Hunks: []model.Hunk{{File: "b.go", Diff: "+test"}}},
 			},
 		}},
 	}

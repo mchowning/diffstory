@@ -81,10 +81,11 @@ type Chapter struct {
 }
 
 type Section struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	Narrative string `json:"narrative"`
-	Hunks     []Hunk `json:"hunks"`
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	What  string `json:"what"`
+	Why   string `json:"why"`
+	Hunks []Hunk `json:"hunks"`
 }
 
 type Hunk struct {

@@ -159,7 +159,7 @@ func TestStore_RoundTrip(t *testing.T) {
 				Sections: []model.Section{
 					{
 						ID:        "1",
-						Narrative: "Test narrative",
+						What: "Test narrative",
 						Hunks: []model.Hunk{
 							{File: "main.go", StartLine: 10, Diff: "+added line"},
 						},

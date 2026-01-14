@@ -44,7 +44,7 @@ func modelWithReviewAndSize(numSections int) tui.Model {
 		sections[i] = model.Section{
 			ID:        string(rune('1' + i)),
 			Title:     "Title " + string(rune('A'+i)),
-			Narrative: "Section " + string(rune('A'+i)),
+			What: "Section " + string(rune('A'+i)),
 			Hunks: []model.Hunk{
 				{
 					File:      "file" + string(rune('1'+i)) + ".go",
@@ -79,13 +79,13 @@ func modelWithChapters() tui.Model {
 					{
 						ID:        "s1",
 						Title:     "Add login endpoint",
-						Narrative: "Implements POST /login with bcrypt hashing.",
+						What: "Implements POST /login with bcrypt hashing.",
 						Hunks:     []model.Hunk{{File: "auth.go", Diff: "+code"}},
 					},
 					{
 						ID:        "s2",
 						Title:     "Add login tests",
-						Narrative: "Tests the login endpoint.",
+						What: "Tests the login endpoint.",
 						Hunks:     []model.Hunk{{File: "auth_test.go", Diff: "+test"}},
 					},
 				},
@@ -97,7 +97,7 @@ func modelWithChapters() tui.Model {
 					{
 						ID:        "s3",
 						Title:     "Add user migration",
-						Narrative: "Creates users table with email column.",
+						What: "Creates users table with email column.",
 						Hunks:     []model.Hunk{{File: "migrate.go", Diff: "+sql"}},
 					},
 				},
@@ -256,6 +256,61 @@ func TestView_DescriptionPanelShowsNarrative(t *testing.T) {
 	}
 }
 
+func modelWithWhatWhy() tui.Model {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Chapters: []model.Chapter{
+			{
+				ID:    "ch1",
+				Title: "Authentication",
+				Sections: []model.Section{
+					{
+						ID:    "s1",
+						Title: "Add rate limiting",
+						What:  "Added rate limiting to login endpoint",
+						Why:   "Prevents brute-force attacks",
+						Hunks: []model.Hunk{{File: "auth.go", Diff: "+code"}},
+					},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	return updated.(tui.Model)
+}
+
+func TestView_DescriptionPanelShowsWhatAndWhy(t *testing.T) {
+	m := modelWithWhatWhy()
+	view := m.View()
+
+	// Description panel should show WHAT label on its own line (no colon)
+	if !strings.Contains(view, "WHAT") {
+		t.Error("Description panel should show 'WHAT' label")
+	}
+	if !strings.Contains(view, "Added rate limiting to login endpoint") {
+		t.Error("Description panel should show the What content")
+	}
+
+	// Description panel should show WHY label on its own line (no colon)
+	if !strings.Contains(view, "WHY") {
+		t.Error("Description panel should show 'WHY' label")
+	}
+	if !strings.Contains(view, "Prevents brute-force attacks") {
+		t.Error("Description panel should show the Why content")
+	}
+
+	// Content should be indented (appears after label line)
+	// We verify this by checking the content appears in the view
+	// The actual indentation is handled by the rendering logic
+}
+
 func TestView_SelectedSectionShowsTitleAndNarrative(t *testing.T) {
 	m := modelWithChapters()
 	view := m.View()
@@ -272,7 +327,7 @@ func TestView_SelectedSectionShowsTitleAndNarrative(t *testing.T) {
 func TestView_NotReadyShowsInitializing(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Set a review but don't send WindowSizeMsg (so viewport not initialized)
-	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ := m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -294,7 +349,7 @@ func TestView_SectionListTruncatesLongTitles(t *testing.T) {
 	// Create a review with a long title that exceeds section pane width
 	longTitle := "This is a very long section title that should be truncated with an ellipsis character at the end"
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Title: longTitle, Narrative: "Short narrative"},
+		{ID: "1", Title: longTitle, What: "Short narrative"},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
@@ -324,7 +379,7 @@ func TestView_StatusBarShowsErrorText(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Set a review
-	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -349,7 +404,7 @@ func TestView_HelpOverlayContainsKeybindings(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Set a review
-	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -445,7 +500,7 @@ func modelWithFilesForView() tui.Model {
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Test section",
+			What: "Test section",
 			Hunks: []model.Hunk{
 				{File: "src/main.go", Diff: "+added"},
 				{File: "src/util.go", Diff: "+added"},
@@ -529,7 +584,7 @@ func modelWithMultipleFilesForDiff() tui.Model {
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Test section",
+			What: "Test section",
 			Hunks: []model.Hunk{
 				{File: "src/main.go", Diff: "+added in main"},
 				{File: "src/util.go", Diff: "+added in util"},
@@ -709,7 +764,7 @@ func TestView_HelpOverlayShowsNewKeybindings(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Set a review
-	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -755,7 +810,7 @@ func TestView_DescriptionPanelShowsPositionIndicator(t *testing.T) {
 	for i := range 5 {
 		sections[i] = model.Section{
 			ID:        string(rune('1' + i)),
-			Narrative: "Section " + string(rune('A'+i)),
+			What: "Section " + string(rune('A'+i)),
 			Hunks:     []model.Hunk{{File: "file.go", Diff: "+added"}},
 		}
 	}
@@ -788,7 +843,7 @@ func TestView_SectionPanelDoesNotShowPositionIndicator(t *testing.T) {
 	for i := range 5 {
 		sections[i] = model.Section{
 			ID:        string(rune('1' + i)),
-			Narrative: "Section " + string(rune('A'+i)),
+			What: "Section " + string(rune('A'+i)),
 			Hunks:     []model.Hunk{{File: "file.go", Diff: "+added"}},
 		}
 	}
@@ -819,7 +874,7 @@ func TestView_SectionPaneScrollsWithOffset(t *testing.T) {
 		sections[i] = model.Section{
 			ID:        string(rune('0' + i)),
 			Title:     "SectionTitle" + string(rune('A'+i)),
-			Narrative: "Narrative for section " + string(rune('A'+i)),
+			What: "Narrative for section " + string(rune('A'+i)),
 			Hunks:     []model.Hunk{{File: "file.go", Diff: "+added"}},
 		}
 	}
@@ -868,7 +923,7 @@ func TestView_FilesPaneScrollsWithOffset(t *testing.T) {
 		}
 	}
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", Narrative: "Test section", Hunks: hunks},
+		{ID: "1", What: "Test section", Hunks: hunks},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
@@ -914,7 +969,7 @@ func TestView_FilesPanelShowsPositionIndicator(t *testing.T) {
 			Diff: "+added",
 		}
 	}
-	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", Narrative: "Section", Hunks: hunks}})
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{{ID: "1", What: "Section", Hunks: hunks}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -947,7 +1002,7 @@ func TestView_FileHeadingAppearsOnceForMultipleHunks(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Test section",
+			What: "Test section",
 			Hunks: []model.Hunk{
 				{File: "src/main.go", Diff: "+first hunk"},
 				{File: "src/main.go", Diff: "+second hunk"},
@@ -1015,7 +1070,7 @@ func TestView_ReviewStateShowsTimestamp(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Create review with CreatedAt set to 2 hours ago
-	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", What: "Section"}})
 	review.CreatedAt = time.Now().Add(-2 * time.Hour)
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
@@ -1038,7 +1093,7 @@ func TestView_ReviewWithoutTimestampShowsNoCreatedLine(t *testing.T) {
 	m = updated.(tui.Model)
 
 	// Create review WITHOUT CreatedAt (zero time)
-	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1058,7 +1113,7 @@ func TestView_ReviewStateShowsFilterIndicator(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1077,7 +1132,7 @@ func TestView_FilterIndicatorShowsCurrentLevel(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1096,7 +1151,7 @@ func TestView_FooterShowsFilterShortcut(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1123,7 +1178,7 @@ func modelWithFilterLevel(filterLevel string) tui.Model {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Section with mixed importance",
+			What: "Section with mixed importance",
 			Hunks: []model.Hunk{
 				{File: "main.go", Diff: "+low importance change", Importance: "low"},
 				{File: "main.go", Diff: "+medium importance change", Importance: "medium"},
@@ -1192,7 +1247,7 @@ func TestView_ShowsFilteredIndicatorWhenAllHunksHidden(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "All low importance section",
+			What: "All low importance section",
 			Hunks: []model.Hunk{
 				{File: "low.go", Diff: "+low", Importance: "low"},
 			},
@@ -1221,7 +1276,7 @@ func TestView_FilesPanelHidesFilesWithNoVisibleHunks(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Mixed section",
+			What: "Mixed section",
 			Hunks: []model.Hunk{
 				{File: "low.go", Diff: "+low", Importance: "low"},
 				{File: "high.go", Diff: "+high", Importance: "high"},
@@ -1259,7 +1314,7 @@ func TestView_SectionListDoesNotShowFilteredIndicator(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "All low importance section",
+			What: "All low importance section",
 			Hunks: []model.Hunk{
 				{File: "low.go", Diff: "+low", Importance: "low"},
 			},
@@ -1294,7 +1349,7 @@ func TestView_DiffHeaderShowsFilteredWhenContentHidden(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Mixed section",
+			What: "Mixed section",
 			Hunks: []model.Hunk{
 				{File: "main.go", Diff: "+low change", Importance: "low"},
 				{File: "main.go", Diff: "+high change", Importance: "high"},
@@ -1323,7 +1378,7 @@ func TestView_DiffHeaderNoFilteredWhenNoContentHidden(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Test section",
+			What: "Test section",
 			Hunks: []model.Hunk{
 				{File: "main.go", Diff: "+change", Importance: "low"},
 			},
@@ -1355,7 +1410,7 @@ func TestView_DiffHeaderNoFilteredWhenFilterActiveButAllPassFilter(t *testing.T)
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "High importance section",
+			What: "High importance section",
 			Hunks: []model.Hunk{
 				{File: "main.go", Diff: "+high1", Importance: "high"},
 				{File: "main.go", Diff: "+high2", Importance: "high"},
@@ -1385,7 +1440,7 @@ func TestView_DiffHeaderFilteredUpdatesWithFileNavigation(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Test section",
+			What: "Test section",
 			Hunks: []model.Hunk{
 				{File: "all_high.go", Diff: "+high", Importance: "high"},
 				{File: "mixed.go", Diff: "+low", Importance: "low"},
@@ -1440,7 +1495,7 @@ func TestView_TestFilterHidesTestHunks(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Section with tests",
+			What: "Section with tests",
 			Hunks: []model.Hunk{
 				{File: "main.go", Diff: "+production code change", IsTest: boolPtr(false)},
 				{File: "main.go", Diff: "+test code change", IsTest: boolPtr(true)},
@@ -1492,7 +1547,7 @@ func TestView_FooterShowsTestFilterShortcut(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1511,7 +1566,7 @@ func TestView_FilterIndicatorShowsTestFilterWhenExcluding(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1535,7 +1590,7 @@ func TestView_FilterIndicatorShowsTestFilterWhenOnly(t *testing.T) {
 	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", Narrative: "Section"}})
+	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{{ID: "1", What: "Section"}})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
@@ -1565,7 +1620,7 @@ func TestView_CompoundFilteringAppliesBothFilters(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Section",
+			What: "Section",
 			Hunks: []model.Hunk{
 				{File: "main.go", Diff: "+high prod", Importance: "high", IsTest: boolPtr(false)},
 				{File: "main.go", Diff: "+low prod", Importance: "low", IsTest: boolPtr(false)},
@@ -1613,7 +1668,7 @@ func TestView_FilesHeaderShowsFilteredWhenFileCompletelyHidden(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Section",
+			What: "Section",
 			Hunks: []model.Hunk{
 				{File: "visible.go", Diff: "+high", Importance: "high"},
 				{File: "hidden.go", Diff: "+low", Importance: "low"},
@@ -1643,7 +1698,7 @@ func TestView_FilesHeaderNoFilteredWhenAllFilesHaveVisibleHunks(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Section",
+			What: "Section",
 			Hunks: []model.Hunk{
 				{File: "file1.go", Diff: "+high", Importance: "high"},
 				{File: "file2.go", Diff: "+high", Importance: "high"},
@@ -1675,7 +1730,7 @@ func TestView_FilesHeaderNoFilteredWhenDefaultFilter(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Section",
+			What: "Section",
 			Hunks: []model.Hunk{
 				{File: "file1.go", Diff: "+low", Importance: "low"},
 				{File: "file2.go", Diff: "+low", Importance: "low"},
@@ -1704,7 +1759,7 @@ func TestView_FilesHeaderShowsFilteredWhenTestFilterHidesFile(t *testing.T) {
 	review := model.NewReviewWithSections("/test/project", "Test Review", []model.Section{
 		{
 			ID:        "1",
-			Narrative: "Section",
+			What: "Section",
 			Hunks: []model.Hunk{
 				{File: "main.go", Diff: "+prod", IsTest: boolPtr(false)},
 				{File: "main_test.go", Diff: "+test", IsTest: boolPtr(true)},

@@ -38,7 +38,8 @@ Respond with JSON in this exact format (no markdown fences, no explanation text)
         {
           "id": "section-identifier",
           "title": "Short section title",
-          "narrative": "Concise explanation of what and why. Mention key decisions if relevant.",
+          "what": "Brief description of WHAT changed in this section",
+          "why": "Brief explanation of WHY this change was made",
           "hunks": [
             {"id": "file/path.go::45", "importance": "high", "isTest": false},
             {"id": "file/path_test.go::120", "importance": "medium", "isTest": true}
@@ -62,12 +63,22 @@ DO NOT:
 - Each chapter contains one or more sections.
 - Chapter title: ~20-30 characters, describes the theme (e.g., "Authentication", "Database Schema").
 - Section title: ~30-40 characters, describes the specific change (e.g., "Add login endpoint handler").
+- what: 1 sentence describing the change (e.g., "Added rate limiting to login endpoint")
+- why: 1 sentence explaining the reasoning (e.g., "Prevents brute-force attacks by limiting failed attempts")
 - Each hunk must have importance: "high", "medium", or "low"
   - high: Critical changes (security, core logic, breaking changes)
   - medium: Important changes (new features, significant refactors)
   - low: Minor changes (formatting, comments, trivial fixes)
 - Each hunk must have isTest: true if the hunk is test code, false if production code
   - Test code includes: unit tests, integration tests, test fixtures, test utilities, mocks
+
+Example (good):
+  "what": "Added rate limiting to login endpoint"
+  "why": "Prevents brute-force attacks by limiting failed attempts to 5 per minute per IP"
+
+Example (bad):
+  "what": "Changed auth.go"  <- Too vague, doesn't describe the actual change
+  "why": "Needed to update it" <- Doesn't explain the reasoning
 %s`
 
 const retryPromptAddendum = `
@@ -295,9 +306,10 @@ func assembleReview(workDir string, response *LLMResponse, hunks []diff.ParsedHu
 		}
 		for _, s := range ch.Sections {
 			section := model.Section{
-				ID:        s.ID,
-				Title:     s.Title,
-				Narrative: s.Narrative,
+				ID:    s.ID,
+				Title: s.Title,
+				What:  s.What,
+				Why:   s.Why,
 			}
 			for _, href := range s.Hunks {
 				if h, ok := hunkMap[href.ID]; ok {
@@ -346,10 +358,11 @@ func assemblePartialReview(workDir string, response *LLMResponse, hunks []diff.P
 			Title: "Unclassified",
 			Sections: []model.Section{
 				{
-					ID:        "unclassified",
-					Title:     "Unclassified changes",
-					Narrative: "The following changes could not be automatically classified.",
-					Hunks:     unclassifiedHunks,
+					ID:    "unclassified",
+					Title: "Unclassified changes",
+					What:  "Changes that could not be automatically classified",
+					Why:   "These changes were not included in the LLM's classification response",
+					Hunks: unclassifiedHunks,
 				},
 			},
 		})

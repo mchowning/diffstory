@@ -20,10 +20,11 @@ type LLMChapter struct {
 
 // LLMSection represents a classified section from the LLM
 type LLMSection struct {
-	ID        string       `json:"id"`
-	Title     string       `json:"title"`
-	Narrative string       `json:"narrative"`
-	Hunks     []LLMHunkRef `json:"hunks"`
+	ID    string       `json:"id"`
+	Title string       `json:"title"`
+	What  string       `json:"what"`
+	Why   string       `json:"why"`
+	Hunks []LLMHunkRef `json:"hunks"`
 }
 
 // LLMHunkRef references a hunk by ID with its classified importance

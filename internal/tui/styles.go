@@ -43,4 +43,8 @@ var (
 	timestampStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("244")).
 			Italic(true)
+
+	// Description pane labels (WHAT/WHY)
+	descriptionLabelStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("183")) // Soft lavender
 )

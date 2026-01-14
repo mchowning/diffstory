@@ -15,7 +15,8 @@ func TestLLMChapter_UnmarshalJSON(t *testing.T) {
 			{
 				"id": "section-1",
 				"title": "Add login types",
-				"narrative": "Defines the types needed for login.",
+				"what": "Added types for login request and response",
+				"why": "Needed for type-safe API communication",
 				"hunks": [{"id": "auth.go::10", "importance": "high"}]
 			}
 		]
@@ -41,6 +42,29 @@ func TestLLMChapter_UnmarshalJSON(t *testing.T) {
 	}
 }
 
+func TestLLMSection_UnmarshalJSON_WhatWhy(t *testing.T) {
+	jsonData := `{
+		"id": "section-1",
+		"title": "Add rate limiting",
+		"what": "Added rate limiting to login endpoint",
+		"why": "Prevents brute-force attacks by limiting failed attempts",
+		"hunks": [{"id": "auth.go::10", "importance": "high"}]
+	}`
+
+	var section LLMSection
+	err := json.Unmarshal([]byte(jsonData), &section)
+	if err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if section.What != "Added rate limiting to login endpoint" {
+		t.Errorf("What = %q, want %q", section.What, "Added rate limiting to login endpoint")
+	}
+	if section.Why != "Prevents brute-force attacks by limiting failed attempts" {
+		t.Errorf("Why = %q, want %q", section.Why, "Prevents brute-force attacks by limiting failed attempts")
+	}
+}
+
 func TestValidateClassification_AllHunksPresent(t *testing.T) {
 	inputHunks := []diff.ParsedHunk{
 		{ID: "file.go::10", File: "file.go", StartLine: 10},
@@ -57,7 +81,7 @@ func TestValidateClassification_AllHunksPresent(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Test section",
-						Narrative: "Test narrative",
+						What: "Test narrative",
 						Hunks: []LLMHunkRef{
 							{ID: "file.go::10", Importance: "high"},
 							{ID: "file.go::50", Importance: "medium"},
@@ -101,7 +125,7 @@ func TestValidateClassification_MissingHunks(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Test section",
-						Narrative: "Test narrative",
+						What: "Test narrative",
 						Hunks: []LLMHunkRef{
 							{ID: "file.go::10", Importance: "high"},
 							// file.go::50 and file.go::100 are missing
@@ -137,13 +161,13 @@ func TestValidateClassification_DuplicateHunks(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "First section",
-						Narrative: "First section",
+						What: "First section",
 						Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "high"}},
 					},
 					{
 						ID:        "section2",
 						Title:     "Second section",
-						Narrative: "Second section",
+						What: "Second section",
 						Hunks:     []LLMHunkRef{{ID: "file.go::10", Importance: "medium"}}, // duplicate
 					},
 				},
@@ -177,7 +201,7 @@ func TestValidateClassification_InvalidImportance(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Test section",
-						Narrative: "Test narrative",
+						What: "Test narrative",
 						Hunks: []LLMHunkRef{
 							{ID: "file.go::10", Importance: "high"},
 							{ID: "file.go::50", Importance: "invalid"}, // invalid importance
@@ -213,7 +237,7 @@ func TestValidateClassification_NormalizesImportance(t *testing.T) {
 					{
 						ID:        "section1",
 						Title:     "Test section",
-						Narrative: "Test narrative",
+						What: "Test narrative",
 						Hunks: []LLMHunkRef{
 							{ID: "file.go::10", Importance: "Critical"}, // should normalize to "high"
 						},

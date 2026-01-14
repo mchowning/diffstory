@@ -119,7 +119,7 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 				Sections: []model.Section{
 					{
 						ID:        "section-1",
-						Narrative: "This is the first section",
+						What: "This is the first section",
 						Hunks: []model.Hunk{
 							{
 								File:       "main.go",
@@ -131,7 +131,7 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 					},
 					{
 						ID:        "section-2",
-						Narrative: "Second section",
+						What: "Second section",
 						Hunks:     []model.Hunk{},
 					},
 				},
@@ -163,8 +163,8 @@ func TestService_SubmitPreservesAllFields(t *testing.T) {
 	if s1.ID != "section-1" {
 		t.Errorf("Section[0].ID = %q, want %q", s1.ID, "section-1")
 	}
-	if s1.Narrative != "This is the first section" {
-		t.Errorf("Section[0].Narrative = %q, want %q", s1.Narrative, "This is the first section")
+	if s1.What != "This is the first section" {
+		t.Errorf("Section[0].What = %q, want %q", s1.What, "This is the first section")
 	}
 	if len(s1.Hunks) != 1 {
 		t.Fatalf("Section[0].Hunks count = %d, want 1", len(s1.Hunks))
@@ -205,7 +205,7 @@ func TestService_SubmitRejectsInvalidImportance(t *testing.T) {
 				Sections: []model.Section{
 					{
 						ID:        "section-1",
-						Narrative: "Test",
+						What: "Test",
 						Hunks: []model.Hunk{
 							{
 								File:       "main.go",
@@ -240,7 +240,7 @@ func TestService_SubmitRejectsMissingImportance(t *testing.T) {
 				Sections: []model.Section{
 					{
 						ID:        "section-1",
-						Narrative: "Test",
+						What: "Test",
 						Hunks: []model.Hunk{
 							{
 								File:       "main.go",
@@ -278,7 +278,7 @@ func TestService_SubmitAcceptsValidImportance(t *testing.T) {
 					Sections: []model.Section{
 						{
 							ID:        "section-1",
-							Narrative: "Test",
+							What: "Test",
 							Hunks: []model.Hunk{
 								{
 									File:       "main.go",

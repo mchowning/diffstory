@@ -121,7 +121,7 @@ func TestWatcher_SendsReviewWhenFileCreated(t *testing.T) {
 				ID:    "ch-1",
 				Title: "Changes",
 				Sections: []model.Section{
-					{ID: "1", Narrative: "Test narrative"},
+					{ID: "1", What: "Test narrative"},
 				},
 			},
 		},
@@ -355,7 +355,7 @@ func TestWatcher_LoadsExistingReviewFileOnStart(t *testing.T) {
 				ID:    "ch-1",
 				Title: "Existing",
 				Sections: []model.Section{
-					{ID: "1", Narrative: "Pre-existing section"},
+					{ID: "1", What: "Pre-existing section"},
 				},
 			},
 		},

@@ -117,7 +117,7 @@ func TestSection_Title_Serialization(t *testing.T) {
 	section := Section{
 		ID:        "section-1",
 		Title:     "Add login handler",
-		Narrative: "Implements the login endpoint with bcrypt hashing.",
+		What: "Implements the login endpoint with bcrypt hashing.",
 		Hunks:     []Hunk{},
 	}
 
@@ -144,7 +144,7 @@ func TestChapter_Serialization(t *testing.T) {
 			{
 				ID:        "section-1",
 				Title:     "Add login types",
-				Narrative: "Defines types for login.",
+				What: "Defines types for login.",
 				Hunks:     []Hunk{},
 			},
 		},
@@ -180,15 +180,15 @@ func TestReview_WithChapters(t *testing.T) {
 				ID:    "auth",
 				Title: "Authentication",
 				Sections: []Section{
-					{ID: "s1", Title: "Login types", Narrative: "Adds types", Hunks: []Hunk{}},
-					{ID: "s2", Title: "Login handler", Narrative: "Adds handler", Hunks: []Hunk{}},
+					{ID: "s1", Title: "Login types", What: "Adds types", Hunks: []Hunk{}},
+					{ID: "s2", Title: "Login handler", What: "Adds handler", Hunks: []Hunk{}},
 				},
 			},
 			{
 				ID:    "db",
 				Title: "Database",
 				Sections: []Section{
-					{ID: "s3", Title: "User migration", Narrative: "Adds migration", Hunks: []Hunk{}},
+					{ID: "s3", Title: "User migration", What: "Adds migration", Hunks: []Hunk{}},
 				},
 			},
 		},
@@ -243,5 +243,32 @@ func TestReview_AllSections(t *testing.T) {
 	}
 	if sections[2].ID != "s3" {
 		t.Errorf("sections[2].ID = %q, want %q", sections[2].ID, "s3")
+	}
+}
+
+func TestSection_WhatWhy_Serialization(t *testing.T) {
+	section := Section{
+		ID:    "section-1",
+		Title: "Add login handler",
+		What:  "Added rate limiting to login endpoint",
+		Why:   "Prevents brute-force attacks by limiting failed attempts",
+		Hunks: []Hunk{},
+	}
+
+	data, err := json.Marshal(section)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	var unmarshaled Section
+	if err := json.Unmarshal(data, &unmarshaled); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if unmarshaled.What != "Added rate limiting to login endpoint" {
+		t.Errorf("What = %q, want %q", unmarshaled.What, "Added rate limiting to login endpoint")
+	}
+	if unmarshaled.Why != "Prevents brute-force attacks by limiting failed attempts" {
+		t.Errorf("Why = %q, want %q", unmarshaled.Why, "Prevents brute-force attacks by limiting failed attempts")
 	}
 }

@@ -311,10 +311,10 @@ func (m Model) renderSectionPane(width, height int) string {
 func (m Model) renderSection(section model.Section, flatIdx, contentWidth int) string {
 	isSelected := flatIdx == m.selected
 
-	// Determine title to show (use Narrative as fallback if Title is empty)
+	// Determine title to show (use What as fallback if Title is empty)
 	title := section.Title
 	if title == "" {
-		title = section.Narrative
+		title = section.What
 	}
 
 	// Truncate title to fit on single line (accounting for prefix)
@@ -329,33 +329,42 @@ func (m Model) renderSection(section model.Section, flatIdx, contentWidth int) s
 }
 
 func (m Model) renderDescriptionPane(width, height int) string {
-	var narrative string
+	var what, why string
 	if m.review != nil {
 		sections := m.review.AllSections()
 		if m.selected < len(sections) {
-			narrative = sections[m.selected].Narrative
+			what = sections[m.selected].What
+			why = sections[m.selected].Why
 		}
 	}
 
 	// Calculate responsive horizontal padding
 	hPadding := CalcDescriptionPadding(width)
 
-	// Content width accounts for borders and horizontal padding on both sides
-	contentWidth := width - 2 - (hPadding * 2)
-	if contentWidth < 10 {
-		contentWidth = 10
-	}
-
 	var content string
-	if narrative != "" {
-		lines := wrapText(narrative, contentWidth)
-		// Apply horizontal padding to each line
-		paddedLines := make([]string, 0, len(lines)+2)
+	if what != "" || why != "" {
+		paddedLines := make([]string, 0)
 		paddedLines = append(paddedLines, "") // vertical padding top
 		padding := strings.Repeat(" ", hPadding)
-		for _, line := range lines {
-			paddedLines = append(paddedLines, padding+line)
+		contentIndent := padding + "  " // Extra indent for content below label
+
+		// Add WHAT section (label on its own line, content indented below)
+		if what != "" {
+			paddedLines = append(paddedLines, padding+descriptionLabelStyle.Render("WHAT"))
+			paddedLines = append(paddedLines, contentIndent+what)
 		}
+
+		// Add blank line between WHAT and WHY
+		if what != "" && why != "" {
+			paddedLines = append(paddedLines, "")
+		}
+
+		// Add WHY section (label on its own line, content indented below)
+		if why != "" {
+			paddedLines = append(paddedLines, padding+descriptionLabelStyle.Render("WHY"))
+			paddedLines = append(paddedLines, contentIndent+why)
+		}
+
 		paddedLines = append(paddedLines, "") // vertical padding bottom
 		content = strings.Join(paddedLines, "\n")
 	}
@@ -383,22 +392,26 @@ func (m Model) descriptionPaneHeight(width, maxHeight int) int {
 		return minHeight
 	}
 
-	narrative := sections[m.selected].Narrative
-	if narrative == "" {
+	what := sections[m.selected].What
+	why := sections[m.selected].Why
+	if what == "" && why == "" {
 		return minHeight
 	}
 
-	// Calculate content width accounting for borders and horizontal padding
-	hPadding := CalcDescriptionPadding(width)
-	contentWidth := width - 2 - (hPadding * 2)
-	if contentWidth < 10 {
-		contentWidth = 10
+	// Count content lines: each section has label line + content line
+	contentLines := 0
+	if what != "" {
+		contentLines += 2 // WHAT label + content
+	}
+	if what != "" && why != "" {
+		contentLines++ // blank line between sections
+	}
+	if why != "" {
+		contentLines += 2 // WHY label + content
 	}
 
-	lines := wrapText(narrative, contentWidth)
-
-	// Height = wrapped lines + 2 borders + 2 vertical padding lines
-	height := len(lines) + 4
+	// Height = content lines + 2 borders + 2 vertical padding lines
+	height := contentLines + 4
 	if height < minHeight {
 		height = minHeight
 	}
