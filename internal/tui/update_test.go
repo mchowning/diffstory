@@ -478,6 +478,106 @@ func TestUpdate_ShiftKScrollsViewportUp(t *testing.T) {
 	}
 }
 
+func TestUpdate_RightBracketScrollsViewportDownHalfPage(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review with enough content to scroll
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
+			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	initialOffset := m.ViewportYOffset()
+
+	// Press ] to scroll down half page
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("]")}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Should scroll down by more than 1 line (half page)
+	scrollAmount := result.ViewportYOffset() - initialOffset
+	if scrollAmount <= 1 {
+		t.Errorf("Expected ] to scroll more than 1 line, got %d", scrollAmount)
+	}
+}
+
+func TestUpdate_LeftBracketScrollsViewportUpHalfPage(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review with enough content to scroll
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
+			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// First scroll down with ] to have somewhere to scroll up from
+	bracketMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("]")}
+	updated, _ = m.Update(bracketMsg)
+	m = updated.(tui.Model)
+
+	offsetAfterDown := m.ViewportYOffset()
+
+	// Now scroll up with [
+	leftBracketMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("[")}
+	updated, _ = m.Update(leftBracketMsg)
+	result := updated.(tui.Model)
+
+	if result.ViewportYOffset() >= offsetAfterDown {
+		t.Errorf("ViewportYOffset() = %d, expected < %d after [ key", result.ViewportYOffset(), offsetAfterDown)
+	}
+}
+
+func TestUpdate_BracketKeysScrollDiffRegardlessOfFocusedPanel(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review with enough content to scroll
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
+			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Focus on files panel (not diff) by pressing "2"
+	focusFilesMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
+	updated, _ = m.Update(focusFilesMsg)
+	m = updated.(tui.Model)
+
+	if m.FocusedPanel() != tui.PanelFiles {
+		t.Fatalf("expected files panel to be focused, got %d", m.FocusedPanel())
+	}
+
+	initialOffset := m.ViewportYOffset()
+
+	// Press ] - should still scroll diff even though files panel is focused
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("]")}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.ViewportYOffset() <= initialOffset {
+		t.Errorf("Expected ] to scroll diff when files panel focused, but offset unchanged")
+	}
+}
+
 func TestUpdate_QuestionMarkTogglesShowHelp(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 

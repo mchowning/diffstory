@@ -123,7 +123,8 @@ diffstory
 | Key | Action |
 |-----|--------|
 | `j` / `k` | Navigate in focused panel (sections, files, or diff) |
-| `J` / `K` | Scroll diff content |
+| `J` / `K` | Scroll diff content (single line) |
+| `]` / `[` | Scroll diff content (half page) |
 | `h` / `l` | Cycle panel focus |
 | `0` / `1` / `2` | Focus Diff/Section/Files panel |
 | `<` / `>` | Jump to first/last item |

@@ -112,6 +112,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.LineDown(1)
 		case "K":
 			m.viewport.LineUp(1)
+		case "]":
+			m.viewport.HalfViewDown()
+		case "[":
+			m.viewport.HalfViewUp()
 		case "ctrl+j":
 			if m.flattenedFiles != nil && m.selectedFile < len(m.flattenedFiles)-1 {
 				m.selectedFile++
