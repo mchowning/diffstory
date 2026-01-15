@@ -488,6 +488,35 @@ func TestView_DiffPanelShowsTitle0(t *testing.T) {
 	}
 }
 
+func TestView_DiffPanelShowsScrollbarWhenContentExceedsViewport(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	// Use a small window to ensure content exceeds viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 20}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create review with enough diff content to require scrolling
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{
+			ID:   "1",
+			What: "Test section",
+			Hunks: []model.Hunk{
+				{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+			},
+		},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// The scrollbar character ▐ should appear in the diff panel
+	if !strings.Contains(view, "▐") {
+		t.Error("diff panel should show scrollbar when content exceeds viewport")
+	}
+}
+
 // Files Panel View Tests
 
 func modelWithFilesForView() tui.Model {

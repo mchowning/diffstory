@@ -574,7 +574,17 @@ func (m Model) renderDiffPaneWithTitle(width, height int) string {
 		title = "[0] Diff (filtered)"
 	}
 
-	return renderBorderedPanel(title, content, width, height, m.focusedPanel == PanelDiff)
+	// Calculate scrollbar if content exceeds viewport
+	var scrollbar *ScrollbarInfo
+	totalLines := m.viewport.TotalLineCount()
+	visibleLines := m.viewport.Height
+	if totalLines > visibleLines {
+		contentHeight := height - 2 // Subtract top/bottom borders
+		start, sbHeight := CalcScrollbar(totalLines, visibleLines, m.viewport.YOffset, contentHeight)
+		scrollbar = &ScrollbarInfo{Start: start, Height: sbHeight}
+	}
+
+	return renderBorderedPanelWithScrollbar(title, content, width, height, m.focusedPanel == PanelDiff, scrollbar)
 }
 
 func (m Model) renderDiffContent(section model.Section) string {
