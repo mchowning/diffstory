@@ -30,22 +30,34 @@ That's it! diffstory will use Claude Code to analyze your diff and present it as
 
 ## Installation
 
-### From Source (with Go)
+### With Nix (Recommended)
+
+Run directly without installing:
 
 ```bash
+nix run github:mchowning/diffstory
+```
+
+Or install to your profile:
+
+```bash
+nix profile install github:mchowning/diffstory
+```
+
+### With Go
+
+```bash
+go install github.com/mchowning/diffstory/cmd/diffstory@latest
+```
+
+This installs the `diffstory` binary to your `$GOPATH/bin` (or `$GOBIN` if set).
+
+### From Source
+
+```bash
+git clone https://github.com/mchowning/diffstory.git
+cd diffstory
 go build -o diffstory ./cmd/diffstory/
-```
-
-### From Source (with Nix)
-
-```bash
-nix develop -c go build -o diffstory ./cmd/diffstory/
-```
-
-### Build with Version
-
-```bash
-go build -ldflags "-X main.Version=1.0.0" -o diffstory ./cmd/diffstory/
 ```
 
 ## Configuration
