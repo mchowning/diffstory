@@ -348,10 +348,19 @@ func (m Model) renderDescriptionPane(width, height int) string {
 		padding := strings.Repeat(" ", hPadding)
 		contentIndent := padding + "  " // Extra indent for content below label
 
+		// Calculate available width for content text
+		// width - 2 (borders) - len(contentIndent) - hPadding (right padding for symmetry)
+		contentWidth := width - 2 - len(contentIndent) - hPadding
+		if contentWidth < 10 {
+			contentWidth = 10 // Minimum reasonable width
+		}
+
 		// Add WHAT section (label on its own line, content indented below)
 		if what != "" {
 			paddedLines = append(paddedLines, padding+descriptionLabelStyle.Render("WHAT"))
-			paddedLines = append(paddedLines, contentIndent+what)
+			for _, line := range wrapText(what, contentWidth) {
+				paddedLines = append(paddedLines, contentIndent+line)
+			}
 		}
 
 		// Add blank line between WHAT and WHY
@@ -362,7 +371,9 @@ func (m Model) renderDescriptionPane(width, height int) string {
 		// Add WHY section (label on its own line, content indented below)
 		if why != "" {
 			paddedLines = append(paddedLines, padding+descriptionLabelStyle.Render("WHY"))
-			paddedLines = append(paddedLines, contentIndent+why)
+			for _, line := range wrapText(why, contentWidth) {
+				paddedLines = append(paddedLines, contentIndent+line)
+			}
 		}
 
 		paddedLines = append(paddedLines, "") // vertical padding bottom
@@ -398,16 +409,26 @@ func (m Model) descriptionPaneHeight(width, maxHeight int) int {
 		return minHeight
 	}
 
-	// Count content lines: each section has label line + content line
+	// Calculate content width (same as renderDescriptionPane)
+	hPadding := CalcDescriptionPadding(width)
+	contentIndentLen := hPadding + 2 // padding + "  "
+	contentWidth := width - 2 - contentIndentLen - hPadding
+	if contentWidth < 10 {
+		contentWidth = 10
+	}
+
+	// Count content lines, accounting for wrapped text
 	contentLines := 0
 	if what != "" {
-		contentLines += 2 // WHAT label + content
+		contentLines++ // WHAT label
+		contentLines += len(wrapText(what, contentWidth))
 	}
 	if what != "" && why != "" {
 		contentLines++ // blank line between sections
 	}
 	if why != "" {
-		contentLines += 2 // WHY label + content
+		contentLines++ // WHY label
+		contentLines += len(wrapText(why, contentWidth))
 	}
 
 	// Height = content lines + 2 borders + 2 vertical padding lines

@@ -1810,3 +1810,195 @@ func TestView_FilesHeaderShowsFilteredWhenTestFilterHidesFile(t *testing.T) {
 		t.Error("files header should show '(filtered)' when test filter hides a file")
 	}
 }
+
+// Description Pane Text Wrapping Tests
+
+func TestView_DescriptionPaneWrapsLongWhatText(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+
+	// Use a narrow window to force text wrapping
+	// With width 60, rightWidth = 60 - 20 - 2 = 38
+	// hPadding = 38/20 = 1, contentIndent = "   " (3 spaces)
+	// Available content width = 38 - 2 (borders) - 3 (contentIndent) - 1 (right padding) = 32
+	sizeMsg := tea.WindowSizeMsg{Width: 60, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a "What" that will need to wrap (longer than 32 characters)
+	longWhat := "This is a very long description that should wrap across multiple lines"
+	review := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Chapters: []model.Chapter{
+			{
+				ID:    "ch1",
+				Title: "Test Chapter",
+				Sections: []model.Section{
+					{
+						ID:    "s1",
+						Title: "Test Section",
+						What:  longWhat,
+						Hunks: []model.Hunk{{File: "test.go", Diff: "+code"}},
+					},
+				},
+			},
+		},
+	}
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	view := m.View()
+
+	// The full text should NOT appear on a single line since it's too long
+	// Instead, it should be wrapped. If unwrapped, the entire longWhat would
+	// appear on one line. With wrapping, we expect multiple lines.
+	// We verify wrapping by checking that "should wrap across" appears
+	// (this would be on a second line after wrapping)
+	if !strings.Contains(view, "should wrap across") {
+		t.Error("wrapped text should contain 'should wrap across'")
+	}
+
+	// The key test: verify wrapped lines have consistent indentation
+	// Find all lines containing parts of the wrapped text
+	lines := strings.Split(view, "\n")
+	var contentLines []string
+	for _, line := range lines {
+		// Look for lines that contain parts of the What content
+		if strings.Contains(line, "This is a very") ||
+			strings.Contains(line, "long description") ||
+			strings.Contains(line, "should wrap") ||
+			strings.Contains(line, "multiple lines") {
+			contentLines = append(contentLines, line)
+		}
+	}
+
+	// Should have multiple wrapped lines
+	if len(contentLines) < 2 {
+		t.Errorf("expected at least 2 wrapped content lines, got %d", len(contentLines))
+	}
+
+	// All content lines should start with the same indentation
+	// (spaces before the actual content)
+	if len(contentLines) >= 2 {
+		firstIndent := countLeadingSpaces(contentLines[0])
+		for i, line := range contentLines[1:] {
+			indent := countLeadingSpaces(line)
+			if indent != firstIndent {
+				t.Errorf("wrapped line %d has indent %d, expected %d (same as first line)", i+1, indent, firstIndent)
+			}
+		}
+	}
+}
+
+// countLeadingSpaces counts the number of leading space characters in a string
+func countLeadingSpaces(s string) int {
+	count := 0
+	for _, r := range s {
+		if r == ' ' {
+			count++
+		} else {
+			break
+		}
+	}
+	return count
+}
+
+func TestView_DescriptionPaneHeightGrowsWithWrappedContent(t *testing.T) {
+	// Test that the description pane height increases when content wraps
+
+	// First, create a model with short content that doesn't wrap
+	mShort := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 60, Height: 40}
+	updated, _ := mShort.Update(sizeMsg)
+	mShort = updated.(tui.Model)
+
+	shortWhat := "Short description"
+	reviewShort := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Chapters: []model.Chapter{
+			{
+				ID:    "ch1",
+				Title: "Test Chapter",
+				Sections: []model.Section{
+					{
+						ID:    "s1",
+						Title: "Test Section",
+						What:  shortWhat,
+						Hunks: []model.Hunk{{File: "test.go", Diff: "+code"}},
+					},
+				},
+			},
+		},
+	}
+	updated, _ = mShort.Update(tui.ReviewReceivedMsg{Review: reviewShort})
+	mShort = updated.(tui.Model)
+
+	// Now create a model with long content that wraps
+	mLong := tui.NewModel("/test/project", nil, nil, nil)
+	updated, _ = mLong.Update(sizeMsg)
+	mLong = updated.(tui.Model)
+
+	longWhat := "This is a very long description that should wrap across multiple lines because it exceeds the available width"
+	reviewLong := model.Review{
+		WorkingDirectory: "/test/project",
+		Title:            "Test Review",
+		Chapters: []model.Chapter{
+			{
+				ID:    "ch1",
+				Title: "Test Chapter",
+				Sections: []model.Section{
+					{
+						ID:    "s1",
+						Title: "Test Section",
+						What:  longWhat,
+						Hunks: []model.Hunk{{File: "test.go", Diff: "+code"}},
+					},
+				},
+			},
+		},
+	}
+	updated, _ = mLong.Update(tui.ReviewReceivedMsg{Review: reviewLong})
+	mLong = updated.(tui.Model)
+
+	viewShort := mShort.View()
+	viewLong := mLong.View()
+
+	// Count the lines in the Description panel for each view
+	// We do this by finding the Description panel border and counting lines inside
+	shortDescLines := countDescriptionPaneLines(viewShort)
+	longDescLines := countDescriptionPaneLines(viewLong)
+
+	// The long content view should have more lines in the description pane
+	if longDescLines <= shortDescLines {
+		t.Errorf("description pane with wrapped content should have more lines: short=%d, long=%d",
+			shortDescLines, longDescLines)
+	}
+}
+
+// countDescriptionPaneLines counts the number of content lines in the Description panel
+// by looking for the area between "Description" header and the next panel
+func countDescriptionPaneLines(view string) int {
+	lines := strings.Split(view, "\n")
+	inDescriptionPane := false
+	count := 0
+
+	for _, line := range lines {
+		// Start counting after we see the Description header
+		if strings.Contains(line, "Description") && strings.Contains(line, "[") {
+			inDescriptionPane = true
+			continue
+		}
+
+		// Stop counting when we hit the Diff panel header
+		if inDescriptionPane && strings.Contains(line, "[0] Diff") {
+			break
+		}
+
+		if inDescriptionPane {
+			count++
+		}
+	}
+
+	return count
+}
