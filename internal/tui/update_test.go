@@ -920,20 +920,20 @@ func TestUpdate_LKeyCyclesFocusFromSectionToFiles(t *testing.T) {
 	}
 }
 
-func TestUpdate_LKeyCyclesFocusFromFilesToSection(t *testing.T) {
+func TestUpdate_LKeyCyclesFocusFromFilesToDiff(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Move to files panel first
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
 	updated, _ := m.Update(msg)
 	m = updated.(tui.Model)
 
-	// Now press l to wrap to section
+	// Now press l to go forward to diff
 	msg = tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")}
 	updated, _ = m.Update(msg)
 	result := updated.(tui.Model)
 
-	if result.FocusedPanel() != tui.PanelSection {
-		t.Errorf("FocusedPanel() = %d, want %d (PanelSection)", result.FocusedPanel(), tui.PanelSection)
+	if result.FocusedPanel() != tui.PanelDiff {
+		t.Errorf("FocusedPanel() = %d, want %d (PanelDiff)", result.FocusedPanel(), tui.PanelDiff)
 	}
 }
 
@@ -954,46 +954,54 @@ func TestUpdate_HKeyCyclesFocusFromFilesToSection(t *testing.T) {
 	}
 }
 
-func TestUpdate_HKeyCyclesFocusFromSectionToFiles(t *testing.T) {
+func TestUpdate_HKeyCyclesFocusFromSectionToDiff(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Ensure we start on section panel
 	if m.FocusedPanel() != tui.PanelSection {
 		t.Fatal("expected to start on section panel")
 	}
 
-	// Press h to wrap to files
+	// Press h to go backward to diff
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("h")}
 	updated, _ := m.Update(msg)
 	result := updated.(tui.Model)
 
-	if result.FocusedPanel() != tui.PanelFiles {
-		t.Errorf("FocusedPanel() = %d, want %d (PanelFiles)", result.FocusedPanel(), tui.PanelFiles)
+	if result.FocusedPanel() != tui.PanelDiff {
+		t.Errorf("FocusedPanel() = %d, want %d (PanelDiff)", result.FocusedPanel(), tui.PanelDiff)
 	}
 }
 
-func TestUpdate_HAndLDoNotAffectDiffPanel(t *testing.T) {
+func TestUpdate_LKeyCyclesFocusFromDiffToSection(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Move to diff panel
 	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("0")}
 	updated, _ := m.Update(msg)
 	m = updated.(tui.Model)
 
-	// Press h - should stay on diff
+	// Press l to go forward to section (wrapping around)
+	msg = tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.FocusedPanel() != tui.PanelSection {
+		t.Errorf("FocusedPanel() = %d, want %d (PanelSection)", result.FocusedPanel(), tui.PanelSection)
+	}
+}
+
+func TestUpdate_HKeyCyclesFocusFromDiffToFiles(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Move to diff panel
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("0")}
+	updated, _ := m.Update(msg)
+	m = updated.(tui.Model)
+
+	// Press h to go backward to files (wrapping around)
 	msg = tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("h")}
 	updated, _ = m.Update(msg)
 	result := updated.(tui.Model)
 
-	if result.FocusedPanel() != tui.PanelDiff {
-		t.Errorf("after h: FocusedPanel() = %d, want %d (PanelDiff)", result.FocusedPanel(), tui.PanelDiff)
-	}
-
-	// Press l - should stay on diff
-	msg = tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")}
-	updated, _ = result.Update(msg)
-	result = updated.(tui.Model)
-
-	if result.FocusedPanel() != tui.PanelDiff {
-		t.Errorf("after l: FocusedPanel() = %d, want %d (PanelDiff)", result.FocusedPanel(), tui.PanelDiff)
+	if result.FocusedPanel() != tui.PanelFiles {
+		t.Errorf("FocusedPanel() = %d, want %d (PanelFiles)", result.FocusedPanel(), tui.PanelFiles)
 	}
 }
 

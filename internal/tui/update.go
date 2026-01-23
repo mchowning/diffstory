@@ -212,21 +212,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.focusedPanel = PanelFiles
 			m.updateViewportContent()
 		case "h":
-			if m.focusedPanel == PanelSection {
-				m.focusedPanel = PanelFiles
-				m.updateViewportContent()
-			} else if m.focusedPanel == PanelFiles {
-				m.focusedPanel = PanelSection
-				m.updateViewportContent()
-			}
+			// Cycle backward through all panels: Section → Diff → Files → Section
+			m.focusedPanel = (m.focusedPanel + 2) % 3
+			m.updateViewportContent()
 		case "l":
-			if m.focusedPanel == PanelSection {
-				m.focusedPanel = PanelFiles
-				m.updateViewportContent()
-			} else if m.focusedPanel == PanelFiles {
-				m.focusedPanel = PanelSection
-				m.updateViewportContent()
-			}
+			// Cycle forward through all panels: Section → Files → Diff → Section
+			m.focusedPanel = (m.focusedPanel + 1) % 3
+			m.updateViewportContent()
 		case "<":
 			switch m.focusedPanel {
 			case PanelSection:
