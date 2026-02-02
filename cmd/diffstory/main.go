@@ -98,7 +98,7 @@ func runViewer(debug bool, reviewPath string) {
 	}
 
 	m := tui.NewModel(cwd, cfg, store, logger, opts...)
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
 
 	// Only create watcher if not in direct review mode
 	if initialReview == nil {

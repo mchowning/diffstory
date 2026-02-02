@@ -259,6 +259,20 @@ func (m Model) filesPanelHeight() int {
 	return contentHeight - sectionHeight
 }
 
+// panelAtPosition returns which panel contains the given screen coordinates.
+func (m Model) panelAtPosition(x, y int) Panel {
+	leftWidth := m.width / 3
+	if x >= leftWidth {
+		return PanelDiff
+	}
+	// Left side - determine section vs files by Y coordinate
+	sectionHeight := m.sectionPanelHeight()
+	if y < sectionHeight {
+		return PanelSection
+	}
+	return PanelFiles
+}
+
 func (m Model) FlattenedFilesCount() int {
 	if m.flattenedFiles == nil {
 		return 0

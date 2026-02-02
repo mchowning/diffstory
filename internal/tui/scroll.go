@@ -45,6 +45,23 @@ func CalculateScrollOffset(currentOffset, selectedIndex, totalItems, visibleCoun
 	return currentOffset
 }
 
+// ScrollOffset adjusts an offset by delta, clamping to valid range.
+// Used for mouse scroll handling in section and files panels.
+func ScrollOffset(current, delta, totalItems, visibleCount int) int {
+	maxOffset := totalItems - visibleCount
+	if maxOffset < 0 {
+		maxOffset = 0
+	}
+	newOffset := current + delta
+	if newOffset < 0 {
+		return 0
+	}
+	if newOffset > maxOffset {
+		return maxOffset
+	}
+	return newOffset
+}
+
 // CalcScrollbar returns scrollbar start position and height.
 func CalcScrollbar(totalItems, visibleCount, scrollOffset, scrollAreaHeight int) (start, height int) {
 	// If all items fit, scrollbar fills entire area

@@ -10,6 +10,48 @@ import (
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.MouseMsg:
+		if msg.Action == tea.MouseActionPress {
+			switch msg.Button {
+			case tea.MouseButtonWheelUp, tea.MouseButtonWheelDown:
+				panel := m.panelAtPosition(msg.X, msg.Y)
+				scrollDelta := 3
+				if msg.Button == tea.MouseButtonWheelUp {
+					scrollDelta = -3
+				}
+
+				switch panel {
+				case PanelDiff:
+					var cmd tea.Cmd
+					m.viewport, cmd = m.viewport.Update(msg)
+					return m, cmd
+
+				case PanelSection:
+					if m.review != nil {
+						sectionCount := m.review.SectionCount()
+						visibleCount := EstimateSectionVisibleCount(m.sectionPanelHeight())
+						m.sectionScrollOffset = ScrollOffset(
+							m.sectionScrollOffset,
+							scrollDelta,
+							sectionCount,
+							visibleCount,
+						)
+					}
+
+				case PanelFiles:
+					if m.flattenedFiles != nil {
+						fileCount := len(m.flattenedFiles)
+						visibleCount := EstimateFilesVisibleCount(m.filesPanelHeight())
+						m.filesScrollOffset = ScrollOffset(
+							m.filesScrollOffset,
+							scrollDelta,
+							fileCount,
+							visibleCount,
+						)
+					}
+				}
+			}
+		}
 	case tea.KeyMsg:
 		// Route to generate UI handlers when in a generate state
 		switch m.generateUIState {

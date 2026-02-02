@@ -78,6 +78,7 @@ See `config.example.jsonc` for a documented example.
 | `diffCommand` | `string[]` | `["git", "diff", "HEAD"]` | Command to generate the diff to review. |
 | `defaultFilterLevel` | `string` | `"low"` | Initial importance filter: `"low"`, `"medium"`, or `"high"`. |
 | `debugLoggingEnabled` | `bool` | `false` | Enable debug logging to `/tmp/diffstory.log`. |
+| `focusLineModeEnabled` | `bool` | `false` | Enable focus line mode by default. |
 
 ### Using a Different LLM
 
@@ -147,6 +148,12 @@ diffstory
 | `G` | Generate review (LLM) |
 | `?` / `Esc` | Toggle/close help |
 | `q` / `Ctrl+C` | Quit |
+
+**Mouse Support:**
+
+Scroll any panel using your mouse wheel. The panel under the cursor receives scroll events.
+
+> **Note**: Enabling mouse support disables native terminal text selection. This is a limitation of terminal mouse handling.
 
 **Filtering:**
 

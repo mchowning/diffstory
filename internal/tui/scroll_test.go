@@ -181,3 +181,44 @@ func TestEstimateSectionRenderCount_MatchesVisibleCount(t *testing.T) {
 		t.Errorf("renderCount (%d) should equal visibleCount (%d)", renderCount, visibleCount)
 	}
 }
+
+// Tests for ScrollOffset helper (used for mouse scrolling)
+
+func TestScrollOffset_ScrollDownFromTop(t *testing.T) {
+	result := ScrollOffset(0, 3, 20, 10)
+	if result != 3 {
+		t.Errorf("ScrollOffset(0, 3, 20, 10) = %d, want 3", result)
+	}
+}
+
+func TestScrollOffset_ScrollUpFromMiddle(t *testing.T) {
+	result := ScrollOffset(5, -3, 20, 10)
+	if result != 2 {
+		t.Errorf("ScrollOffset(5, -3, 20, 10) = %d, want 2", result)
+	}
+}
+
+func TestScrollOffset_ClampAtTop(t *testing.T) {
+	// Trying to scroll up past the beginning should clamp to 0
+	result := ScrollOffset(1, -5, 20, 10)
+	if result != 0 {
+		t.Errorf("ScrollOffset(1, -5, 20, 10) = %d, want 0", result)
+	}
+}
+
+func TestScrollOffset_ClampAtBottom(t *testing.T) {
+	// Trying to scroll past the end should clamp to maxOffset
+	// maxOffset = totalItems - visibleCount = 20 - 10 = 10
+	result := ScrollOffset(8, 5, 20, 10)
+	if result != 10 {
+		t.Errorf("ScrollOffset(8, 5, 20, 10) = %d, want 10", result)
+	}
+}
+
+func TestScrollOffset_NoScrollWhenAllVisible(t *testing.T) {
+	// When all items fit (totalItems <= visibleCount), offset should be 0
+	result := ScrollOffset(0, 3, 5, 10)
+	if result != 0 {
+		t.Errorf("ScrollOffset(0, 3, 5, 10) = %d, want 0 (all items visible)", result)
+	}
+}

@@ -2456,3 +2456,239 @@ func TestUpdate_WindowSizeMsg_InitializesFileTreeForPreloadedReview(t *testing.T
 		t.Error("expected flattened files to be initialized after WindowSizeMsg with pre-loaded review")
 	}
 }
+
+// Mouse scroll tests
+
+func TestUpdate_MouseWheelDownScrollsDiffPanel(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review with enough content to scroll
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
+			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	initialOffset := m.ViewportYOffset()
+
+	// Mouse wheel down over diff panel (right side, x >= width/3 = 40)
+	msg := tea.MouseMsg{
+		X:      80, // Right side of screen (diff panel)
+		Y:      20,
+		Button: tea.MouseButtonWheelDown,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.ViewportYOffset() <= initialOffset {
+		t.Errorf("ViewportYOffset() = %d, expected > %d after mouse wheel down",
+			result.ViewportYOffset(), initialOffset)
+	}
+}
+
+func TestUpdate_MouseWheelUpScrollsDiffPanel(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review with enough content to scroll
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
+			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// First scroll down with mouse wheel
+	downMsg := tea.MouseMsg{
+		X:      80,
+		Y:      20,
+		Button: tea.MouseButtonWheelDown,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(downMsg)
+	m = updated.(tui.Model)
+
+	offsetAfterDown := m.ViewportYOffset()
+
+	// Now scroll up with mouse wheel
+	upMsg := tea.MouseMsg{
+		X:      80,
+		Y:      20,
+		Button: tea.MouseButtonWheelUp,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(upMsg)
+	result := updated.(tui.Model)
+
+	if result.ViewportYOffset() >= offsetAfterDown {
+		t.Errorf("ViewportYOffset() = %d, expected < %d after mouse wheel up",
+			result.ViewportYOffset(), offsetAfterDown)
+	}
+}
+
+func TestUpdate_MouseWheelDownScrollsSectionPanel(t *testing.T) {
+	// Create model with many sections (enough to require scrolling)
+	m := modelWithReviewAndSmallWindow(20)
+
+	// Verify initial scroll offset is 0
+	if m.SectionScrollOffset() != 0 {
+		t.Fatalf("initial SectionScrollOffset() = %d, want 0", m.SectionScrollOffset())
+	}
+
+	// Mouse wheel down over section panel (left side, top area)
+	// With 80x20 window: leftWidth = 80/3 ≈ 26, sectionPanelHeight = (20-5)/2 = 7
+	msg := tea.MouseMsg{
+		X:      10, // Left side of screen (section panel)
+		Y:      3,  // Top area (within section panel)
+		Button: tea.MouseButtonWheelDown,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.SectionScrollOffset() <= 0 {
+		t.Errorf("SectionScrollOffset() = %d, expected > 0 after mouse wheel down",
+			result.SectionScrollOffset())
+	}
+}
+
+func TestUpdate_MouseWheelUpScrollsSectionPanel(t *testing.T) {
+	// Create model with many sections
+	m := modelWithReviewAndSmallWindow(20)
+
+	// First scroll down to have something to scroll up from
+	m = m.SetSectionScrollOffset(5)
+
+	// Mouse wheel up over section panel
+	msg := tea.MouseMsg{
+		X:      10,
+		Y:      3,
+		Button: tea.MouseButtonWheelUp,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.SectionScrollOffset() >= 5 {
+		t.Errorf("SectionScrollOffset() = %d, expected < 5 after mouse wheel up",
+			result.SectionScrollOffset())
+	}
+}
+
+func TestUpdate_MouseWheelDownScrollsFilesPanel(t *testing.T) {
+	// Create model with a section that has many files
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 30}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a section with many files
+	hunks := make([]model.Hunk, 30)
+	for i := range 30 {
+		hunks[i] = model.Hunk{
+			File: "file" + string(rune('a'+i)) + ".go",
+			Diff: "+line",
+		}
+	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "Many files", Hunks: hunks},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Focus on files panel and verify initial offset
+	if m.FilesScrollOffset() != 0 {
+		t.Fatalf("initial FilesScrollOffset() = %d, want 0", m.FilesScrollOffset())
+	}
+
+	// Mouse wheel down over files panel (left side, bottom area)
+	// With 80x30 window: sectionPanelHeight = (30-5)/2 = 12, so Y > 12 is files panel
+	msg := tea.MouseMsg{
+		X:      10, // Left side
+		Y:      20, // Bottom area (files panel)
+		Button: tea.MouseButtonWheelDown,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.FilesScrollOffset() <= 0 {
+		t.Errorf("FilesScrollOffset() = %d, expected > 0 after mouse wheel down",
+			result.FilesScrollOffset())
+	}
+}
+
+func TestUpdate_MouseWheelUpScrollsFilesPanel(t *testing.T) {
+	// Create model with a section that has many files
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 30}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a section with many files
+	hunks := make([]model.Hunk, 30)
+	for i := range 30 {
+		hunks[i] = model.Hunk{
+			File: "file" + string(rune('a'+i)) + ".go",
+			Diff: "+line",
+		}
+	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "Many files", Hunks: hunks},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// First set a scroll offset to have something to scroll up from
+	m = m.SetFilesScrollOffset(5)
+
+	// Mouse wheel up over files panel
+	msg := tea.MouseMsg{
+		X:      10,
+		Y:      20,
+		Button: tea.MouseButtonWheelUp,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.FilesScrollOffset() >= 5 {
+		t.Errorf("FilesScrollOffset() = %d, expected < 5 after mouse wheel up",
+			result.FilesScrollOffset())
+	}
+}
+
+func TestUpdate_MouseWheelUpAtTopBoundaryStaysAtZero(t *testing.T) {
+	m := modelWithReviewAndSmallWindow(20)
+
+	// Verify initial scroll offset is 0
+	if m.SectionScrollOffset() != 0 {
+		t.Fatalf("initial SectionScrollOffset() = %d, want 0", m.SectionScrollOffset())
+	}
+
+	// Mouse wheel up when already at top
+	msg := tea.MouseMsg{
+		X:      10,
+		Y:      3,
+		Button: tea.MouseButtonWheelUp,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	if result.SectionScrollOffset() < 0 {
+		t.Errorf("SectionScrollOffset() = %d, expected >= 0 (should not go negative)",
+			result.SectionScrollOffset())
+	}
+}
