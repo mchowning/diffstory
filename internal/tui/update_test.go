@@ -417,35 +417,7 @@ func TestUpdate_WindowSizeMsgResizesViewport(t *testing.T) {
 	}
 }
 
-func TestUpdate_ShiftJScrollsViewportDown(t *testing.T) {
-	m := tui.NewModel("/test/project", nil, nil, nil)
-	// Initialize viewport
-	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
-	updated, _ := m.Update(sizeMsg)
-	m = updated.(tui.Model)
-
-	// Set a review
-	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
-		{ID: "1", What: "First", Hunks: []model.Hunk{
-			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
-		}},
-	})
-	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
-	m = updated.(tui.Model)
-
-	initialOffset := m.ViewportYOffset()
-
-	// Press J (shift+j) to scroll down
-	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("J")}
-	updated, _ = m.Update(msg)
-	result := updated.(tui.Model)
-
-	if result.ViewportYOffset() <= initialOffset {
-		t.Errorf("ViewportYOffset() = %d, expected > %d after J key", result.ViewportYOffset(), initialOffset)
-	}
-}
-
-func TestUpdate_ShiftKScrollsViewportUp(t *testing.T) {
+func TestUpdate_ShiftJScrollsViewportDownHalfPage(t *testing.T) {
 	m := tui.NewModel("/test/project", nil, nil, nil)
 	// Initialize viewport
 	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
@@ -461,20 +433,53 @@ func TestUpdate_ShiftKScrollsViewportUp(t *testing.T) {
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
-	// First scroll down with J
-	jMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("J")}
-	updated, _ = m.Update(jMsg)
+	initialOffset := m.ViewportYOffset()
+
+	// Press J (shift+j) to scroll down half page
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("J")}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Should scroll down by more than 1 line (half page)
+	scrollAmount := result.ViewportYOffset() - initialOffset
+	if scrollAmount <= 1 {
+		t.Errorf("Expected J to scroll more than 1 line (half page), got %d", scrollAmount)
+	}
+}
+
+func TestUpdate_ShiftKScrollsViewportUpHalfPage(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	// Initialize viewport
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
 	m = updated.(tui.Model)
 
-	offsetAfterJ := m.ViewportYOffset()
+	// Set a review with enough content to scroll
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
+			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// First scroll down with ] to have somewhere to scroll up from
+	bracketMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("]")}
+	updated, _ = m.Update(bracketMsg)
+	updated, _ = updated.(tui.Model).Update(bracketMsg)
+	m = updated.(tui.Model)
+
+	offsetAfterScroll := m.ViewportYOffset()
 
 	// Now scroll up with K
 	kMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("K")}
 	updated, _ = m.Update(kMsg)
 	result := updated.(tui.Model)
 
-	if result.ViewportYOffset() >= offsetAfterJ {
-		t.Errorf("ViewportYOffset() = %d, expected < %d after K key", result.ViewportYOffset(), offsetAfterJ)
+	// Should scroll up by more than 1 line (half page)
+	scrollAmount := offsetAfterScroll - result.ViewportYOffset()
+	if scrollAmount <= 1 {
+		t.Errorf("Expected K to scroll more than 1 line (half page), got %d", scrollAmount)
 	}
 }
 

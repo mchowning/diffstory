@@ -151,9 +151,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.viewport.LineUp(1)
 			}
 		case "J":
-			m.viewport.LineDown(1)
+			m.viewport.HalfViewDown()
 		case "K":
-			m.viewport.LineUp(1)
+			m.viewport.HalfViewUp()
 		case "]":
 			m.viewport.HalfViewDown()
 		case "[":
