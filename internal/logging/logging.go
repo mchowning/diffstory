@@ -19,5 +19,7 @@ func Setup(enabled bool) *slog.Logger {
 		return slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
 
-	return slog.New(slog.NewTextHandler(file, nil))
+	// Enable Debug level logging when debug mode is on
+	opts := &slog.HandlerOptions{Level: slog.LevelDebug}
+	return slog.New(slog.NewTextHandler(file, opts))
 }
