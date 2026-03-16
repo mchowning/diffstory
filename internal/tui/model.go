@@ -178,7 +178,7 @@ func NewModel(workDir string, cfg *config.Config, store *storage.Store, logger *
 		lookPath:     DefaultLookPath,
 		spinner:      s,
 		logger:       logger,
-		diffSources:  DefaultDiffSources(),
+		diffSources:  DefaultDiffSources(DetectBaseBranch(workDir)),
 		commitInput:  ci,
 		contextInput: ctx,
 	}
