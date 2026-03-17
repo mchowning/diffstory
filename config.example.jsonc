@@ -25,5 +25,11 @@
   // Enable debug logging to /tmp/diffstory.log
   // Useful for troubleshooting LLM integration issues.
   // Default: false
-  "debugLoggingEnabled": false
+  "debugLoggingEnabled": false,
+
+  // Enable focus line mode by default when the viewer starts.
+  // Focus mode highlights the current changed line in the diff panel.
+  // Toggle with 'L' keybinding during viewing.
+  // Default: false
+  "focusLineModeEnabled": false
 }
