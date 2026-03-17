@@ -2,6 +2,8 @@ package tui
 
 import (
 	"testing"
+
+	"github.com/mchowning/diffstory/internal/model"
 )
 
 func TestCalculateScrollOffset_SelectionInView_NoChange(t *testing.T) {
@@ -220,5 +222,221 @@ func TestScrollOffset_NoScrollWhenAllVisible(t *testing.T) {
 	result := ScrollOffset(0, 3, 5, 10)
 	if result != 0 {
 		t.Errorf("ScrollOffset(0, 3, 5, 10) = %d, want 0 (all items visible)", result)
+	}
+}
+
+// Tests for ClickYToSectionIndex
+
+func TestClickYToSectionIndex_FirstSectionInFirstChapter(t *testing.T) {
+	// Review with one chapter containing 3 sections
+	// Visual layout (with border offset 1):
+	// Line 0: border
+	// Line 1: chapter header "Changes"
+	// Line 2: section 0
+	// Line 3: section 1
+	// Line 4: section 2
+	review := &model.Review{
+		Chapters: []model.Chapter{
+			{
+				Title:    "Changes",
+				Sections: []model.Section{{ID: "1"}, {ID: "2"}, {ID: "3"}},
+			},
+		},
+	}
+
+	// Click on line 2 (first section, after border and chapter header)
+	result := ClickYToSectionIndex(review, 0, 2)
+	if result != 0 {
+		t.Errorf("ClickYToSectionIndex for line 2 = %d, want 0", result)
+	}
+}
+
+func TestClickYToSectionIndex_SecondSectionInFirstChapter(t *testing.T) {
+	review := &model.Review{
+		Chapters: []model.Chapter{
+			{
+				Title:    "Changes",
+				Sections: []model.Section{{ID: "1"}, {ID: "2"}, {ID: "3"}},
+			},
+		},
+	}
+
+	// Click on line 3 (second section)
+	result := ClickYToSectionIndex(review, 0, 3)
+	if result != 1 {
+		t.Errorf("ClickYToSectionIndex for line 3 = %d, want 1", result)
+	}
+}
+
+func TestClickYToSectionIndex_ClickOnChapterHeader(t *testing.T) {
+	review := &model.Review{
+		Chapters: []model.Chapter{
+			{
+				Title:    "Changes",
+				Sections: []model.Section{{ID: "1"}, {ID: "2"}},
+			},
+		},
+	}
+
+	// Click on line 1 (chapter header) - should return -1
+	result := ClickYToSectionIndex(review, 0, 1)
+	if result != -1 {
+		t.Errorf("ClickYToSectionIndex for chapter header = %d, want -1", result)
+	}
+}
+
+func TestClickYToSectionIndex_WithScrollOffset(t *testing.T) {
+	// Review with multiple sections
+	review := &model.Review{
+		Chapters: []model.Chapter{
+			{
+				Title: "Changes",
+				Sections: []model.Section{
+					{ID: "1"}, {ID: "2"}, {ID: "3"}, {ID: "4"}, {ID: "5"},
+				},
+			},
+		},
+	}
+
+	// With scroll offset 2, the chapter header is STILL shown (because sections from this chapter are visible)
+	// Visual layout when scrolled:
+	// Line 0: border
+	// Line 1: chapter header "Changes" (still shown!)
+	// Line 2: section 2 (index 2)
+	// Line 3: section 3 (index 3)
+	// etc.
+	result := ClickYToSectionIndex(review, 2, 2)
+	if result != 2 {
+		t.Errorf("ClickYToSectionIndex with scroll offset 2, line 2 = %d, want 2", result)
+	}
+}
+
+func TestClickYToSectionIndex_MultipleChapters(t *testing.T) {
+	// Review with two chapters
+	// Visual layout:
+	// Line 0: border
+	// Line 1: chapter header "Chapter 1"
+	// Line 2: section 0
+	// Line 3: section 1
+	// Line 4: chapter header "Chapter 2"
+	// Line 5: section 2
+	review := &model.Review{
+		Chapters: []model.Chapter{
+			{
+				Title:    "Chapter 1",
+				Sections: []model.Section{{ID: "1"}, {ID: "2"}},
+			},
+			{
+				Title:    "Chapter 2",
+				Sections: []model.Section{{ID: "3"}},
+			},
+		},
+	}
+
+	// Click on line 5 (section in second chapter, flat index 2)
+	result := ClickYToSectionIndex(review, 0, 5)
+	if result != 2 {
+		t.Errorf("ClickYToSectionIndex for line 5 = %d, want 2", result)
+	}
+}
+
+func TestClickYToSectionIndex_ClickOnSecondChapterHeader(t *testing.T) {
+	review := &model.Review{
+		Chapters: []model.Chapter{
+			{
+				Title:    "Chapter 1",
+				Sections: []model.Section{{ID: "1"}, {ID: "2"}},
+			},
+			{
+				Title:    "Chapter 2",
+				Sections: []model.Section{{ID: "3"}},
+			},
+		},
+	}
+
+	// Click on line 4 (second chapter header) - should return -1
+	result := ClickYToSectionIndex(review, 0, 4)
+	if result != -1 {
+		t.Errorf("ClickYToSectionIndex for second chapter header = %d, want -1", result)
+	}
+}
+
+func TestClickYToSectionIndex_OutOfBounds(t *testing.T) {
+	review := &model.Review{
+		Chapters: []model.Chapter{
+			{
+				Title:    "Changes",
+				Sections: []model.Section{{ID: "1"}, {ID: "2"}},
+			},
+		},
+	}
+
+	// Click on line 10 (beyond all content)
+	result := ClickYToSectionIndex(review, 0, 10)
+	if result != -1 {
+		t.Errorf("ClickYToSectionIndex out of bounds = %d, want -1", result)
+	}
+}
+
+func TestClickYToSectionIndex_NilReview(t *testing.T) {
+	result := ClickYToSectionIndex(nil, 0, 2)
+	if result != -1 {
+		t.Errorf("ClickYToSectionIndex with nil review = %d, want -1", result)
+	}
+}
+
+// Tests for ClickYToFileIndex
+
+func TestClickYToFileIndex_FirstFile(t *testing.T) {
+	// Files pane layout (localY is already relative to files pane):
+	// Line 0: top border
+	// Line 1: file 0
+	// Line 2: file 1
+	// etc.
+
+	// Click on line 1 (first file)
+	result := ClickYToFileIndex(0, 1, 10)
+	if result != 0 {
+		t.Errorf("ClickYToFileIndex for line 1 = %d, want 0", result)
+	}
+}
+
+func TestClickYToFileIndex_SecondFile(t *testing.T) {
+	// Click on line 2 (second file)
+	result := ClickYToFileIndex(0, 2, 10)
+	if result != 1 {
+		t.Errorf("ClickYToFileIndex for line 2 = %d, want 1", result)
+	}
+}
+
+func TestClickYToFileIndex_WithScrollOffset(t *testing.T) {
+	// With scroll offset 3, line 1 shows file index 3
+	result := ClickYToFileIndex(3, 1, 10)
+	if result != 3 {
+		t.Errorf("ClickYToFileIndex with scroll offset 3, line 1 = %d, want 3", result)
+	}
+}
+
+func TestClickYToFileIndex_OutOfBounds(t *testing.T) {
+	// Click beyond the file list
+	result := ClickYToFileIndex(0, 20, 5)
+	if result != -1 {
+		t.Errorf("ClickYToFileIndex out of bounds = %d, want -1", result)
+	}
+}
+
+func TestClickYToFileIndex_OnBorder(t *testing.T) {
+	// Click on border (line 0)
+	result := ClickYToFileIndex(0, 0, 10)
+	if result != -1 {
+		t.Errorf("ClickYToFileIndex on border = %d, want -1", result)
+	}
+}
+
+func TestClickYToFileIndex_EmptyList(t *testing.T) {
+	// No files
+	result := ClickYToFileIndex(0, 1, 0)
+	if result != -1 {
+		t.Errorf("ClickYToFileIndex with empty list = %d, want -1", result)
 	}
 }

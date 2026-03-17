@@ -2480,11 +2480,16 @@ func TestUpdate_MouseWheelDownScrollsDiffPanel(t *testing.T) {
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
+	// Focus diff panel first (scroll follows focused panel)
+	focusDiffMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("0")}
+	updated, _ = m.Update(focusDiffMsg)
+	m = updated.(tui.Model)
+
 	initialOffset := m.ViewportYOffset()
 
-	// Mouse wheel down over diff panel (right side, x >= width/3 = 40)
+	// Mouse wheel down - scrolls the focused diff panel
 	msg := tea.MouseMsg{
-		X:      80, // Right side of screen (diff panel)
+		X:      80,
 		Y:      20,
 		Button: tea.MouseButtonWheelDown,
 		Action: tea.MouseActionPress,
@@ -2512,6 +2517,11 @@ func TestUpdate_MouseWheelUpScrollsDiffPanel(t *testing.T) {
 		}},
 	})
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Focus diff panel first (scroll follows focused panel)
+	focusDiffMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("0")}
+	updated, _ = m.Update(focusDiffMsg)
 	m = updated.(tui.Model)
 
 	// First scroll down with mouse wheel
@@ -2612,16 +2622,20 @@ func TestUpdate_MouseWheelDownScrollsFilesPanel(t *testing.T) {
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
-	// Focus on files panel and verify initial offset
+	// Focus files panel first (scroll follows focused panel)
+	focusFilesMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
+	updated, _ = m.Update(focusFilesMsg)
+	m = updated.(tui.Model)
+
+	// Verify initial offset
 	if m.FilesScrollOffset() != 0 {
 		t.Fatalf("initial FilesScrollOffset() = %d, want 0", m.FilesScrollOffset())
 	}
 
-	// Mouse wheel down over files panel (left side, bottom area)
-	// With 80x30 window: sectionPanelHeight = (30-5)/2 = 12, so Y > 12 is files panel
+	// Mouse wheel down - scrolls the focused files panel
 	msg := tea.MouseMsg{
-		X:      10, // Left side
-		Y:      20, // Bottom area (files panel)
+		X:      10,
+		Y:      20,
 		Button: tea.MouseButtonWheelDown,
 		Action: tea.MouseActionPress,
 	}
@@ -2655,10 +2669,15 @@ func TestUpdate_MouseWheelUpScrollsFilesPanel(t *testing.T) {
 	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
 	m = updated.(tui.Model)
 
-	// First set a scroll offset to have something to scroll up from
+	// Focus files panel first (scroll follows focused panel)
+	focusFilesMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
+	updated, _ = m.Update(focusFilesMsg)
+	m = updated.(tui.Model)
+
+	// Set a scroll offset to have something to scroll up from
 	m = m.SetFilesScrollOffset(5)
 
-	// Mouse wheel up over files panel
+	// Mouse wheel up - scrolls the focused files panel
 	msg := tea.MouseMsg{
 		X:      10,
 		Y:      20,
@@ -2695,5 +2714,380 @@ func TestUpdate_MouseWheelUpAtTopBoundaryStaysAtZero(t *testing.T) {
 	if result.SectionScrollOffset() < 0 {
 		t.Errorf("SectionScrollOffset() = %d, expected >= 0 (should not go negative)",
 			result.SectionScrollOffset())
+	}
+}
+
+func TestUpdate_MouseWheelScrollsPanelUnderCursor(t *testing.T) {
+	// Create model with many sections (enough to require scrolling)
+	m := modelWithReviewAndSmallWindow(20)
+
+	// Section panel is focused by default - verify
+	if m.FocusedPanel() != tui.PanelSection {
+		t.Fatalf("expected PanelSection to be focused by default, got %d", m.FocusedPanel())
+	}
+
+	// Verify initial section scroll offset is 0
+	if m.SectionScrollOffset() != 0 {
+		t.Fatalf("initial SectionScrollOffset() = %d, want 0", m.SectionScrollOffset())
+	}
+
+	// Mouse wheel down over DIFF panel (right side, x >= width/3)
+	// With 80-wide window: leftWidth = 80/3 ≈ 26, so X=50 is over diff panel
+	// Diff panel should scroll (panel under cursor), NOT section panel (focused)
+	msg := tea.MouseMsg{
+		X:      50, // Over diff panel
+		Y:      10, // In the diff panel area
+		Button: tea.MouseButtonWheelDown,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ := m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Section panel should NOT have scrolled - cursor was over diff panel
+	if result.SectionScrollOffset() != 0 {
+		t.Errorf("SectionScrollOffset() = %d, expected 0 (should scroll panel under cursor, not focused panel)", result.SectionScrollOffset())
+	}
+}
+
+func TestUpdate_MouseWheelScrollsFilesPanelUnderCursor(t *testing.T) {
+	// Create model with many files
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 30}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a section with many files
+	hunks := make([]model.Hunk, 30)
+	for i := range 30 {
+		hunks[i] = model.Hunk{
+			File: "file" + string(rune('a'+i)) + ".go",
+			Diff: "+line",
+		}
+	}
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "Many files", Hunks: hunks},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Verify initial files scroll offset is 0
+	if m.FilesScrollOffset() != 0 {
+		t.Fatalf("initial FilesScrollOffset() = %d, want 0", m.FilesScrollOffset())
+	}
+
+	// Mouse wheel down over FILES panel area (bottom left)
+	// With 80-wide window and 30 height:
+	// - leftWidth = 80/3 ≈ 26, so X=10 is in left pane
+	// - Section panel takes roughly upper half, files takes lower half
+	// - Y=20 should be in the files panel area
+	msg := tea.MouseMsg{
+		X:      10, // Over left pane (section/files area)
+		Y:      20, // Lower area (files panel)
+		Button: tea.MouseButtonWheelDown,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Files panel should scroll because cursor is over it
+	if result.FilesScrollOffset() == 0 {
+		t.Errorf("FilesScrollOffset() = 0, expected > 0 after scrolling (panel under cursor should scroll)")
+	}
+}
+
+func TestUpdate_MouseWheelScrollsDiffPanelUnderCursor(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 120, Height: 40}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Set a review with enough content to scroll
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First", Hunks: []model.Hunk{
+			{File: "test.go", Diff: strings.Repeat("line\n", 100)},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	initialOffset := m.ViewportYOffset()
+
+	// Mouse wheel down over DIFF panel (right side)
+	// With 120-wide window: leftWidth = 120/3 = 40, so X=80 is over diff panel
+	msg := tea.MouseMsg{
+		X:      80, // Over diff panel area
+		Y:      10,
+		Button: tea.MouseButtonWheelDown,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Diff viewport should scroll because cursor is over it
+	if result.ViewportYOffset() <= initialOffset {
+		t.Errorf("ViewportYOffset() = %d, expected > %d after scrolling (panel under cursor should scroll)",
+			result.ViewportYOffset(), initialOffset)
+	}
+}
+
+// Mouse click tests
+
+func TestUpdate_ClickOnSectionSelectsAndFocuses(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 30}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a review with 3 sections
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First section"},
+		{ID: "2", What: "Second section"},
+		{ID: "3", What: "Third section"},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Verify initial state - section 0 selected
+	if m.Selected() != 0 {
+		t.Fatalf("initial Selected() = %d, want 0", m.Selected())
+	}
+
+	// Focus diff panel first (to test that clicking section panel focuses it)
+	focusDiffMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("0")}
+	updated, _ = m.Update(focusDiffMsg)
+	m = updated.(tui.Model)
+
+	if m.FocusedPanel() != tui.PanelDiff {
+		t.Fatalf("expected PanelDiff to be focused, got %d", m.FocusedPanel())
+	}
+
+	// Click on section 1 (second section)
+	// Screen layout (headerOffset=1 since no timestamp):
+	// Line 0: header
+	// Line 1: section pane border
+	// Line 2: chapter header
+	// Line 3: section 0
+	// Line 4: section 1  <-- click here
+	msg := tea.MouseMsg{
+		X:      10, // Left side (section panel area)
+		Y:      4,  // Section 1 (header + border + chapter + section0)
+		Button: tea.MouseButtonLeft,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Should select section 1 and focus section panel
+	if result.Selected() != 1 {
+		t.Errorf("Selected() = %d, want 1 after clicking on second section", result.Selected())
+	}
+	if result.FocusedPanel() != tui.PanelSection {
+		t.Errorf("FocusedPanel() = %d, want PanelSection after clicking on section", result.FocusedPanel())
+	}
+}
+
+func TestUpdate_ClickOnChapterHeaderDoesNothing(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 30}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a review with sections
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First section"},
+		{ID: "2", What: "Second section"},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Navigate to section 1
+	jMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("j")}
+	updated, _ = m.Update(jMsg)
+	m = updated.(tui.Model)
+
+	if m.Selected() != 1 {
+		t.Fatalf("Selected() = %d, want 1", m.Selected())
+	}
+
+	// Click on chapter header
+	// Screen layout (headerOffset=1 since no timestamp):
+	// Line 0: header
+	// Line 1: section pane border
+	// Line 2: chapter header  <-- click here
+	msg := tea.MouseMsg{
+		X:      10,
+		Y:      2, // Chapter header (header + border)
+		Button: tea.MouseButtonLeft,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Selection should not change
+	if result.Selected() != 1 {
+		t.Errorf("Selected() = %d, want 1 (should not change on chapter header click)", result.Selected())
+	}
+}
+
+func TestUpdate_ClickOutsideSectionBoundsDoesNothing(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 30}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a review with 2 sections
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "First"},
+		{ID: "2", What: "Second"},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Click way below the sections (out of bounds)
+	msg := tea.MouseMsg{
+		X:      10,
+		Y:      20, // Way beyond the section list
+		Button: tea.MouseButtonLeft,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Selection should not change
+	if result.Selected() != 0 {
+		t.Errorf("Selected() = %d, want 0 (should not change on out of bounds click)", result.Selected())
+	}
+}
+
+func TestUpdate_ClickOnFileSelectsAndFocuses(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 30}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a review with multiple files
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "Section", Hunks: []model.Hunk{
+			{File: "file1.go", Diff: "+line"},
+			{File: "file2.go", Diff: "+line"},
+			{File: "file3.go", Diff: "+line"},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Verify initial state - file 0 selected, section panel focused
+	if m.SelectedFile() != 0 {
+		t.Fatalf("initial SelectedFile() = %d, want 0", m.SelectedFile())
+	}
+	if m.FocusedPanel() != tui.PanelSection {
+		t.Fatalf("initial FocusedPanel() = %d, want PanelSection", m.FocusedPanel())
+	}
+
+	// Calculate files panel Y offset
+	// headerOffset = 1 (no timestamp in test review)
+	// sectionPanelHeight = (30-5)/2 = 12
+	// Files pane starts at screenY = headerOffset + sectionPanelHeight = 1 + 12 = 13
+	headerOffset := 1                 // no timestamp
+	sectionPanelHeight := (30 - 5) / 2 // 12
+
+	// Click on file 1 (second file)
+	// Files pane layout (relative to files pane top):
+	// Line 0: border
+	// Line 1: file 0
+	// Line 2: file 1  <-- click here
+	// Screen Y = headerOffset + sectionPanelHeight + localY
+	msg := tea.MouseMsg{
+		X:      10,                                         // Left side (files panel area)
+		Y:      headerOffset + sectionPanelHeight + 2,      // File 1 (header + section pane + border + file0 + file1)
+		Button: tea.MouseButtonLeft,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Should select file 1 and focus files panel
+	if result.SelectedFile() != 1 {
+		t.Errorf("SelectedFile() = %d, want 1 after clicking on second file", result.SelectedFile())
+	}
+	if result.FocusedPanel() != tui.PanelFiles {
+		t.Errorf("FocusedPanel() = %d, want PanelFiles after clicking on file", result.FocusedPanel())
+	}
+}
+
+func TestUpdate_ClickOutsideFilesBoundsDoesNothing(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 30}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a review with 2 files
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "Section", Hunks: []model.Hunk{
+			{File: "file1.go", Diff: "+line"},
+			{File: "file2.go", Diff: "+line"},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Focus files panel first
+	focusFilesMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("2")}
+	updated, _ = m.Update(focusFilesMsg)
+	m = updated.(tui.Model)
+
+	headerOffset := 1                 // no timestamp
+	sectionPanelHeight := (30 - 5) / 2 // 12
+
+	// Click way below the files (out of bounds)
+	msg := tea.MouseMsg{
+		X:      10,
+		Y:      headerOffset + sectionPanelHeight + 20, // Way beyond the file list
+		Button: tea.MouseButtonLeft,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Selection should not change
+	if result.SelectedFile() != 0 {
+		t.Errorf("SelectedFile() = %d, want 0 (should not change on out of bounds click)", result.SelectedFile())
+	}
+}
+
+func TestUpdate_ClickOnDiffFocusesDiffPanel(t *testing.T) {
+	m := tui.NewModel("/test/project", nil, nil, nil)
+	sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 30}
+	updated, _ := m.Update(sizeMsg)
+	m = updated.(tui.Model)
+
+	// Create a review
+	review := model.NewReviewWithSections("/test/project", "Test", []model.Section{
+		{ID: "1", What: "Section", Hunks: []model.Hunk{
+			{File: "file1.go", Diff: "+line"},
+		}},
+	})
+	updated, _ = m.Update(tui.ReviewReceivedMsg{Review: review})
+	m = updated.(tui.Model)
+
+	// Verify initial state - section panel focused
+	if m.FocusedPanel() != tui.PanelSection {
+		t.Fatalf("initial FocusedPanel() = %d, want PanelSection", m.FocusedPanel())
+	}
+
+	// Click on diff panel (right side)
+	// Width = 80, leftWidth = 80/3 = 26, so X >= 26 is diff panel
+	msg := tea.MouseMsg{
+		X:      50, // Right side (diff panel area)
+		Y:      10,
+		Button: tea.MouseButtonLeft,
+		Action: tea.MouseActionPress,
+	}
+	updated, _ = m.Update(msg)
+	result := updated.(tui.Model)
+
+	// Should focus diff panel
+	if result.FocusedPanel() != tui.PanelDiff {
+		t.Errorf("FocusedPanel() = %d, want PanelDiff after clicking on diff panel", result.FocusedPanel())
 	}
 }

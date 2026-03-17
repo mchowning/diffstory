@@ -266,11 +266,23 @@ func (m Model) panelAtPosition(x, y int) Panel {
 		return PanelDiff
 	}
 	// Left side - determine section vs files by Y coordinate
+	// Adjust for header offset (header + optional timestamp line)
+	contentY := y - m.headerOffset()
 	sectionHeight := m.sectionPanelHeight()
-	if y < sectionHeight {
+	if contentY < sectionHeight {
 		return PanelSection
 	}
 	return PanelFiles
+}
+
+// headerOffset returns the number of lines above the main content area.
+// This includes the header line and optionally the timestamp line.
+func (m Model) headerOffset() int {
+	offset := 1 // header is always present
+	if m.review != nil && !m.review.CreatedAt.IsZero() {
+		offset++ // timestamp line
+	}
+	return offset
 }
 
 func (m Model) FlattenedFilesCount() int {

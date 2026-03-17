@@ -50,6 +50,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						)
 					}
 				}
+			case tea.MouseButtonLeft:
+				return m.handleMouseClick(msg.X, msg.Y)
 			}
 		}
 	case tea.KeyMsg:
@@ -476,5 +478,51 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.generateUIState = GenerateUIStateNone
 		return m, m.startGeneration()
 	}
+	return m, nil
+}
+
+// handleMouseClick handles left mouse button clicks for panel selection
+func (m Model) handleMouseClick(x, y int) (tea.Model, tea.Cmd) {
+	panel := m.panelAtPosition(x, y)
+
+	// Convert screen Y to content-relative Y (subtract header/timestamp lines)
+	contentY := y - m.headerOffset()
+
+	switch panel {
+	case PanelSection:
+		if m.review == nil {
+			return m, nil
+		}
+		sectionIdx := ClickYToSectionIndex(m.review, m.sectionScrollOffset, contentY)
+		if sectionIdx >= 0 && sectionIdx < m.review.SectionCount() {
+			m.selected = sectionIdx
+			m.focusedPanel = PanelSection
+			m.viewport.GotoTop()
+			m.updateFileTree()
+			m.updateViewportContent()
+		}
+		return m, nil
+
+	case PanelFiles:
+		if m.flattenedFiles == nil || len(m.flattenedFiles) == 0 {
+			return m, nil
+		}
+		// Calculate local Y coordinate relative to files pane
+		localY := contentY - m.sectionPanelHeight()
+		fileIdx := ClickYToFileIndex(m.filesScrollOffset, localY, len(m.flattenedFiles))
+		if fileIdx >= 0 && fileIdx < len(m.flattenedFiles) {
+			m.selectedFile = fileIdx
+			m.focusedPanel = PanelFiles
+			m.updateViewportContent()
+			m.viewport.GotoTop()
+		}
+		return m, nil
+
+	case PanelDiff:
+		m.focusedPanel = PanelDiff
+		m.updateViewportContent()
+		return m, nil
+	}
+
 	return m, nil
 }
